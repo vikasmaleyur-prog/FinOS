@@ -83,6 +83,15 @@ class SimulateRequest(BaseModel):
     one_time_expenses: Optional[List[OneTimeExpense]] = None
     new_recurring_emis: Optional[List[RecurringEMI]] = None
     account_type: Optional[str] = "savings"
+    lump_sum_inflow: Optional[float] = 0.0
+    lump_sum_name: Optional[str] = "Capital / Loan Inflow"
+    expense_multiplier: Optional[float] = 1.0
+    discretionary_spend_reduction_pct: Optional[float] = 0.0
+
+class CategoryCorrectionRequest(BaseModel):
+    description: str
+    category: str
+    amount: Optional[float] = None
 
 class ForecastRequest(BaseModel):
     transactions: Optional[List[Dict[str, Any]]] = None
@@ -263,6 +272,9 @@ def run_pipeline_for_dataframe(
         },
         "risk_summary": {
             "prob_below_safe_balance": float(forecast_res["prob_below_safe_balance"]),
+            "prob_below_zero": float(forecast_res.get("prob_below_zero", 0.0)),
+            "expected_future_balance": float(forecast_res.get("expected_future_balance", ending_balance)),
+            "horizon_metrics": forecast_res.get("horizon_metrics", {}),
             "risk_level": forecast_res["risk_level"],
             "first_breach_date": forecast_res["first_breach_date"],
             "breach_date_range": forecast_res.get("breach_date_range"),
@@ -283,6 +295,9 @@ def run_pipeline_for_dataframe(
                 "current_balance": float(forecast_res["current_balance"]),
                 "minimum_safe_balance": float(forecast_res["minimum_safe_balance"]),
                 "prob_below_safe_balance": float(forecast_res["prob_below_safe_balance"]),
+                "prob_below_zero": float(forecast_res.get("prob_below_zero", 0.0)),
+                "expected_future_balance": float(forecast_res.get("expected_future_balance", ending_balance)),
+                "horizon_metrics": forecast_res.get("horizon_metrics", {}),
                 "risk_level": forecast_res["risk_level"],
                 "first_breach_date": forecast_res["first_breach_date"],
                 "breach_date_range": forecast_res.get("breach_date_range"),
@@ -416,9 +431,16 @@ def simulate_scenario(payload: SimulateRequest):
         ote_dicts = [o.model_dump() for o in payload.one_time_expenses] if payload.one_time_expenses else []
         emi_dicts = [e.model_dump() for e in payload.new_recurring_emis] if payload.new_recurring_emis else []
 
+        sim_start_bal = float(start_bal) + float(payload.lump_sum_inflow or 0.0)
+
+        daily_cap_mod = None
+        if payload.discretionary_spend_reduction_pct and payload.discretionary_spend_reduction_pct > 0:
+            normal_burn = float(baseline.get("mean_daily_burn", 850.0))
+            daily_cap_mod = max(100.0, normal_burn * (1.0 - payload.discretionary_spend_reduction_pct / 100.0))
+
         simulated = CashFlowForecaster.run_monte_carlo(
             df=df,
-            current_balance=float(start_bal),
+            current_balance=float(sim_start_bal),
             forecast_days=60,
             num_simulations=1000,
             minimum_safe_balance=float(min_safe),
@@ -426,6 +448,7 @@ def simulate_scenario(payload: SimulateRequest):
             new_recurring_emis=emi_dicts,
             income_delay_days=payload.income_delay_days,
             income_boost_pct=payload.income_boost_pct,
+            daily_spend_cap=daily_cap_mod,
             account_type=payload.account_type or "savings"
         )
 
@@ -434,6 +457,20 @@ def simulate_scenario(payload: SimulateRequest):
             simulated,
             recurring_bills,
             sim_params={"simulated": True, "income_delay": payload.income_delay_days}
+        )
+
+        # Baseline and simulated limits
+        base_limits = SpendingLimitOptimizer.calculate_optimal_limits(
+            df=df,
+            current_balance=float(start_bal),
+            minimum_safe_balance=float(min_safe),
+            target_max_breach_prob=10.0
+        )
+        sim_limits = SpendingLimitOptimizer.calculate_optimal_limits(
+            df=df,
+            current_balance=float(sim_start_bal),
+            minimum_safe_balance=float(min_safe),
+            target_max_breach_prob=10.0
         )
 
         combined_timeline = []
@@ -461,6 +498,10 @@ def simulate_scenario(payload: SimulateRequest):
                 "risk_increase_pct": delta_risk,
                 "baseline_min_balance": float(baseline["lowest_median_balance"]),
                 "simulated_min_balance": float(simulated["lowest_median_balance"]),
+                "baseline_ending_balance": round(float(baseline["forecast"][-1]["p50"]), 2),
+                "simulated_ending_balance": round(float(simulated["forecast"][-1]["p50"]), 2),
+                "baseline_safe_limit": float(base_limits.get("recommended_daily_cap", 850.0)),
+                "simulated_safe_limit": float(sim_limits.get("recommended_daily_cap", 850.0)),
                 "balance_impact": delta_min_balance,
                 "new_breach_date": simulated["first_breach_date"],
                 "simulated_risk_level": simulated["risk_level"]
@@ -470,6 +511,17 @@ def simulate_scenario(payload: SimulateRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Simulation error: {str(e)}")
+
+@app.post("/categorize/correct")
+def correct_category_endpoint(payload: CategoryCorrectionRequest):
+    """Allows manual correction of merchant categories, persisting the override in memory."""
+    categorizer.record_user_correction(payload.description, payload.category)
+    return {
+        "status": "success",
+        "description": payload.description,
+        "new_category": payload.category,
+        "message": f"Successfully updated category for '{payload.description}' to '{payload.category}'."
+    }
 
 @app.post("/forecast")
 def recalculate_forecast(payload: ForecastRequest):

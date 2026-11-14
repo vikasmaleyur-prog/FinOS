@@ -55,11 +55,30 @@ FinOS is an enterprise-grade, privacy-first FinTech platform built for **freelan
 
 ### 9. What-If Cash Flow Stress Testing (`SimulatorView.tsx`)
 - Interactive sliders for one-time purchases, invoice arrival delays, and new EMI debt.
-- **One-Click Business Scenarios**:
-  - ⏱️ *Customer Pays 20d Late* (client receivable delay stress test)
-  - 📦 *Bulk Stock Purchase (₹75k)* (major inventory capital expenditure)
-  - 👥 *New Staff Hire (₹20k/mo)* (monthly payroll addition starting on the 1st)
-- Recharts Before vs After trajectory comparison chart showing median paths and safe buffer lines.
+- **7 One-Click Scenarios**:
+  - 💻 *Buy ₹30k Laptop* (one-time discretionary capex)
+  - 🏦 *Take ₹1L Loan* (lump sum cash infusion with monthly repayment)
+  - 💳 *Add ₹15k EMI* (new debt commitment on the 5th)
+  - ⏳ *Delay Salary (20d)* (inflow timing liquidity stress test)
+  - 🏢 *Delay Client Payment (25d)* (commercial receivable delay)
+  - 📈 *Increase Expenses (+20%)* (inflation & burn escalation)
+  - ✂️ *Cut Discretionary (-25%)* (austerity cash preservation)
+- **Side-by-Side Comparative Analytics**: Displays original vs simulated Forecast Ending Balance, Shortage Probability, Minimum Expected Balance, and Safe Daily Living Spend Cap.
+
+### 10. Multi-Horizon Projections & Zero-Breach Probability
+- **Granular Temporal Horizons**: Calculates exact probabilistic metrics across **7, 15, 30, 60, and 90 days** (`CashFlowForecaster.run_monte_carlo`).
+- **Zero-Breach Risk & Safe Buffer Breach**:
+  - `prob_below_zero`: Exact probability of account insolvency ($\text{Balance} < ₹0$).
+  - `prob_breach_buffer`: Probability of dipping below the user's custom minimum safe balance.
+- **Interactive UI Chips**: Forecast chart includes instant 7D, 15D, 30D, 60D, and 90D chips and real-time Zero-Breach Risk pill.
+
+### 11. Official Google Gen AI SDK & Production Polish
+- **Official SDK Migration**: Powered by `google-genai` SDK (`gemini-2.5-flash`) with multi-tier fallback (SDK -> REST -> Deterministic Statistical Intelligence).
+- **Transparent Offline Indicator**: Ask FinOS AI Advisor clearly displays an offline indicator when `GEMINI_API_KEY` is not present, ensuring 100% functionality without network dependencies.
+- **Inline Manual Category Correction (`POST /categorize/correct`)**: Interactive category dropdown badge in the transaction ledger allowing users to immediately correct any transaction's category.
+- **Duplicate Payment Detection**: Flags identical debits to the same merchant within 48 hours as HIGH severity anomalies with plain-English reasons.
+- **Weekly Safe Spending Limits**: Computes recommended weekly living spend caps alongside daily and monthly limits in `PersonalizedLimitsCard.tsx`.
+- **Forecast Accuracy RMSE Metric**: Reports Model RMSE, Naive RMSE, and percentage improvement in `AccuracyView.tsx`.
 
 ---
 
@@ -105,7 +124,8 @@ finos/
 │   ├── test_baseline.py      # Baseline ingestion, sanitization, categorization, Monte Carlo
 │   ├── test_phase1.py        # Limits binary search, rolling backtest, explainability drivers
 │   ├── test_phase2.py        # 4-feature Isolation Forest, LLM cache, benchmark, /explain, /chat
-│   └── test_phase3.py        # PhonePe 90d, SMB current a/c, receivables delay, multi-account, PDF
+│   ├── test_phase3.py        # PhonePe 90d, SMB current a/c, receivables delay, multi-account, PDF
+│   └── test_phase4.py        # Google Gen AI SDK, multi-horizon, duplicate anomalies, weekly caps, RMSE, what-if
 ├── AUDIT.md                  # Complete architectural audit of real vs demo components
 ├── CHANGELOG.md              # Detailed log of all phases
 ├── DEMO.md                   # 2-Minute hackathon demonstration script
@@ -122,8 +142,8 @@ finos/
 # In repository root
 pip install -r backend/requirements.txt
 
-# (Optional) Export Gemini API Key for AI explanations & conversational copilot
-# If unset, FinOS seamlessly uses deterministic templates
+# (Optional) Export Gemini API Key for official Google Gen AI SDK integration
+# If unset, FinOS automatically runs with deterministic statistical intelligence
 export GEMINI_API_KEY="your-gemini-api-key"
 
 # Launch FastAPI Backend
@@ -144,7 +164,7 @@ npm run dev
 ### 3. Run Automated Tests
 
 ```bash
-# Run complete test suite across all phases (23 passing tests)
+# Run complete test suite across all 31 tests (100% passing)
 python -m pytest tests/ -v
 ```
 

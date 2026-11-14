@@ -32,6 +32,10 @@ interface SimulationResult {
     risk_increase_pct: number;
     baseline_min_balance: number;
     simulated_min_balance: number;
+    baseline_ending_balance?: number;
+    simulated_ending_balance?: number;
+    baseline_safe_limit?: number;
+    simulated_safe_limit?: number;
     balance_impact: number;
     new_breach_date: string | null;
     simulated_risk_level: string;
@@ -71,45 +75,79 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
   accountType = 'savings'
 }) => {
   // Simulator Inputs
-  const [purchaseName, setPurchaseName] = useState('New MacBook Pro M3');
-  const [purchaseAmount, setPurchaseAmount] = useState<number>(125000);
-  const [purchaseDayOffset, setPurchaseDayOffset] = useState<number>(10);
+  const [purchaseName, setPurchaseName] = useState('₹30,000 Laptop');
+  const [purchaseAmount, setPurchaseAmount] = useState<number>(30000);
+  const [purchaseDayOffset, setPurchaseDayOffset] = useState<number>(7);
   const [includePurchase, setIncludePurchase] = useState<boolean>(true);
 
-  const [emiName, setEmiName] = useState('Car / Equipment Loan');
-  const [emiAmount, setEmiAmount] = useState<number>(12000);
-  const [emiDayOfMonth, setEmiDayOfMonth] = useState<number>(7);
+  const [emiName, setEmiName] = useState('Loan Repayment EMI');
+  const [emiAmount, setEmiAmount] = useState<number>(15000);
+  const [emiDayOfMonth, setEmiDayOfMonth] = useState<number>(5);
   const [includeEmi, setIncludeEmi] = useState<boolean>(false);
 
-  const [incomeDelayDays, setIncomeDelayDays] = useState<number>(14);
+  const [lumpSumInflow, setLumpSumInflow] = useState<number>(0);
+  const [discretionaryReductionPct, setDiscretionaryReductionPct] = useState<number>(0);
+  const [incomeDelayDays, setIncomeDelayDays] = useState<number>(0);
   const [incomeBoostPct, setIncomeBoostPct] = useState<number>(0);
   const [safeBalance, setSafeBalance] = useState<number>(minimumSafeBalance);
 
-  const [activeScenario, setActiveScenario] = useState<string | null>(null);
+  const [activeScenario, setActiveScenario] = useState<string | null>('laptop_30k');
   const [simulationData, setSimulationData] = useState<SimulationResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const applyPreset = (preset: 'late_payment' | 'bulk_purchase' | 'new_hire') => {
+  const applyPreset = (preset: 'laptop_30k' | 'take_loan' | 'add_emi' | 'delay_salary' | 'delay_client' | 'increase_expenses' | 'cut_discretionary') => {
     setActiveScenario(preset);
-    if (preset === 'late_payment') {
-      setIncomeDelayDays(20);
-      setIncomeBoostPct(0);
-      setIncludePurchase(false);
-      setIncludeEmi(false);
-    } else if (preset === 'bulk_purchase') {
-      setPurchaseName('Bulk Wholesale Stock Purchase');
-      setPurchaseAmount(75000);
-      setPurchaseDayOffset(5);
+    if (preset === 'laptop_30k') {
+      setPurchaseName('₹30,000 Laptop');
+      setPurchaseAmount(30000);
+      setPurchaseDayOffset(7);
       setIncludePurchase(true);
-      setIncomeDelayDays(0);
       setIncludeEmi(false);
-    } else if (preset === 'new_hire') {
-      setEmiName('New Staff Hire Salary');
-      setEmiAmount(20000);
-      setEmiDayOfMonth(1);
+      setIncomeDelayDays(0);
+      setLumpSumInflow(0);
+      setDiscretionaryReductionPct(0);
+    } else if (preset === 'take_loan') {
+      setLumpSumInflow(100000);
+      setEmiName('Loan Repayment EMI');
+      setEmiAmount(15000);
+      setEmiDayOfMonth(5);
       setIncludeEmi(true);
       setIncludePurchase(false);
       setIncomeDelayDays(0);
+      setDiscretionaryReductionPct(0);
+    } else if (preset === 'add_emi') {
+      setEmiName('Equipment Loan EMI');
+      setEmiAmount(15000);
+      setEmiDayOfMonth(5);
+      setIncludeEmi(true);
+      setIncludePurchase(false);
+      setIncomeDelayDays(0);
+      setLumpSumInflow(0);
+      setDiscretionaryReductionPct(0);
+    } else if (preset === 'delay_salary') {
+      setIncomeDelayDays(20);
+      setIncludePurchase(false);
+      setIncludeEmi(false);
+      setLumpSumInflow(0);
+      setDiscretionaryReductionPct(0);
+    } else if (preset === 'delay_client') {
+      setIncomeDelayDays(25);
+      setIncludePurchase(false);
+      setIncludeEmi(false);
+      setLumpSumInflow(0);
+      setDiscretionaryReductionPct(0);
+    } else if (preset === 'increase_expenses') {
+      setDiscretionaryReductionPct(-20);
+      setIncludePurchase(false);
+      setIncludeEmi(false);
+      setIncomeDelayDays(0);
+      setLumpSumInflow(0);
+    } else if (preset === 'cut_discretionary') {
+      setDiscretionaryReductionPct(25);
+      setIncludePurchase(false);
+      setIncludeEmi(false);
+      setIncomeDelayDays(0);
+      setLumpSumInflow(0);
     }
   };
 
@@ -123,6 +161,8 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
         income_delay_days: incomeDelayDays,
         income_boost_pct: incomeBoostPct,
         account_type: accountType,
+        lump_sum_inflow: lumpSumInflow,
+        discretionary_spend_reduction_pct: discretionaryReductionPct,
         one_time_expenses: includePurchase && purchaseAmount > 0 ? [
           { name: purchaseName, amount: purchaseAmount, day_offset: purchaseDayOffset }
         ] : [],
@@ -207,49 +247,89 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
       </div>
 
       {/* One-Click Scenario Presets */}
-      <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] flex flex-wrap items-center gap-2.5">
+      <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] flex flex-wrap items-center gap-2">
         <span className="text-xs font-mono text-white/50 flex items-center space-x-1.5 mr-1">
           <Zap size={14} className="text-[#d9f154]" />
-          <span>Quick Scenarios:</span>
+          <span>Scenarios:</span>
         </span>
         <button
-          onClick={() => applyPreset('late_payment')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
-            activeScenario === 'late_payment'
+          onClick={() => applyPreset('laptop_30k')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'laptop_30k'
               ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
               : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
           }`}
         >
-          <span>⏱️ Customer Pays 20d Late</span>
+          <span>💻 Buy ₹30k Laptop</span>
         </button>
         <button
-          onClick={() => applyPreset('bulk_purchase')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
-            activeScenario === 'bulk_purchase'
+          onClick={() => applyPreset('take_loan')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'take_loan'
               ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
               : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
           }`}
         >
-          <span>📦 Bulk Stock Purchase (₹75k)</span>
+          <span>🏦 Take ₹1L Loan (+₹15k EMI)</span>
         </button>
         <button
-          onClick={() => applyPreset('new_hire')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
-            activeScenario === 'new_hire'
+          onClick={() => applyPreset('add_emi')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'add_emi'
               ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
               : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
           }`}
         >
-          <span>👥 New Staff Hire (₹20k/mo)</span>
+          <span>💳 Add ₹15k EMI</span>
+        </button>
+        <button
+          onClick={() => applyPreset('delay_salary')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'delay_salary'
+              ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
+              : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
+          }`}
+        >
+          <span>⏳ Delay Salary (20d)</span>
+        </button>
+        <button
+          onClick={() => applyPreset('delay_client')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'delay_client'
+              ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
+              : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
+          }`}
+        >
+          <span>🏢 Delay Client (25d)</span>
+        </button>
+        <button
+          onClick={() => applyPreset('increase_expenses')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'increase_expenses'
+              ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
+              : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
+          }`}
+        >
+          <span>📈 Expenses +20%</span>
+        </button>
+        <button
+          onClick={() => applyPreset('cut_discretionary')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'cut_discretionary'
+              ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
+              : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
+          }`}
+        >
+          <span>✂️ Cut Discretionary -25%</span>
         </button>
       </div>
 
-      {/* Delta Metrics Headline Row */}
+      {/* Delta Metrics Headline Row: 4 Side-by-Side Comparative Cards */}
       {delta && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-          {/* Risk Change */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {/* 1. Shortage Probability */}
           <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-            <span className="text-xs font-mono text-white/50 block mb-1">Breach Probability Delta</span>
+            <span className="text-xs font-mono text-white/50 block mb-1">Shortage Probability</span>
             <div className="flex items-baseline space-x-2">
               <span className="text-2xl font-bold font-mono text-white">
                 {delta.baseline_risk}%
@@ -260,15 +340,19 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
               </span>
             </div>
             <div className="text-[11px] font-mono text-white/40 mt-1">
-              {delta.risk_increase_pct > 0 ? `+${delta.risk_increase_pct}% increase in risk` : 'Risk unchanged'}
+              {delta.risk_increase_pct > 0 ? `+${delta.risk_increase_pct}% risk shift` : 'Risk reduced / safe'}
             </div>
           </div>
 
-          {/* Lowest Balance Impact */}
+          {/* 2. Minimum Projected Balance */}
           <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-            <span className="text-xs font-mono text-white/50 block mb-1">Lowest Median Balance</span>
+            <span className="text-xs font-mono text-white/50 block mb-1">Minimum Balance</span>
             <div className="flex items-baseline space-x-2">
               <span className="text-2xl font-bold font-mono text-white">
+                ₹{Math.round(delta.baseline_min_balance || 0).toLocaleString('en-IN')}
+              </span>
+              <ArrowRight size={14} className="text-white/40" />
+              <span className={`text-2xl font-bold font-mono ${delta.simulated_min_balance < delta.baseline_min_balance ? 'text-rose-400' : 'text-[#d9f154]'}`}>
                 ₹{Math.round(delta.simulated_min_balance || 0).toLocaleString('en-IN')}
               </span>
             </div>
@@ -277,14 +361,37 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
             </div>
           </div>
 
-          {/* First Breach Date */}
+          {/* 3. Forecast Ending Balance */}
           <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-            <span className="text-xs font-mono text-white/50 block mb-1">Simulated Breach Date</span>
-            <div className="text-2xl font-bold font-mono text-white">
-              {delta.new_breach_date || 'No Breach'}
+            <span className="text-xs font-mono text-white/50 block mb-1">Forecast 60d Balance</span>
+            <div className="flex items-baseline space-x-2">
+              <span className="text-2xl font-bold font-mono text-white">
+                ₹{Math.round(delta.baseline_ending_balance || delta.baseline_min_balance || 0).toLocaleString('en-IN')}
+              </span>
+              <ArrowRight size={14} className="text-white/40" />
+              <span className="text-2xl font-bold font-mono text-[#d9f154]">
+                ₹{Math.round(delta.simulated_ending_balance || delta.simulated_min_balance || 0).toLocaleString('en-IN')}
+              </span>
             </div>
             <div className="text-[11px] font-mono text-white/40 mt-1">
-              Safe buffer: ₹{safeBalance.toLocaleString('en-IN')}
+              Breach date: {delta.new_breach_date || 'None'}
+            </div>
+          </div>
+
+          {/* 4. Safe Spending Limit */}
+          <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
+            <span className="text-xs font-mono text-white/50 block mb-1">Safe Daily Spend Cap</span>
+            <div className="flex items-baseline space-x-2">
+              <span className="text-2xl font-bold font-mono text-white">
+                ₹{Math.round(delta.baseline_safe_limit || 850).toLocaleString('en-IN')}
+              </span>
+              <ArrowRight size={14} className="text-white/40" />
+              <span className="text-2xl font-bold font-mono text-[#d9f154]">
+                ₹{Math.round(delta.simulated_safe_limit || 850).toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-white/40 mt-1">
+              Caps keep breach &lt; 10%
             </div>
           </div>
         </div>

@@ -31,6 +31,7 @@ interface ForecastChartProps {
   currentBalance?: number;
   minimumSafeBalance?: number;
   probBelowSafe?: number;
+  probBelowZero?: number;
   breachDate?: string | null;
   dataSufficiency?: { level: string; badge: string; history_days?: number };
 }
@@ -40,11 +41,12 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
   currentBalance = 0,
   minimumSafeBalance = 5000,
   probBelowSafe = 0,
+  probBelowZero = 0,
   breachDate,
   dataSufficiency
 }) => {
   const [showConfidenceBand, setShowConfidenceBand] = useState(true);
-  const [dayRange, setDayRange] = useState<30 | 45 | 60>(60);
+  const [dayRange, setDayRange] = useState<7 | 15 | 30 | 60 | 90>(60);
 
   const safeData = data && Array.isArray(data) ? data : [];
   const displayData = safeData.slice(0, dayRange);
@@ -104,11 +106,16 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-semibold text-white tracking-tight">
-              60-Day Stochastic Cash Flow Trajectory
+              {dayRange}-Day Stochastic Cash Flow Trajectory
             </h2>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#d9f154]/10 text-[#d9f154] border border-[#d9f154]/20 font-semibold">
               1,000 MONTE CARLO RUNS
             </span>
+            {probBelowZero > 0 && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">
+                Zero-Breach Risk: {probBelowZero}%
+              </span>
+            )}
             {dataSufficiency && (
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-medium ${
                 dataSufficiency.level === 'LOW'
@@ -141,11 +148,11 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
 
           {/* Time range pills */}
           <div className="flex items-center p-0.5 rounded-lg bg-black/40 border border-white/[0.08] text-xs font-mono">
-            {([30, 45, 60] as const).map((days) => (
+            {([7, 15, 30, 60, 90] as const).map((days) => (
               <button
                 key={days}
                 onClick={() => setDayRange(days)}
-                className={`px-2.5 py-1 rounded-md transition-all ${
+                className={`px-2 py-1 rounded-md transition-all text-[11px] ${
                   dayRange === days
                     ? 'bg-[#1D2027] text-white font-medium shadow-sm'
                     : 'text-white/40 hover:text-white'

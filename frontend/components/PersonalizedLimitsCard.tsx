@@ -6,14 +6,17 @@ import { ShieldCheck, TrendingDown, ArrowDownRight, Sparkles, CheckCircle2, Aler
 interface CategoryCap {
   category: string;
   daily_cap: number;
+  weekly_cap?: number;
   monthly_cap: number;
   share_pct: number;
 }
 
 interface LimitsData {
   recommended_daily_cap: number;
+  recommended_weekly_cap?: number;
   recommended_monthly_cap: number;
   current_daily_burn: number;
+  current_weekly_burn?: number;
   current_monthly_burn: number;
   breach_prob_at_cap: number;
   baseline_breach_prob: number;
@@ -33,8 +36,10 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
 
   const {
     recommended_daily_cap,
+    recommended_weekly_cap,
     recommended_monthly_cap,
     current_daily_burn,
+    current_weekly_burn,
     burn_reduction_needed,
     breach_prob_at_cap,
     baseline_breach_prob,
@@ -44,6 +49,8 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
     action_text
   } = limits;
 
+  const weeklyCap = recommended_weekly_cap || recommended_daily_cap * 7;
+  const weeklyBurn = current_weekly_burn || current_daily_burn * 7;
   const requiresCut = burn_reduction_needed > 0;
 
   return (
@@ -83,13 +90,15 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
         {/* Spend Comparison Banner */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-3 rounded-lg bg-black/40 border border-white/[0.06] font-mono">
-            <div className="text-[11px] text-white/40">Safe Daily Spend Cap</div>
+            <div className="text-[11px] text-white/40">Safe Spend Cap</div>
             <div className="text-xl font-bold text-[#d9f154] mt-0.5">
               ₹{Math.round(recommended_daily_cap).toLocaleString('en-IN')}
               <span className="text-xs font-normal text-white/40"> / day</span>
             </div>
-            <div className="text-[10px] text-white/40 mt-1">
-              ₹{Math.round(recommended_monthly_cap).toLocaleString('en-IN')} / month
+            <div className="text-[10px] text-white/50 mt-1 flex items-center space-x-1.5">
+              <span>₹{Math.round(weeklyCap).toLocaleString('en-IN')}/wk</span>
+              <span>·</span>
+              <span>₹{Math.round(recommended_monthly_cap).toLocaleString('en-IN')}/mo</span>
             </div>
           </div>
 
@@ -100,7 +109,7 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
               <span className="text-xs font-normal text-white/40"> / day</span>
             </div>
             <div className="text-[10px] text-white/40 mt-1">
-              Historical variable spending
+              ₹{Math.round(weeklyBurn).toLocaleString('en-IN')}/wk (₹{Math.round(current_daily_burn * 30).toLocaleString('en-IN')}/mo)
             </div>
           </div>
 

@@ -153,8 +153,11 @@ class AutoCategorizer:
         # Health: hospital, apollo, medplus, pharmacy, clinic
         (re.compile(r'(?i)(hospital|apollo|medplus|pharmacy|clinic|1mg|lalpath|manipal|dr\b|doctor|practo|pharmeasy|cult\.fit|cultfit|gym|healthcare|diagnostic|medical)'), 'Health'),
         
+        # Insurance: LIC, ICICI Prudential, HDFC Life, Star Health, Max Life, Care Health
+        (re.compile(r'(?i)(insurance|lic\b|icici prudential|hdfc life|max life|star health|care health|bajaj allianz|tata aia|sbi life|general insurance|policybazaar)'), 'Insurance'),
+
         # EMI/Loans: emi, loan, credit card, bajaj
-        (re.compile(r'(?i)(emi|loan|credit card|bajaj|hdfcloan|home loan|car loan|personal loan|ach dr/|ecs debit|installment)'), 'EMI/Loans'),
+        (re.compile(r'(?i)(\bemi\b|\bloan\b|\bloans\b|credit card|bajaj|hdfcloan|home loan|car loan|personal loan|ach dr/|ecs debit|installment)'), 'EMI/Loans'),
 
         # Rent: landlord, rent, flat rent, pg rent
         (re.compile(r'(?i)(rent|landlord|house rent|flat rent|pg rent|society maintenance|maintenance deposit)'), 'Rent'),
@@ -183,7 +186,7 @@ class AutoCategorizer:
 
     CANONICAL_CATEGORIES = [
         "Food", "Travel", "Investments", "Bills & Utilities", "Shopping",
-        "Health", "EMI/Loans", "Rent", "Subscriptions", "Income", "Other/Transfer",
+        "Health", "EMI/Loans", "Rent", "Subscriptions", "Insurance", "Income", "Other/Transfer",
         "Sales Receipts", "Supplier Payments", "Salaries", "GST/TDS", "Owner Drawings"
     ]
 
@@ -192,21 +195,47 @@ class AutoCategorizer:
         self.classifier = LogisticRegression(C=1.0, max_iter=300, random_state=42)
         self.is_trained = False
         self._llm_cache: Dict[str, str] = {}
+        self._user_overrides: Dict[str, str] = {}
         self._train_default_model()
 
+    def record_user_correction(self, merchant_or_desc: str, category: str):
+        """Records a user override for a merchant to support manual category correction."""
+        key = self.clean_text_for_nlp(merchant_or_desc).lower().strip() or merchant_or_desc.lower().strip()
+        self._user_overrides[key] = category
+        self._llm_cache[key] = category
+
     def _query_gemini_fallback(self, clean_text: str, raw_text: str) -> Optional[str]:
-        """Queries Gemini REST API to categorize ambiguous merchant, strictly with DPDP masked text."""
+        """Queries Gemini using official google-genai SDK (with REST fallback) to categorize ambiguous merchant, strictly with DPDP masked text."""
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             return None
+        masked_text, _ = PrivacyMasker.mask_text(raw_text)
+        prompt = (
+            f"Classify this Indian bank transaction merchant description into exactly ONE of these categories: "
+            f"{', '.join(self.CANONICAL_CATEGORIES)}.\n"
+            f"Transaction Narration: '{masked_text}'\n"
+            f"Reply with ONLY the exact category name and nothing else."
+        )
+        # 1. Official Google Gen AI Python SDK
         try:
-            masked_text, _ = PrivacyMasker.mask_text(raw_text)
-            prompt = (
-                f"Classify this Indian bank transaction merchant description into exactly ONE of these categories: "
-                f"{', '.join(self.CANONICAL_CATEGORIES)}.\n"
-                f"Transaction Narration: '{masked_text}'\n"
-                f"Reply with ONLY the exact category name and nothing else."
+            from google import genai
+            from google.genai import types
+            client = genai.Client(api_key=api_key)
+            resp = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=20)
             )
+            if resp and resp.text:
+                cand = resp.text.strip()
+                for c in self.CANONICAL_CATEGORIES:
+                    if c.lower() == cand.lower() or c.lower() in cand.lower():
+                        return c
+        except Exception:
+            pass
+
+        # 2. REST API fallback
+        try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
             headers = {"Content-Type": "application/json"}
             body = {
@@ -294,9 +323,23 @@ class AutoCategorizer:
     def predict(self, text: str, amount: Optional[float] = None) -> Dict[str, Any]:
         """
         Heuristics-First, ML-Second, LLM-Third evaluation for a single transaction.
+        Checks user manual corrections before automated pipelines.
         """
         raw_text = str(text or "")
         amt = float(amount) if amount is not None else 0.0
+
+        clean_text = self.clean_text_for_nlp(raw_text)
+        cache_key = clean_text.lower().strip() or raw_text.lower().strip()
+
+        # Rule 0: Check manual user overrides
+        for k, custom_cat in self._user_overrides.items():
+            if k in cache_key or cache_key in k:
+                return {
+                    "category": custom_cat,
+                    "confidence": 1.0,
+                    "method": "user_override",
+                    "is_ai_categorized": False
+                }
 
         # Rule 1: Credits & Inflows
         if amt > 0:
@@ -818,6 +861,28 @@ class CashFlowForecaster:
 
         prob_breach = round(float((breach_count / num_simulations) * 100), 1)
 
+        # Calculate probability of strictly breaching zero
+        zero_breached_any = np.any(trajectories < 0.0, axis=1)
+        prob_below_zero = round(float(np.mean(zero_breached_any) * 100), 1)
+
+        # Calculate multi-horizon metrics (7, 15, 30, 60, 90 days)
+        horizon_metrics = {}
+        for h in [7, 15, 30, 60, 90]:
+            h_idx = min(h, forecast_days) - 1
+            h_sub = trajectories[:, :h_idx+1]
+            h_breached_safe = np.any(h_sub < minimum_safe_balance, axis=1)
+            h_breached_zero = np.any(h_sub < 0.0, axis=1)
+            horizon_metrics[f"{h}d"] = {
+                "horizon_days": h,
+                "expected_balance": round(float(np.mean(trajectories[:, h_idx])), 2),
+                "p10": round(float(np.percentile(trajectories[:, h_idx], 10)), 2),
+                "p50": round(float(np.percentile(trajectories[:, h_idx], 50)), 2),
+                "p90": round(float(np.percentile(trajectories[:, h_idx], 90)), 2),
+                "min_expected_balance": round(float(np.min(np.percentile(h_sub, 50, axis=0))), 2),
+                "prob_below_safe_balance": round(float(np.mean(h_breached_safe) * 100), 1),
+                "prob_below_zero": round(float(np.mean(h_breached_zero) * 100), 1)
+            }
+
         first_breach_date_str = None
         days_to_breach = None
         if len(first_breach_days) > 0:
@@ -921,6 +986,10 @@ class CashFlowForecaster:
             "current_balance": round(float(current_balance), 2),
             "minimum_safe_balance": float(minimum_safe_balance),
             "prob_below_safe_balance": float(prob_breach),
+            "prob_below_zero": float(prob_below_zero),
+            "expected_future_balance": round(float(np.mean(trajectories[:, -1])), 2),
+            "min_expected_balance": round(float(min_median_balance), 2),
+            "horizon_metrics": horizon_metrics,
             "risk_level": risk_level,
             "first_breach_date": first_breach_date_str,
             "breach_date_range": breach_date_range,
@@ -1061,6 +1130,44 @@ class AnomalyDetector:
                 "z_score": round(z, 2),
                 "day_of_month": dom
             })
+
+        # Duplicate payment detection: identical amount to same payee within 48 hours
+        existing_signatures = set((r["date"], round(abs(r["amount"]), 2)) for r in results)
+        clean_exp = expenses.sort_values("Clean_Date")
+        n_exp = len(clean_exp)
+        for i in range(n_exp):
+            row_i = clean_exp.iloc[i]
+            amt_i = float(row_i["Abs_Amount"])
+            merch_i = str(row_i["Merchant_Key"])
+            date_i = row_i["Clean_Date"]
+            if amt_i < 100.0 or merch_i == "Recurring Outflow":
+                continue
+            for j in range(i + 1, min(i + 8, n_exp)):
+                row_j = clean_exp.iloc[j]
+                amt_j = float(row_j["Abs_Amount"])
+                merch_j = str(row_j["Merchant_Key"])
+                date_j = row_j["Clean_Date"]
+                days_diff = abs((date_j - date_i).days)
+                if days_diff > 2:
+                    break
+                if abs(amt_i - amt_j) < 0.05 and (merch_i.lower() == merch_j.lower() or merch_i in merch_j or merch_j in merch_i):
+                    sig = (str(row_j["Date"]), round(amt_j, 2))
+                    if sig not in existing_signatures:
+                        existing_signatures.add(sig)
+                        results.append({
+                            "date": str(row_j["Date"]),
+                            "description": str(row_j[desc_col]),
+                            "amount": float(row_j["Amount"]),
+                            "category": str(row_j.get("Category", "Other")),
+                            "severity": "HIGH",
+                            "reason": f"Potential duplicate payment: ₹{amt_j:,.0f} charged twice (2.0x your usual {str(row_j.get('Category', 'Other'))} spend) to {merch_j} within 48 hours",
+                            "reference_no": str(row_j.get("Reference_No", "")),
+                            "ratio": 2.0,
+                            "merchant": merch_j,
+                            "typical_amount": amt_j,
+                            "z_score": 2.5,
+                            "day_of_month": int(row_j["Day_Of_Month"])
+                        })
 
         results.sort(key=lambda x: abs(x["amount"]), reverse=True)
         return results
@@ -1239,24 +1346,28 @@ class SpendingLimitOptimizer:
                 category_caps.append({
                     "category": cat_name,
                     "daily_cap": cat_daily,
+                    "weekly_cap": round(cat_daily * 7, 2),
                     "monthly_cap": round(cat_daily * 30, 2),
                     "share_pct": round(share * 100, 1)
                 })
 
-        burn_reduction_needed = max(0.0, round(mean_burn - optimal_cap, 2))
-        is_sufficient = (optimal_cap >= mean_burn * 0.70)
+        opt_cap = round(optimal_cap, 2)
+        burn_reduction_needed = max(0.0, round(mean_burn - opt_cap, 2))
+        is_sufficient = (opt_cap >= mean_burn * 0.70)
 
-        headline = f"Spend ≤ ₹{round(optimal_cap):,}/day to stay safe"
-        if base_prob > target_max_breach_prob and optimal_cap <= 10.0 and final_prob > target_max_breach_prob:
+        headline = f"Spend ≤ ₹{round(opt_cap):,}/day to stay safe"
+        if base_prob > target_max_breach_prob and opt_cap <= 10.0 and final_prob > target_max_breach_prob:
             action_text = "Upcoming fixed obligations (Rent & Loans) alone cause buffer breach. Freeze discretionary spend and accelerate invoice clearance."
             headline = "Spend ≤ ₹0/day (Fixed Bills Exceed Buffer)"
         else:
-            action_text = f"Capping daily variable burn at ₹{round(optimal_cap):,}/day keeps buffer breach probability at {final_prob:.1f}% (< 10%)."
+            action_text = f"Capping daily variable burn at ₹{round(opt_cap):,}/day keeps buffer breach probability at {final_prob:.1f}% (< 10%)."
 
         return {
-            "recommended_daily_cap": round(optimal_cap, 2),
-            "recommended_monthly_cap": round(optimal_cap * 30, 2),
+            "recommended_daily_cap": opt_cap,
+            "recommended_weekly_cap": round(opt_cap * 7, 2),
+            "recommended_monthly_cap": round(opt_cap * 30, 2),
             "current_daily_burn": round(mean_burn, 2),
+            "current_weekly_burn": round(mean_burn * 7, 2),
             "current_monthly_burn": round(mean_burn * 30, 2),
             "breach_prob_at_cap": final_prob,
             "baseline_breach_prob": base_prob,
@@ -1286,11 +1397,14 @@ class BacktestEngine:
         cls,
         df: pd.DataFrame,
         initial_balance: Optional[float] = None,
+        starting_balance: Optional[float] = None,
+        start_balance: Optional[float] = None,
         test_window_days: int = 30
     ) -> Dict[str, Any]:
         if len(df) == 0:
             raise ValueError("Cannot backtest empty dataset.")
 
+        init_bal = initial_balance if initial_balance is not None else (starting_balance if starting_balance is not None else start_balance)
         df_sorted = df.copy()
         if "Category" not in df_sorted.columns:
             categorizer = AutoCategorizer()
@@ -1303,7 +1417,7 @@ class BacktestEngine:
         total_days = (max_date - min_date).days + 1
         total_months = total_days / 30.0
 
-        start_bal = initial_balance if initial_balance is not None else float(df_sorted.get("Starting Balance", 75000.0))
+        start_bal = init_bal if init_bal is not None else float(df_sorted.get("Starting Balance", 75000.0))
         daily_net_map = df_sorted.groupby(df_sorted["Date_DT"].dt.date)["Amount"].sum().to_dict()
 
         calendar_days = [min_date + datetime.timedelta(days=i) for i in range(total_days)]
@@ -1401,6 +1515,11 @@ class BacktestEngine:
         mae_model = float(np.mean(np.abs(all_act_arr - all_p50_arr)))
         mae_naive = float(np.mean(np.abs(all_act_arr - all_naive_arr)))
 
+        # RMSE
+        rmse_model = float(np.sqrt(np.mean((all_act_arr - all_p50_arr) ** 2)))
+        rmse_naive = float(np.sqrt(np.mean((all_act_arr - all_naive_arr) ** 2)))
+        pct_improvement_rmse = float(((rmse_naive - rmse_model) / rmse_naive) * 100) if rmse_naive > 0 else 0.0
+
         # MAPE
         denom = np.maximum(np.abs(all_act_arr), 1000.0)
         mape_model = float(np.mean(np.abs(all_act_arr - all_p50_arr) / denom) * 100)
@@ -1430,6 +1549,9 @@ class BacktestEngine:
                 "model_mae": round(mae_model, 2),
                 "naive_mae": round(mae_naive, 2),
                 "pct_improvement_mae": round(pct_improvement, 1),
+                "model_rmse": round(rmse_model, 2),
+                "naive_rmse": round(rmse_naive, 2),
+                "pct_improvement_rmse": round(pct_improvement_rmse, 1),
                 "model_mape": round(mape_model, 2),
                 "naive_mape": round(mape_naive, 2),
                 "calibration_80_pct": round(calibration_80, 1),
@@ -1475,6 +1597,28 @@ class FinOSLLMService:
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             return None
+
+        # 1. Use official Google Gen AI Python SDK
+        try:
+            from google import genai
+            from google.genai import types
+            client = genai.Client(api_key=api_key)
+            config = types.GenerateContentConfig(
+                temperature=0.2,
+                max_output_tokens=800,
+                system_instruction=system_instruction if system_instruction else None
+            )
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=config
+            )
+            if response and response.text:
+                return response.text.strip()
+        except Exception:
+            pass
+
+        # 2. Resilient fallback to direct REST API
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
             headers = {"Content-Type": "application/json"}
@@ -1708,7 +1852,10 @@ Earliest Breach Date: {sim_result['new_breach_date'] or 'None'}
                 return {
                     "reply": llm_text,
                     "simulated_result": sim_result,
-                    "is_llm_generated": True
+                    "is_llm_generated": True,
+                    "is_llm_active": True,
+                    "llm_provider": "Google Gemini 2.5 Flash (Official Gen AI SDK)",
+                    "offline_fallback_active": False
                 }
 
         # 3. Resilient Deterministic Fallback Copilot
@@ -1782,10 +1929,18 @@ Earliest Breach Date: {sim_result['new_breach_date'] or 'None'}
                 f"- *'Are there any unusual transactions?'*"
             )
 
+        status_footer = (
+            "\n\n*(⚡ Offline Mode: Operating with deterministic statistical financial intelligence. Set GEMINI_API_KEY to activate Google Gemini 2.5 Flash AI Advisor.)*"
+            if not api_key else ""
+        )
+
         return {
-            "reply": reply,
+            "reply": reply + status_footer,
             "simulated_result": sim_result,
-            "is_llm_generated": False
+            "is_llm_generated": False,
+            "is_llm_active": bool(api_key),
+            "llm_provider": "Deterministic Rule-Based Intelligence Engine (Offline Fallback)",
+            "offline_fallback_active": True
         }
 
 

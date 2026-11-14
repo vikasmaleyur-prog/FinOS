@@ -6,6 +6,43 @@ All notable changes to the FinOS Predictive Cash Flow Operating System will be d
 
 ---
 
+## [Phase 4: Official Google Gen AI SDK Integration, Multi-Horizon Projections & Complete What-If Engine] - 2026-11-14
+
+### Added
+- **Official Google Gen AI SDK (`google-genai`)**:
+  - Migrated `FinOSLLMService.call_gemini` and `AutoCategorizer._query_gemini_fallback` to official `from google import genai; from google.genai import types` with `gemini-2.5-flash`.
+  - Implemented multi-tier graceful fallback: Official Gen AI SDK -> REST Fallback -> Deterministic Statistical Financial Intelligence.
+  - Transparent execution: returns `is_llm_active`, `llm_provider`, and `offline_fallback_active` metadata on all AI endpoints.
+  - Explicit offline banner rendered by Ask FinOS when `GEMINI_API_KEY` is not present (`*(⚡ Offline Mode: Operating with deterministic statistical financial intelligence. Set GEMINI_API_KEY to activate Google Gemini 2.5 Flash AI Advisor.)*`).
+- **Interactive Manual Category Correction**:
+  - Backend: Added `record_user_correction` and `POST /categorize/correct` in `backend/main.py`.
+  - Frontend: Added interactive category dropdown badge in `frontend/components/TransactionTable.tsx` allowing instant inline category overrides by users.
+- **Dedicated Insurance Category & Heuristic Word Boundary Protection**:
+  - Added `Insurance` category across heuristic rules, classifier models, and sample data.
+  - Word-bounded `\bemi\b` and `\bloan\b` regular expressions to eliminate false positive collisions on words like "pr**emi**um".
+- **Multi-Horizon Cash Flow Projections (7d, 15d, 30d, 60d, 90d)**:
+  - `CashFlowForecaster.run_monte_carlo` computes granular `horizon_metrics` across 7, 15, 30, 60, and 90 days.
+  - Computes `prob_below_zero` (probability of dipping strictly below ₹0), `prob_breach_buffer` (probability of breaching minimum safe balance), `expected_future_balance`, and `min_expected_balance`.
+  - Added horizon toggle buttons (7D, 15D, 30D, 60D, 90D) and Zero-Breach Risk badge in `frontend/components/ForecastChart.tsx`.
+- **Duplicate Payment Detection**:
+  - Upgraded `AnomalyDetector.detect_anomalies` to flag duplicate debits of identical amounts to the same merchant within a 48-hour window.
+  - Flags duplicate charges with severity `HIGH` and plain-English reasons (`Potential duplicate payment: ₹X charged twice (...)`).
+- **Weekly Safe Spending Limits**:
+  - `SpendingLimitOptimizer.calculate_optimal_limits` computes `recommended_weekly_cap` and `current_weekly_burn`.
+  - `frontend/components/PersonalizedLimitsCard.tsx` displays weekly spending cap alongside daily and monthly caps.
+- **Forecast Accuracy RMSE Metric**:
+  - `BacktestEngine.run_rolling_backtest` computes `model_rmse`, `naive_rmse`, and `pct_improvement_rmse`.
+  - Displayed Model RMSE as the 5th metric card in `frontend/components/AccuracyView.tsx`.
+- **Comprehensive What-If Simulator Scenarios**:
+  - Added 7 instant scenario presets in `frontend/components/SimulatorView.tsx` (Buy ₹30k Laptop, Take ₹1L Loan, Add ₹15k EMI, Delay Salary 20d, Delay Client Payment 25d, Increase Expenses +20%, Cut Discretionary -25%).
+  - Added 4 comparative side-by-side KPI cards: Forecast Balance, Shortage Probability, Minimum Balance, and Safe Spending Limit.
+- **Demo Data Badging**:
+  - Added clear amber `"DEMO DATA (<dataset>)"` pill in dashboard header when sample datasets are active.
+- **Automated Tests (`tests/test_phase4.py`)**:
+  - Added 8 tests covering Google Gen AI SDK integration, offline fallback transparency, manual category correction, insurance classification, multi-horizon forecasts, duplicate payment detection, weekly safe caps, RMSE computation, and What-If loan simulation (8/8 passed).
+
+---
+
 ## [Phase 3: Data & Business Support - SMB Current Accounts, PhonePe & Multi-Account] - 2026-11-14
 
 ### Added

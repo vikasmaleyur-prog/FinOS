@@ -199,6 +199,11 @@ export default function DashboardPage() {
               <span>FINOS WORKSPACE</span>
               <span>/</span>
               <span className="text-[#d9f154] font-semibold uppercase">{activeTab}</span>
+              {overview?.dataset_loaded && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                  DEMO DATA ({overview.dataset_loaded})
+                </span>
+              )}
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white capitalize">
               {activeTab === 'overview' && 'Cash Flow Overview & Risk Radar'}

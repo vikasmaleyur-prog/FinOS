@@ -48,15 +48,36 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   const [page, setPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryOverrides, setCategoryOverrides] = useState<Record<string, string>>({});
   const pageSize = 20;
 
-  const categories = ['All', 'Income', 'Investments', 'Food', 'Travel', 'Bills & Utilities', 'Shopping', 'Health', 'EMI/Loans', 'Rent', 'Subscriptions', 'Other/Transfer'];
+  const categories = [
+    'All', 'Income', 'Investments', 'Food', 'Travel', 'Bills & Utilities',
+    'Shopping', 'Health', 'Insurance', 'EMI/Loans', 'Rent', 'Subscriptions',
+    'Sales Receipts', 'Supplier Payments', 'Salaries', 'Other/Transfer'
+  ];
+
+  const handleCategoryChange = async (desc: string, newCat: string) => {
+    setCategoryOverrides(prev => ({ ...prev, [desc]: newCat }));
+    try {
+      await fetch('http://127.0.0.1:8000/categorize/correct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: desc, category: newCat })
+      });
+    } catch (e) {
+      console.error('Failed to register category correction:', e);
+    }
+  };
 
   // Safe client-side filtering with optional chaining
   const filteredTransactions = useMemo(() => {
     if (!transactions || !Array.isArray(transactions)) return [];
     
-    return transactions.filter((txn) => {
+    return transactions.map(t => {
+      const override = categoryOverrides[t.Description];
+      return override ? { ...t, Category: override } : t;
+    }).filter((txn) => {
       if (!txn) return false;
       
       // Category filter
@@ -240,9 +261,18 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       {/* Category */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
-                          <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${getCategoryBadge(txn?.Category || 'Other')}`}>
-                            {txn?.Category || 'Other'}
-                          </span>
+                          <select
+                            value={txn?.Category || 'Other'}
+                            onChange={(e) => handleCategoryChange(txn?.Description || '', e.target.value)}
+                            className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border bg-black/60 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#d9f154] ${getCategoryBadge(txn?.Category || 'Other')}`}
+                            title="Click to manually correct category"
+                          >
+                            {categories.filter(c => c !== 'All').map(c => (
+                              <option key={c} value={c} className="bg-[#121418] text-white">
+                                {c}
+                              </option>
+                            ))}
+                          </select>
                           {txn?.is_ai_categorized && (
                             <span 
                               className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30"
