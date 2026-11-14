@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, TrendingDown, ArrowDownRight, Sparkles, CheckCircle2, AlertTriangle, PieChart } from 'lucide-react';
+import { ShieldCheck, TrendingDown, Sparkles, CheckCircle2, PieChart } from 'lucide-react';
 
 interface CategoryCap {
   category: string;
@@ -43,10 +43,8 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
     burn_reduction_needed,
     breach_prob_at_cap,
     baseline_breach_prob,
-    is_budget_sufficient,
     top_category_caps,
-    headline,
-    action_text
+    headline
   } = limits;
 
   const weeklyCap = recommended_weekly_cap || recommended_daily_cap * 7;
@@ -54,33 +52,30 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
   const requiresCut = burn_reduction_needed > 0;
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-gradient-to-r from-[#121418] via-[#14171d] to-[#121418] p-5 relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-0 right-0 w-60 h-28 bg-[#d9f154]/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 space-y-4">
+    <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-6 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)] relative overflow-hidden w-full min-w-0">
+      <div className="space-y-5">
         {/* Header Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
-          <div className="flex items-center space-x-2.5">
-            <div className="h-8 w-8 rounded-lg bg-[#d9f154]/10 border border-[#d9f154]/20 flex items-center justify-center text-[#d9f154]">
-              <ShieldCheck size={18} />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EAE6F0] pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-xl bg-[#F3EDFA] flex items-center justify-center text-[#7650A8]">
+              <ShieldCheck size={20} />
             </div>
             <div>
-              <span className="text-[11px] font-mono text-white/50 uppercase tracking-wider block">
-                Algorithmic Spending Limit (Safe Buffer Engine)
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#77758A] block">
+                Algorithmic Spending Recommendation
               </span>
-              <h3 className="text-base font-bold text-white tracking-tight">
-                {headline || `Spend ≤ ₹${Math.round(recommended_daily_cap).toLocaleString('en-IN')}/day to stay safe`}
+              <h3 className="text-lg font-bold text-[#17152D] tracking-tight">
+                {headline || `Spend ≤ ₹${Math.round(recommended_daily_cap).toLocaleString('en-IN')}/day to keep risk under 10%`}
               </h3>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-[11px] font-mono self-start sm:self-auto">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+          <div className="flex items-center space-x-2 text-xs font-semibold self-start sm:self-auto">
+            <span className="px-3 py-1 rounded-full bg-[#E8F8F2] text-[#0E684C] border border-[#B4E8D6]">
               Risk: {breach_prob_at_cap}% at cap
             </span>
             {baseline_breach_prob > 10 && (
-              <span className="text-white/40 line-through">
+              <span className="text-[#77758A] line-through">
                 was {baseline_breach_prob}%
               </span>
             )}
@@ -88,69 +83,84 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
         </div>
 
         {/* Spend Comparison Banner */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 rounded-lg bg-black/40 border border-white/[0.06] font-mono">
-            <div className="text-[11px] text-white/40">Safe Spend Cap</div>
-            <div className="text-xl font-bold text-[#d9f154] mt-0.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 rounded-2xl bg-[#F7F5FA] border border-[#EAE6F0]">
+            <div className="text-xs font-semibold text-[#77758A]">Daily Living Limit</div>
+            <div className="text-2xl font-bold text-[#7650A8] mt-1 tabular-nums">
               ₹{Math.round(recommended_daily_cap).toLocaleString('en-IN')}
-              <span className="text-xs font-normal text-white/40"> / day</span>
+              <span className="text-xs font-normal text-[#77758A]"> / day</span>
             </div>
-            <div className="text-[10px] text-white/50 mt-1 flex items-center space-x-1.5">
+            <div className="text-xs text-[#77758A] mt-1.5 flex items-center space-x-1.5 font-medium">
               <span>₹{Math.round(weeklyCap).toLocaleString('en-IN')}/wk</span>
-              <span>·</span>
+              <span>•</span>
               <span>₹{Math.round(recommended_monthly_cap).toLocaleString('en-IN')}/mo</span>
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-black/40 border border-white/[0.06] font-mono">
-            <div className="text-[11px] text-white/40">Current Average Burn</div>
-            <div className="text-xl font-bold text-white mt-0.5">
+          <div className="p-4 rounded-2xl bg-[#F7F5FA] border border-[#EAE6F0]">
+            <div className="text-xs font-semibold text-[#77758A]">Historical Average Burn</div>
+            <div className="text-2xl font-bold text-[#17152D] mt-1 tabular-nums">
               ₹{Math.round(current_daily_burn).toLocaleString('en-IN')}
-              <span className="text-xs font-normal text-white/40"> / day</span>
+              <span className="text-xs font-normal text-[#77758A]"> / day</span>
             </div>
-            <div className="text-[10px] text-white/40 mt-1">
-              ₹{Math.round(weeklyBurn).toLocaleString('en-IN')}/wk (₹{Math.round(current_daily_burn * 30).toLocaleString('en-IN')}/mo)
+            <div className="text-xs text-[#77758A] mt-1.5 font-medium">
+              ~₹{Math.round(weeklyBurn).toLocaleString('en-IN')}/week actual discretionary spend
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-black/40 border border-white/[0.06] font-mono">
-            <div className="text-[11px] text-white/40">Required Adjustment</div>
-            <div className={`text-xl font-bold mt-0.5 ${requiresCut ? 'text-amber-400' : 'text-emerald-400'}`}>
-              {requiresCut ? `-₹${Math.round(burn_reduction_needed).toLocaleString('en-IN')}/day` : 'Within Safe Range'}
-            </div>
-            <div className="text-[10px] text-white/40 mt-1">
-              {requiresCut ? 'Trims breach risk to <10%' : 'No discretionary trim needed'}
-            </div>
+          <div className="p-4 rounded-2xl bg-[#F7F5FA] border border-[#EAE6F0]">
+            <div className="text-xs font-semibold text-[#77758A]">Adjustment Needed</div>
+            {requiresCut ? (
+              <>
+                <div className="text-2xl font-bold text-[#E64B55] mt-1 tabular-nums flex items-center space-x-1">
+                  <TrendingDown size={20} />
+                  <span>-₹{Math.round(burn_reduction_needed).toLocaleString('en-IN')}/day</span>
+                </div>
+                <div className="text-xs text-[#9B1C23] mt-1.5 font-medium">
+                  Cut daily living spend by ₹{Math.round(burn_reduction_needed).toLocaleString('en-IN')} to prevent shortage
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-[#159B72] mt-1 tabular-nums flex items-center space-x-1">
+                  <CheckCircle2 size={20} />
+                  <span>On Track</span>
+                </div>
+                <div className="text-xs text-[#0E684C] mt-1.5 font-medium">
+                  Current spending rate is comfortably within safe boundaries
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Top 3 Category Caps */}
+        {/* Category-Level Living Caps */}
         {top_category_caps && top_category_caps.length > 0 && (
-          <div className="pt-1 space-y-2">
-            <div className="text-[11px] font-mono text-white/50 flex items-center justify-between">
-              <span className="flex items-center space-x-1.5">
-                <PieChart size={13} className="text-[#d9f154]" />
-                <span>Recommended Category Caps (Top 3 Variable Discretionary Spends)</span>
-              </span>
-              <span>Daily / Monthly</span>
+          <div className="pt-2">
+            <div className="flex items-center space-x-2 text-xs font-semibold text-[#77758A] mb-3">
+              <PieChart size={15} className="text-[#7650A8]" />
+              <span>Recommended Discretionary Allocations (Top Categories):</span>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {top_category_caps.map((cat, idx) => (
                 <div
                   key={idx}
-                  className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs font-mono"
+                  className="p-3.5 rounded-xl bg-white border border-[#EAE6F0] shadow-xs flex items-center justify-between"
                 >
                   <div>
-                    <span className="font-semibold text-white block">{cat.category}</span>
-                    <span className="text-[10px] text-white/40">{cat.share_pct}% of variable</span>
+                    <span className="text-xs font-bold text-[#17152D] block">
+                      {cat.category}
+                    </span>
+                    <span className="text-[11px] text-[#77758A]">
+                      {cat.share_pct}% of living spend
+                    </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[#d9f154] font-bold block">
-                      ₹{Math.round(cat.daily_cap).toLocaleString('en-IN')}/d
+                    <span className="text-sm font-bold text-[#7650A8] tabular-nums block">
+                      ≤ ₹{Math.round(cat.daily_cap).toLocaleString('en-IN')}/day
                     </span>
-                    <span className="text-[10px] text-white/40">
-                      ₹{Math.round(cat.monthly_cap).toLocaleString('en-IN')}/mo
+                    <span className="text-[11px] text-[#77758A] tabular-nums">
+                      ₹{Math.round(cat.weekly_cap || cat.daily_cap * 7).toLocaleString('en-IN')}/wk
                     </span>
                   </div>
                 </div>
@@ -158,11 +168,6 @@ export const PersonalizedLimitsCard: React.FC<PersonalizedLimitsCardProps> = ({ 
             </div>
           </div>
         )}
-
-        {/* Explanatory text */}
-        <p className="text-[11px] text-white/60 font-mono pt-1">
-          {action_text}
-        </p>
       </div>
     </div>
   );

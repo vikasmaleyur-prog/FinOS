@@ -12,7 +12,7 @@ import {
   ReferenceLine,
   CartesianGrid
 } from 'recharts';
-import { TrendingDown, ShieldAlert, Sparkles, Layers } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 interface ForecastPoint {
   date: string;
@@ -51,45 +51,51 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
   const safeData = data && Array.isArray(data) ? data : [];
   const displayData = safeData.slice(0, dayRange);
 
-  // Custom Ramp-styled Tooltip
+  // Friendly Clean Light Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const pt: ForecastPoint = payload[0]?.payload;
       if (!pt) return null;
       return (
-        <div className="p-3.5 rounded-xl bg-[#0F1014] border border-white/[0.12] shadow-2xl backdrop-blur-md min-w-[210px] space-y-2">
-          <div className="flex items-center justify-between border-b border-white/[0.08] pb-1.5">
-            <span className="text-xs font-mono font-medium text-white/50">{pt.date}</span>
+        <div className="p-4 rounded-2xl bg-white border border-[#EAE6F0] shadow-[0_8px_30px_-4px_rgba(118,80,168,0.12)] min-w-[220px] space-y-2.5">
+          <div className="flex items-center justify-between border-b border-[#EAE6F0] pb-2">
+            <span className="text-xs font-semibold text-[#17152D]">{pt.date}</span>
             {(pt.p50 || 0) < minimumSafeBalance && (
-              <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                Breach Risk
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF1F2] text-[#9B1C23] border border-[#F9B8BC]">
+                Buffer Breach
               </span>
             )}
           </div>
 
-          <div className="space-y-1.5 text-xs font-mono">
+          <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-white/60">Expected Median (P50):</span>
-              <span className="font-bold text-[#d9f154]">₹{Math.round(pt.p50 || 0).toLocaleString('en-IN')}</span>
+              <span className="text-[#77758A] font-medium">Expected Median (P50):</span>
+              <span className="font-bold text-[#7650A8] tabular-nums">
+                ₹{Math.round(pt.p50 || 0).toLocaleString('en-IN')}
+              </span>
             </div>
 
             {showConfidenceBand && (
               <>
-                <div className="flex items-center justify-between text-[11px] text-white/40">
+                <div className="flex items-center justify-between text-[11px] text-[#77758A]">
                   <span>P90 (Optimistic):</span>
-                  <span className="text-white/80">₹{Math.round(pt.p90 || 0).toLocaleString('en-IN')}</span>
+                  <span className="text-[#17152D] font-semibold tabular-nums">
+                    ₹{Math.round(pt.p90 || 0).toLocaleString('en-IN')}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-white/40">
+                <div className="flex items-center justify-between text-[11px] text-[#77758A]">
                   <span>P10 (Pessimistic):</span>
-                  <span className="text-rose-400/90">₹{Math.round(pt.p10 || 0).toLocaleString('en-IN')}</span>
+                  <span className="text-[#E64B55] font-semibold tabular-nums">
+                    ₹{Math.round(pt.p10 || 0).toLocaleString('en-IN')}
+                  </span>
                 </div>
               </>
             )}
 
             {pt.scheduledFixed && pt.scheduledFixed > 0 ? (
-              <div className="pt-1 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-amber-400">
+              <div className="pt-1.5 border-t border-[#EAE6F0] flex items-center justify-between text-[11px] text-[#8F5805] font-medium">
                 <span>Scheduled Outflow:</span>
-                <span>-₹{Math.round(pt.scheduledFixed).toLocaleString('en-IN')}</span>
+                <span className="tabular-nums">-₹{Math.round(pt.scheduledFixed).toLocaleString('en-IN')}</span>
               </div>
             ) : null}
           </div>
@@ -100,62 +106,62 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
   };
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-5">
+    <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-6 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)] w-full min-w-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold text-white tracking-tight">
-              {dayRange}-Day Stochastic Cash Flow Trajectory
-            </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#d9f154]/10 text-[#d9f154] border border-[#d9f154]/20 font-semibold">
-              1,000 MONTE CARLO RUNS
+            <h3 className="text-lg font-bold text-[#17152D] tracking-tight">
+              {dayRange}-Day Predictive Cash Flow Trajectory
+            </h3>
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#F3EDFA] text-[#7650A8] border border-[#EAE6F0]">
+              1,000 MONTE CARLO PATHS
             </span>
             {probBelowZero > 0 && (
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">
-                Zero-Breach Risk: {probBelowZero}%
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FDF1F2] text-[#9B1C23] border border-[#F9B8BC]">
+                Zero Risk: {probBelowZero}%
               </span>
             )}
             {dataSufficiency && (
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-medium ${
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
                 dataSufficiency.level === 'LOW'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  ? 'bg-[#FEF7EC] text-[#8F5805] border-[#FBD9A3]'
+                  : 'bg-[#E8F8F2] text-[#0E684C] border-[#B4E8D6]'
               }`}>
                 {dataSufficiency.badge}
               </span>
             )}
           </div>
-          <p className="text-xs text-white/50 mt-1">
-            Simulates irregular client invoices, known recurring bills, and daily living burn rate.
+          <p className="text-xs text-[#77758A] mt-1 font-medium">
+            Stochastic simulation incorporating irregular milestone income, scheduled recurring bills, and bootstrap living expenses.
           </p>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
+        <div className="flex items-center space-x-2 self-start sm:self-auto shrink-0">
           {/* Confidence Band Toggle */}
           <button
             onClick={() => setShowConfidenceBand(!showConfidenceBand)}
-            className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors border ${
+            className={`min-h-[44px] flex items-center space-x-2 px-3.5 py-2 rounded-full text-xs font-semibold transition-all border focus:outline-none focus:ring-2 focus:ring-[#7650A8] ${
               showConfidenceBand
-                ? 'bg-white/[0.08] text-white border-white/[0.14]'
-                : 'text-white/40 border-transparent hover:text-white'
+                ? 'bg-[#F3EDFA] text-[#7650A8] border-[#7650A8]/30'
+                : 'bg-white text-[#77758A] border-[#EAE6F0] hover:bg-[#F7F5FA]'
             }`}
           >
-            <Layers size={13} className={showConfidenceBand ? 'text-[#E2FD52]' : ''} />
-            <span>80% CI</span>
+            <Layers size={15} className={showConfidenceBand ? 'text-[#7650A8]' : 'text-[#77758A]'} />
+            <span>80% Uncertainty Band</span>
           </button>
 
-          {/* Time range pills */}
-          <div className="flex items-center p-0.5 rounded-lg bg-black/40 border border-white/[0.08] text-xs font-mono">
+          {/* Time Range Pills */}
+          <div className="flex items-center p-1 rounded-full bg-[#F7F5FA] border border-[#EAE6F0] text-xs font-semibold">
             {([7, 15, 30, 60, 90] as const).map((days) => (
               <button
                 key={days}
                 onClick={() => setDayRange(days)}
-                className={`px-2 py-1 rounded-md transition-all text-[11px] ${
+                className={`min-h-[36px] px-3 py-1.5 rounded-full transition-all text-xs ${
                   dayRange === days
-                    ? 'bg-[#1D2027] text-white font-medium shadow-sm'
-                    : 'text-white/40 hover:text-white'
+                    ? 'bg-[#7650A8] text-white shadow-xs font-bold'
+                    : 'text-[#77758A] hover:text-[#17152D] hover:bg-white'
                 }`}
               >
                 {days}D
@@ -166,59 +172,60 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
       </div>
 
       {/* Main Chart */}
-      <div className="h-[360px] w-full">
+      <div className="h-[360px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={displayData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+          <ComposedChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
-              {/* Neon Lime Shaded Confidence Area */}
-              <linearGradient id="rampConfidenceGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#d9f154" stopOpacity={0.22} />
-                <stop offset="95%" stopColor="#d9f154" stopOpacity={0.01} />
+              {/* Soft Purple Confidence Band Gradient */}
+              <linearGradient id="purpleConfidenceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7650A8" stopOpacity={0.16} />
+                <stop offset="95%" stopColor="#7650A8" stopOpacity={0.02} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.04)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#EAE6F0" vertical={false} />
 
             <XAxis
               dataKey="displayDate"
-              stroke="#525562"
+              stroke="#77758A"
               fontSize={11}
               tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+              axisLine={{ stroke: '#EAE6F0' }}
               interval="preserveStartEnd"
             />
 
             <YAxis
-              stroke="#525562"
+              stroke="#77758A"
               fontSize={11}
               tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+              axisLine={{ stroke: '#EAE6F0' }}
               tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
             />
 
             <Tooltip content={<CustomTooltip />} />
 
-            {/* Minimum Safe Balance Line */}
+            {/* Minimum Safe Balance Threshold Reference Line */}
             <ReferenceLine
               y={minimumSafeBalance}
-              stroke="#EF4444"
+              stroke="#E64B55"
               strokeDasharray="4 4"
+              strokeWidth={1.5}
               label={{
                 value: `Safe Buffer: ₹${minimumSafeBalance.toLocaleString('en-IN')}`,
                 position: 'right',
-                fill: '#EF4444',
-                fontSize: 10,
-                fontFamily: 'monospace'
+                fill: '#E64B55',
+                fontSize: 11,
+                fontWeight: 600
               }}
             />
 
-            {/* Shaded 80% Confidence Interval */}
+            {/* Shaded 80% Confidence Interval Band */}
             {showConfidenceBand && (
               <Area
                 type="monotone"
                 dataKey="p90"
                 stroke="transparent"
-                fill="url(#rampConfidenceGradient)"
+                fill="url(#purpleConfidenceGradient)"
                 name="80% CI"
               />
             )}
@@ -227,7 +234,7 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
               <Line
                 type="monotone"
                 dataKey="p10"
-                stroke="rgba(239, 68, 68, 0.5)"
+                stroke="#D8C2EC"
                 strokeDasharray="2 2"
                 strokeWidth={1.2}
                 dot={false}
@@ -238,34 +245,34 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
             <Line
               type="monotone"
               dataKey="p50"
-              stroke="#d9f154"
-              strokeWidth={2.5}
+              stroke="#7650A8"
+              strokeWidth={3}
               dot={false}
-              activeDot={{ r: 5, fill: '#d9f154', stroke: '#08090A', strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: '#7650A8', stroke: '#FFFFFF', strokeWidth: 2 }}
             />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Legend & Stats footer */}
-      <div className="mt-4 pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between text-xs font-mono text-white/50 gap-3">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-[#E2FD52] inline-block" />
-            <span className="text-white/80">Median Trajectory (P50)</span>
+      {/* Legend & Summary Footer */}
+      <div className="mt-5 pt-4 border-t border-[#EAE6F0] flex flex-wrap items-center justify-between text-xs text-[#77758A] gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <span className="h-3 w-3 rounded-full bg-[#7650A8] inline-block" />
+            <span className="text-[#17152D] font-semibold">Expected Median (P50)</span>
           </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="h-2 w-4 rounded-sm bg-[#E2FD52]/20 border border-[#E2FD52]/40 inline-block" />
-            <span>80% Confidence Band (P10 - P90)</span>
+          <div className="flex items-center space-x-2">
+            <span className="h-2.5 w-5 rounded bg-[#F3EDFA] border border-[#EAE6F0] inline-block" />
+            <span>80% Confidence Band (P10 to P90)</span>
           </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="h-0.5 w-4 border-b border-dashed border-rose-500 inline-block" />
-            <span className="text-rose-400">Min Buffer</span>
+          <div className="flex items-center space-x-2">
+            <span className="h-0.5 w-4 border-b-2 border-dashed border-[#E64B55] inline-block" />
+            <span className="text-[#E64B55] font-medium">Minimum Safe Buffer</span>
           </div>
         </div>
 
-        <div className="text-[11px] text-white/40">
-          Last updated: Continuous Monte Carlo update on session change
+        <div className="text-[11px] text-[#77758A] font-medium">
+          Continuously evaluated against rolling 90-day transaction burn
         </div>
       </div>
     </div>

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'FinOS | Predictive Cash Flow Operating System',
-  description: 'Enterprise-grade predictive cash flow manager and stress-test simulator for irregular earners and freelancers.',
+  title: 'FinOS | Smart Predictive Cash Flow for India',
+  description: 'AI-Powered Financial Operating System for Predictive Cash Flow Management. Real-time Monte Carlo liquidity modeling, DPDP Act compliance, and smart spending recommendations.',
 };
 
 export default function RootLayout({
@@ -12,16 +12,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="bg-[#08090A] text-white min-h-screen antialiased selection:bg-[#E2FD52] selection:text-black font-sans">
+      <body className="bg-[#F7F5FA] text-[#17152D] min-h-screen antialiased selection:bg-[#F3EDFA] selection:text-[#17152D] font-sans">
         {children}
       </body>
     </html>

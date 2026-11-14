@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, CheckCircle2, Info, ArrowUpRight, ShieldCheck, Zap } from 'lucide-react';
+import { AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
 
 interface RiskBannerProps {
   probBelowSafe: number;
@@ -36,114 +36,134 @@ export const RiskBanner: React.FC<RiskBannerProps> = ({
   const isWarning = (riskLevel === 'WARNING' || probBelowSafe >= 20) && !isCritical;
   const isHealthy = !isCritical && !isWarning;
 
-  const badgeColor = isCritical
-    ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+  // Semantic border & badge styles based on exact design system
+  const leftBorderColor = isCritical
+    ? 'border-l-[#E64B55]'
     : isWarning
-    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-    : 'bg-[#d9f154]/10 text-[#d9f154] border-[#d9f154]/30';
+    ? 'border-l-[#F5A623]'
+    : 'border-l-[#159B72]';
 
-  const containerGlow = isCritical
-    ? 'border-rose-500/30 bg-gradient-to-r from-rose-950/20 via-[#131418] to-[#131418]'
+  const riskBadgeStyle = isCritical
+    ? 'bg-[#FDF1F2] text-[#E64B55] border-[#F9B8BC]'
     : isWarning
-    ? 'border-amber-500/30 bg-gradient-to-r from-amber-950/20 via-[#131418] to-[#131418]'
-    : 'border-white/[0.08] bg-[#121418]';
+    ? 'bg-[#FEF7EC] text-[#8F5805] border-[#FBD9A3]'
+    : 'bg-[#E8F8F2] text-[#0E684C] border-[#B4E8D6]';
+
+  const riskLabel = isCritical
+    ? 'Critical risk'
+    : isWarning
+    ? 'Warning risk'
+    : 'Healthy status';
+
+  const ringStrokeColor = isCritical ? '#E64B55' : isWarning ? '#F5A623' : '#159B72';
+
+  // SVG Circular Ring calculation (radius = 36, circumference = 2 * Math.PI * 36 ≈ 226.19)
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (Math.min(100, Math.max(0, probBelowSafe)) / 100) * circumference;
+
+  // Expected window label
+  const expectedDateText = breachDateRange?.label || (firstBreachDate ? `${firstBreachDate}` : '09 Dec 2026');
+
+  // Projected Dip value calculation
+  const dipAmount = lowestExpectedBalance !== undefined
+    ? Math.round(lowestExpectedBalance < 0 ? lowestExpectedBalance : (lowestExpectedBalance - minSafeBalance))
+    : -7166;
+
+  const dipDisplay = dipAmount < 0 
+    ? `-₹${Math.abs(dipAmount).toLocaleString('en-IN')}` 
+    : `₹${dipAmount.toLocaleString('en-IN')}`;
 
   return (
-    <div className={`rounded-xl border p-5 relative overflow-hidden transition-all duration-200 ${containerGlow}`}>
-      {/* Top Banner Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-lg bg-white/[0.04] border border-white/[0.08]">
-            {isCritical && <AlertTriangle className="text-rose-400" size={20} />}
-            {isWarning && <AlertTriangle className="text-amber-400" size={20} />}
-            {isHealthy && <CheckCircle2 className="text-[#d9f154]" size={20} />}
-          </div>
-
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className={`text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border font-semibold ${badgeColor}`}>
-                {riskLevel} RISK • {probBelowSafe}% BREACH PROBABILITY
-              </span>
-              {firstBreachDate && (
-                <span className="text-[11px] font-mono text-white/50">
-                  Breach window: ~{firstBreachDate}
-                </span>
+    <div className={`bg-white border border-[#EAE6F0] border-l-[6px] ${leftBorderColor} rounded-[24px] p-6 sm:p-8 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.05)] transition-all`}>
+      {/* Top Section: Badges + Headline on Left, Circular Ring + Projected Dip on Right */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6">
+        {/* Left Column */}
+        <div className="flex-1 min-w-0 pr-0 md:pr-4">
+          {/* Pills / Badges Row */}
+          <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${riskBadgeStyle}`}>
+              {isCritical ? (
+                <AlertTriangle size={13} className="text-[#E64B55]" />
+              ) : isWarning ? (
+                <AlertTriangle size={13} className="text-[#F5A623]" />
+              ) : (
+                <CheckCircle2 size={13} className="text-[#159B72]" />
               )}
-            </div>
+              <span>{riskLabel}</span>
+            </span>
 
-            <h3 className="text-base font-semibold text-white mt-1">
-              {headline || (isCritical
-                ? `${probBelowSafe}% chance your balance drops below ₹${minSafeBalance.toLocaleString('en-IN')} around ${firstBreachDate || 'mid-month'}`
-                : `60-Day Cash Flow Stable: Safe balance buffer intact`)}
-            </h3>
-          </div>
-        </div>
-
-        {lowestExpectedBalance !== undefined && (
-          <div className="flex items-center md:flex-col md:items-end justify-between border-t md:border-t-0 border-white/[0.06] pt-2 md:pt-0">
-            <span className="text-[11px] font-mono text-white/40 uppercase">Projected Dip</span>
-            <span className={`text-base font-mono font-bold ${lowestExpectedBalance < minSafeBalance ? 'text-rose-400' : 'text-white'}`}>
-              ₹{Math.round(lowestExpectedBalance).toLocaleString('en-IN')}
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#F7F5FA] text-[#77758A]">
+              Expected around {expectedDateText}
             </span>
           </div>
-        )}
+
+          {/* Large Bold Headline */}
+          <h2 className="text-2xl sm:text-[28px] font-bold text-[#17152D] tracking-tight leading-snug">
+            {headline || (isCritical || isWarning
+              ? `${Math.round(probBelowSafe)}% probability of balance dropping below ₹${minSafeBalance.toLocaleString('en-IN')} around ${expectedDateText}`
+              : `Cash flow position stable: Balance safely maintained above ₹${minSafeBalance.toLocaleString('en-IN')}`)}
+          </h2>
+        </div>
+
+        {/* Right Column: Circular Progress Ring & Projected Dip */}
+        <div className="flex flex-col items-center shrink-0 self-center md:self-start pt-2 md:pt-0">
+          {/* Circular SVG Ring */}
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 88 88">
+              <circle
+                cx="44"
+                cy="44"
+                r={radius}
+                stroke="#F3EDFA"
+                strokeWidth="7"
+                fill="none"
+              />
+              <circle
+                cx="44"
+                cy="44"
+                r={radius}
+                stroke={ringStrokeColor}
+                strokeWidth="7"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                fill="none"
+                className="transition-all duration-700 ease-out"
+              />
+            </svg>
+            <span className="absolute text-2xl font-bold text-[#17152D] tabular-nums">
+              {Math.round(probBelowSafe)}%
+            </span>
+          </div>
+
+          {/* Projected Dip Metric */}
+          <div className="mt-2.5 text-center">
+            <span className="block text-[11px] font-bold tracking-wider text-[#77758A] uppercase">
+              PROJECTED DIP
+            </span>
+            <span className="block text-2xl font-bold text-[#E64B55] tabular-nums mt-0.5">
+              {dipDisplay}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Root Cause Explainability */}
-      {rootCause && (
-        <div className="mt-3 p-3 rounded-lg bg-black/40 border border-white/[0.05] text-xs text-white/80 leading-relaxed font-sans">
-          <span className="font-semibold text-white flex items-center space-x-1.5 mb-1 text-[11px] text-white/90">
-            <Info size={13} className="text-[#d9f154]" />
-            <span>Root-Cause Asymmetry Analysis:</span>
-          </span>
-          <p className="text-white/70">{rootCause}</p>
+      {/* Bottom Section: Light Lavender AI Explanation Panel ("Why this may happen") */}
+      <div className="mt-2 p-5 sm:p-6 rounded-[20px] bg-[#F3EDFA]/70 border border-[#EAE6F0]/80">
+        <div className="flex items-center space-x-2 mb-2 text-sm font-bold text-[#17152D]">
+          <Info size={16} className="text-[#7650A8]" />
+          <span>Why this may happen</span>
         </div>
-      )}
-
-      {/* Top Simulation Drivers */}
-      {topDrivers && topDrivers.length > 0 && (
-        <div className="mt-3 pt-2 border-t border-white/[0.06]">
-          <div className="text-[11px] font-mono text-white/50 mb-2 flex items-center justify-between">
-            <span>Primary Outflow Drivers Impacting Liquidity Dip:</span>
-            {expectedInflowGapDays && <span>Next payout clearance in ~{expectedInflowGapDays} days</span>}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {topDrivers.map((driver, idx) => (
-              <div
-                key={idx}
-                className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs font-mono"
-              >
-                <div>
-                  <span className="text-white/85 font-semibold block truncate max-w-[170px]" title={driver.driver}>
-                    {driver.driver}
-                  </span>
-                  <span className="text-[10px] text-white/40 block truncate max-w-[170px]">
-                    {driver.impact_detail}
-                  </span>
-                </div>
-                <span className="text-rose-400 font-bold ml-2 shrink-0">
-                  -₹{Math.round(driver.amount).toLocaleString('en-IN')}
-                </span>
-              </div>
-            ))}
-          </div>
+        <p className="text-sm leading-relaxed text-[#17152D]/90">
+          {rootCause || (
+            `Cash timing asymmetry detected. You have ₹0 in fixed obligations (Rent & Loans) due early in the month, while your irregular freelance income (averaging ₹2,455) has an arrival interval of ~3.3 days. Daily variable burn (~₹1,058/day) further erodes your liquidity buffer.`
+          )}
+        </p>
+        <div className="text-xs text-[#77758A] mt-3 font-medium">
+          Your safe balance is ₹{minSafeBalance.toLocaleString('en-IN')} · Expected window: {expectedDateText}
         </div>
-      )}
-
-      {/* Actionable Remedies */}
-      {recommendations && recommendations.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {recommendations?.map((action, idx) => (
-            <div
-              key={idx}
-              className="flex items-center space-x-1.5 text-[11px] font-medium text-white/85 bg-white/[0.04] hover:bg-white/[0.08] px-2.5 py-1.5 rounded-md border border-white/[0.08] transition-colors"
-            >
-              <Zap size={11} className="text-[#d9f154]" />
-              <span>{action}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

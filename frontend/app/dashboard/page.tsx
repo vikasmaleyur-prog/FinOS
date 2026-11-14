@@ -18,12 +18,16 @@ import { AskFinOSChat } from '@/components/AskFinOSChat';
 import { MultiAccountView } from '@/components/MultiAccountView';
 import { 
   UploadCloud, 
-  CircleAlert, 
   LogOut, 
   X,
   AlertCircle,
   Sparkles,
-  Layers
+  ShieldCheck,
+  SlidersHorizontal,
+  ArrowRightLeft,
+  FileSpreadsheet,
+  CheckCircle2,
+  TrendingUp
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
@@ -34,6 +38,13 @@ export default function DashboardPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [minSafeBalance, setMinSafeBalance] = useState<number>(5000);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsSidebarCollapsed(true);
+    }
+  }, []);
   
   // Stateless Client-Side Data States
   const [transactions, setTransactions] = useState<any[] | null>(null);
@@ -47,7 +58,7 @@ export default function DashboardPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // CRITICAL: Reset previous state immediately on new upload action to prevent stale data
+  // Reset state on new upload action
   const handleUploadStart = () => {
     setTransactions(null);
     setForecast(null);
@@ -79,7 +90,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Robust error notification handler
   const handleUploadError = (errorMsg: string) => {
     setUploadError(errorMsg);
     setTransactions(null);
@@ -87,7 +97,7 @@ export default function DashboardPage() {
     setOverview(null);
   };
 
-  // One-click sample dataset loader
+  // Sample dataset loader
   const handleLoadSample = async (datasetName: string = 'freelancer') => {
     handleUploadStart();
     setIsLoadingSample(true);
@@ -168,7 +178,7 @@ export default function DashboardPage() {
   const hasData = Boolean(transactions && Array.isArray(transactions) && transactions.length > 0);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex font-sans selection:bg-[#d9f154] selection:text-black">
+    <div className="min-h-screen bg-[#F7F5FA] text-[#3B3552] flex font-sans">
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -188,97 +198,110 @@ export default function DashboardPage() {
           }
         }}
         isRefreshing={isRefreshing}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-[72px] md:ml-[260px] p-5 md:p-8 max-w-7xl transition-all">
-        {/* Top Ramp-style Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
-          <div>
-            <div className="flex items-center space-x-2 text-xs font-mono text-white/50 mb-1">
-              <span>FINOS WORKSPACE</span>
-              <span>/</span>
-              <span className="text-[#d9f154] font-semibold uppercase">{activeTab}</span>
-              {overview?.dataset_loaded && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                  DEMO DATA ({overview.dataset_loaded})
+      <main className={`flex-1 min-w-0 w-full ${isSidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[260px]'} pb-24 md:pb-8 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto transition-all`}>
+        {/* Sticky Light Top Bar */}
+        <header className="sticky top-0 z-30 bg-[#F7F5FA]/90 backdrop-blur-md border-b border-[#EAE6F0] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-6 transition-all">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+            {/* Left: Branding & Status */}
+            <div className="min-w-0">
+              <div className="flex items-center flex-wrap gap-2 text-xs text-[#77758A] mb-1">
+                <span className="font-bold uppercase tracking-wider text-[11px] text-[#77758A]">
+                  {activeTab === 'multi-account' ? 'FINOS WORKSPACE / MULTI-ACCOUNT' : `YOUR WORKSPACE / ${activeTab.toUpperCase()}`}
                 </span>
-              )}
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white capitalize">
-              {activeTab === 'overview' && 'Cash Flow Overview & Risk Radar'}
-              {activeTab === 'transactions' && 'Ledger & Categorized Transactions'}
-              {activeTab === 'simulator' && 'What-If Cash Flow Stress Testing'}
-              {activeTab === 'accuracy' && 'Predictive Accuracy & Backtesting'}
-              {activeTab === 'multi-account' && 'Multi-Account Consolidation & Balancing'}
-            </h1>
-          </div>
+                
+                {/* Privacy Chip */}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#E8F8F2] text-[#0E684C] border border-[#B4E8D6]">
+                  <ShieldCheck size={12} className="text-[#159B72]" />
+                  Privacy: data stays local
+                </span>
 
-          <div className="flex items-center space-x-3">
-            {/* Account Type Toggle */}
-            <div className="flex items-center rounded-xl bg-white/[0.04] border border-white/[0.08] p-0.5">
-              <button
-                onClick={() => handleSwitchAccountType('savings')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
-                  accountType === 'savings'
-                    ? 'bg-[#d9f154] text-black font-bold shadow-sm'
-                    : 'text-white/60 hover:text-white'
-                }`}
-                title="Switch to Personal/Freelance Savings Account"
-              >
-                Savings
-              </button>
-              <button
-                onClick={() => handleSwitchAccountType('current')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
-                  accountType === 'current'
-                    ? 'bg-[#d9f154] text-black font-bold shadow-sm'
-                    : 'text-white/60 hover:text-white'
-                }`}
-                title="Switch to Small Business Current Account (Overdraft / Receivables delay)"
-              >
-                Current (SMB)
-              </button>
+                {overview?.dataset_loaded && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FEF7EC] text-[#8F5805] border border-[#FBD9A3]">
+                    Demo: {overview.dataset_loaded}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#17152D]">
+                {activeTab === 'overview' && 'Cash flow overview'}
+                {activeTab === 'transactions' && 'Ledger & Categorized Transactions'}
+                {activeTab === 'simulator' && 'What-If Cash Flow Stress Testing'}
+                {activeTab === 'accuracy' && 'Predictive Accuracy & Backtesting'}
+                {activeTab === 'multi-account' && 'Multi-Account Consolidation & Balancing'}
+              </h1>
             </div>
 
-            {/* Ask FinOS Chat Copilot Button */}
-            <button
-              onClick={() => setIsChatOpen(true)}
-              className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-xs font-semibold tracking-tight transition-all shadow-[0_0_12px_rgba(168,85,247,0.15)] cursor-pointer"
-              title="Open Ask FinOS AI Chat Copilot"
-            >
-              <Sparkles size={14} className="text-purple-300" />
-              <span>Ask FinOS</span>
-            </button>
+            {/* Right: Controls */}
+            <div className="flex items-center flex-wrap gap-2.5">
+              {/* Account Type Toggle */}
+              <div className="inline-flex items-center bg-white border border-[#EAE6F0] p-1 rounded-full shadow-sm">
+                <button
+                  onClick={() => handleSwitchAccountType('savings')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    accountType === 'savings'
+                      ? 'bg-[#7650A8] text-white shadow-sm'
+                      : 'text-[#77758A] hover:text-[#17152D]'
+                  }`}
+                  title="Switch to Personal/Freelance Savings Account"
+                >
+                  Savings
+                </button>
+                <button
+                  onClick={() => handleSwitchAccountType('current')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    accountType === 'current'
+                      ? 'bg-[#7650A8] text-white shadow-sm'
+                      : 'text-[#77758A] hover:text-[#17152D]'
+                  }`}
+                  title="Switch to Small Business Current Account"
+                >
+                  Current (SMB)
+                </button>
+              </div>
 
-            {/* Quick Upload Button */}
-            <button
-              onClick={() => {
-                setUploadError(null);
-                setIsUploadModalOpen(true);
-              }}
-              className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-[#d9f154] hover:bg-[#cbf037] text-black text-xs font-bold tracking-tight transition-all shadow-[0_0_15px_rgba(217,241,84,0.25)] cursor-pointer"
-            >
-              <UploadCloud size={15} />
-              <span>Import Statement</span>
-            </button>
+              {/* Ask FinOS Chat Button */}
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full bg-[#F3EDFA] hover:bg-[#EBE2F7] active:bg-[#DBC3F0] text-[#7650A8] border border-[#EAE6F0] text-xs font-semibold tracking-tight transition-all shadow-sm cursor-pointer"
+                title="Open Ask FinOS AI Chat Copilot"
+              >
+                <Sparkles size={15} className="text-[#7650A8]" />
+                <span>Ask FinOS</span>
+              </button>
 
-            {/* User Avatar & Logout */}
-            <Link
-              href="/login"
-              className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors border border-white/[0.08]"
-              title="Sign Out to Login Page"
-            >
-              <LogOut size={16} />
-            </Link>
+              {/* Quick Upload Button */}
+              <button
+                onClick={() => {
+                  setUploadError(null);
+                  setIsUploadModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full bg-[#7650A8] hover:bg-[#643F96] active:bg-[#523082] text-white text-xs font-semibold tracking-tight transition-all shadow-[0_2px_8px_rgba(118,80,168,0.25)] cursor-pointer"
+              >
+                <UploadCloud size={15} />
+                <span>Import Statement</span>
+              </button>
+
+              {/* User Sign Out Link */}
+              <Link
+                href="/login"
+                className="p-2.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-full bg-white hover:bg-[#F3EDFA] text-[#77758A] hover:text-[#7650A8] transition-colors border border-[#EAE6F0] shadow-sm"
+                title="Sign Out to Login Page"
+              >
+                <LogOut size={16} />
+              </Link>
+            </div>
           </div>
         </header>
 
         {/* Upload Error Alert / Toast Notification */}
         {uploadError && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start justify-between">
+          <div className="mb-6 p-4 rounded-[16px] bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] text-xs flex items-start justify-between shadow-sm">
             <div className="flex items-start space-x-3">
-              <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-400" />
+              <AlertCircle size={18} className="shrink-0 mt-0.5 text-[#E5484D]" />
               <div>
                 <strong className="block font-semibold mb-0.5">Failed to Process Statement</strong>
                 <span>{uploadError}</span>
@@ -286,7 +309,7 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={() => setUploadError(null)}
-              className="p-1 rounded text-rose-400 hover:text-white hover:bg-rose-500/20 transition-colors"
+              className="p-1 rounded text-[#9B1C1C] hover:bg-[#FDE8E8] transition-colors"
             >
               <X size={15} />
             </button>
@@ -326,11 +349,6 @@ export default function DashboardPage() {
                   expectedInflowGapDays={overview?.risk_summary?.expected_inflow_gap_days ?? forecast?.explanation?.expected_inflow_gap_days}
                 />
 
-                {/* Personalized Safe Spending Limits Card */}
-                {overview?.limits && (
-                  <PersonalizedLimitsCard limits={overview.limits} />
-                )}
-
                 {/* Metrics Row */}
                 <MetricsRow
                   currentBalance={Number(overview?.current_balance ?? 0)}
@@ -341,6 +359,58 @@ export default function DashboardPage() {
                   meanDailyBurn={Number(forecast?.burn_metrics?.mean_daily_burn ?? 850)}
                   minimumSafeBalance={minSafeBalance}
                 />
+
+                {/* Quick-Action Tiles */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <button
+                    onClick={() => setActiveTab('simulator')}
+                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#F3EDFA] text-[#7650A8] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <SlidersHorizontal size={20} />
+                    </div>
+                    <h3 className="font-bold text-sm text-[#17152D] mb-0.5">What-If Stress Test</h3>
+                    <p className="text-xs text-[#77758A]">Simulate loans, delayed invoices, or major purchases</p>
+                  </button>
+
+                  <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#F3EDFA] text-[#7650A8] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <Sparkles size={20} />
+                    </div>
+                    <h3 className="font-bold text-sm text-[#17152D] mb-0.5">Ask FinOS Copilot</h3>
+                    <p className="text-xs text-[#77758A]">Get instant AI explanations on cash flow risks and spending</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('transactions')}
+                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#E8F8F2] text-[#159B72] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <FileSpreadsheet size={20} />
+                    </div>
+                    <h3 className="font-bold text-sm text-[#17152D] mb-0.5">Ledger & Anomalies</h3>
+                    <p className="text-xs text-[#77758A]">Audit UPI transactions, DPDP redactions, and unusual spikes</p>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('multi-account')}
+                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#FEF7EC] text-[#F5A623] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <ArrowRightLeft size={20} />
+                    </div>
+                    <h3 className="font-bold text-sm text-[#17152D] mb-0.5">Multi-Account Balancing</h3>
+                    <p className="text-xs text-[#77758A]">Consolidate savings and current accounts to eliminate deficits</p>
+                  </button>
+                </div>
+
+                {/* Personalized Safe Spending Limits Card */}
+                {overview?.limits && (
+                  <PersonalizedLimitsCard limits={overview.limits} />
+                )}
 
                 {/* Main Recharts 60-Day Forecast Chart */}
                 {forecast && forecast.timeline && forecast.timeline.length > 0 ? (
@@ -353,7 +423,7 @@ export default function DashboardPage() {
                     dataSufficiency={overview?.data_sufficiency ?? forecast?.forecast_meta?.data_sufficiency}
                   />
                 ) : (
-                  <div className="p-12 text-center rounded-xl border border-white/[0.08] bg-[#121418] text-white/40 font-mono text-xs">
+                  <div className="p-12 text-center rounded-[20px] border border-[#ECE7F2] bg-white text-[#6B6584] text-xs shadow-sm">
                     Computing 1,000 Monte Carlo paths...
                   </div>
                 )}

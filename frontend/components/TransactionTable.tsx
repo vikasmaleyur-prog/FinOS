@@ -70,7 +70,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     }
   };
 
-  // Safe client-side filtering with optional chaining
+  // Safe client-side filtering
   const filteredTransactions = useMemo(() => {
     if (!transactions || !Array.isArray(transactions)) return [];
     
@@ -99,226 +99,210 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
       return true;
     });
-  }, [transactions, categoryFilter, searchQuery]);
+  }, [transactions, categoryFilter, searchQuery, categoryOverrides]);
 
-  const total = filteredTransactions.length;
-  const pages = Math.max(1, Math.ceil(total / pageSize));
-  const currentPage = Math.min(page, pages);
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
-  const paginatedTransactions = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredTransactions.slice(start, start + pageSize);
-  }, [filteredTransactions, currentPage, pageSize]);
-
-  // Check if a transaction is flagged as anomaly safely
-  const isAnomaly = (txn: Transaction) => {
-    if (!anomalies || !Array.isArray(anomalies) || !txn) return false;
-    return anomalies.some(
-      (a) => a?.date === txn.Date && Math.abs((a?.amount || 0) - (txn.Amount || 0)) < 0.01
-    );
-  };
-
-  const getAnomalyDetails = (txn: Transaction) => {
-    if (!anomalies || !Array.isArray(anomalies) || !txn) return null;
-    return anomalies.find(
-      (a) => a?.date === txn.Date && Math.abs((a?.amount || 0) - (txn.Amount || 0)) < 0.01
-    );
-  };
-
-  const getCategoryBadge = (cat: string) => {
-    switch ((cat || '').toLowerCase()) {
-      case 'income':
-        return 'bg-[#d9f154]/10 text-[#d9f154] border-[#d9f154]/30';
-      case 'investments':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-      case 'rent':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
-      case 'emi/loans':
-      case 'emi':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-      case 'food':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
-      case 'travel':
-        return 'bg-teal-500/10 text-teal-400 border-teal-500/30';
-      case 'bills & utilities':
-        return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
-      case 'shopping':
-        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
-      case 'health':
-        return 'bg-pink-500/10 text-pink-400 border-pink-500/30';
-      case 'subscriptions':
-        return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
-      default:
-        return 'bg-white/[0.06] text-white/70 border-white/[0.1]';
+  // Helper map for flagged anomalies
+  const anomalyMap = useMemo(() => {
+    const map = new Map<string, Anomaly>();
+    if (anomalies && Array.isArray(anomalies)) {
+      anomalies.forEach((a) => {
+        const key = `${a.date}_${Math.abs(Math.round(a.amount))}_${(a.description || '').slice(0, 15)}`;
+        map.set(key, a);
+      });
     }
+    return map;
+  }, [anomalies]);
+
+  // Category pill style mapping
+  const getCategoryBadgeClass = (category: string) => {
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('income') || cat.includes('sales')) {
+      return 'bg-[#E8F8F2] text-[#0E684C] border-[#B4E8D6]';
+    }
+    if (cat.includes('rent')) {
+      return 'bg-[#F3EDFA] text-[#7650A8] border-[#7650A8]/30';
+    }
+    if (cat.includes('emi') || cat.includes('loan')) {
+      return 'bg-[#FEF7EC] text-[#8F5805] border-[#FBD9A3]';
+    }
+    if (cat.includes('health') || cat.includes('emergency')) {
+      return 'bg-[#FDF1F2] text-[#9B1C23] border-[#F9B8BC]';
+    }
+    if (cat.includes('bills') || cat.includes('util')) {
+      return 'bg-[#FEF7EC] text-[#8F5805] border-[#FBD9A3]';
+    }
+    if (cat.includes('shopping')) {
+      return 'bg-[#F3EDFA] text-[#7650A8] border-[#7650A8]/30';
+    }
+    return 'bg-[#F7F5FA] text-[#17152D] border-[#EAE6F0]';
   };
 
   return (
-    <div className="space-y-4">
-      {/* Top Controls Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-        {/* Search Input */}
-        <div className="relative flex-1 max-w-md">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-          <input
-            type="text"
-            placeholder="Search merchant, narration, reference number..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(1);
-            }}
-            className="w-full pl-10 pr-4 py-2 bg-black/40 border border-white/[0.1] rounded-lg text-xs font-sans text-white placeholder-white/40 focus:outline-none focus:border-[#d9f154] transition-colors"
-          />
+    <div className="space-y-5 w-full min-w-0">
+      {/* Search & Filter Controls Header */}
+      <div className="p-6 rounded-[20px] bg-white border border-[#EAE6F0] shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)] space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#77758A]" size={16} />
+            <input
+              type="text"
+              placeholder="Search by description, reference, or category..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-full bg-[#F7F5FA] border border-[#EAE6F0] text-xs text-[#17152D] placeholder-[#77758A] focus:outline-none focus:border-[#7650A8] focus:ring-2 focus:ring-[#F3EDFA] transition-all"
+            />
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <span className="text-xs font-semibold text-[#77758A]">
+              Showing {filteredTransactions.length} of {transactions?.length || 0} transactions
+            </span>
+
+            {/* DPDP Privacy Badge */}
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#E8F8F2] border border-[#B4E8D6] text-[#0E684C] text-xs font-semibold">
+              <ShieldCheck size={14} className="text-[#159B72]" />
+              <span>DPDP Sanitized</span>
+            </div>
+          </div>
         </div>
 
-        {/* DPDP Act 2023 Masking Indicator */}
-        <div className="flex items-center space-x-2 text-[11px] font-mono text-emerald-400 bg-emerald-500/[0.08] border border-emerald-500/20 px-3 py-1.5 rounded-lg shrink-0">
-          <ShieldCheck size={14} />
-          <span>DPDP Act 2023: PII Masked & Zero-Retention</span>
+        {/* Category Pills Bar */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                setCategoryFilter(cat);
+                setPage(1);
+              }}
+              className={`min-h-[36px] px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border focus:outline-none focus:ring-2 focus:ring-[#7650A8] ${
+                categoryFilter === cat
+                  ? 'bg-[#7650A8] text-white border-[#7650A8] shadow-xs'
+                  : 'bg-[#F7F5FA] text-[#77758A] border-[#EAE6F0] hover:bg-[#F3EDFA] hover:text-[#17152D]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Category Filter Pills */}
-      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none">
-        {categories?.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              setCategoryFilter(cat);
-              setPage(1);
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer ${
-              categoryFilter === cat
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'text-white/60 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white border border-white/[0.06]'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {/* Data Table */}
-      <div className="rounded-xl border border-white/[0.08] bg-[#121418] overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Main Ledger Table Card */}
+      <div className="rounded-[20px] bg-white border border-[#EAE6F0] shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)] overflow-hidden w-full min-w-0">
+        <div className="overflow-x-auto w-full">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-white/[0.08] bg-white/[0.02] text-[11px] font-mono uppercase tracking-wider text-white/40">
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4">Description (PII Sanitized)</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4 text-right">Amount</th>
-                <th className="py-3 px-4 text-right">Running Balance</th>
-                <th className="py-3 px-4 text-center">Status</th>
+            <thead className="bg-[#F7F5FA] text-[#77758A] border-b border-[#EAE6F0] font-semibold uppercase tracking-wider">
+              <tr>
+                <th className="py-3.5 px-4">Date</th>
+                <th className="py-3.5 px-4">Description</th>
+                <th className="py-3.5 px-4">Category</th>
+                <th className="py-3.5 px-4 text-right">Amount</th>
+                <th className="py-3.5 px-4 text-right">Balance</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.05] font-sans">
-              {!transactions || transactions.length === 0 ? (
+            <tbody className="divide-y divide-[#EAE6F0]">
+              {paginatedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-white/40 font-mono">
-                    No transactions loaded. Please import a bank statement.
-                  </td>
-                </tr>
-              ) : paginatedTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-white/40 font-mono">
-                    No transactions match current filters.
+                  <td colSpan={5} className="py-12 text-center text-[#77758A] text-xs">
+                    No transactions match your search filter.
                   </td>
                 </tr>
               ) : (
-                paginatedTransactions?.map((txn, idx) => {
-                  const amt = Number(txn?.Amount || 0);
-                  const isCredit = amt > 0;
-                  const anomaly = isAnomaly(txn);
-                  const anomalyData = anomaly ? getAnomalyDetails(txn) : null;
-                  const bal = Number(txn?.['Running Balance'] ?? txn?.Balance ?? 0);
+                paginatedTransactions.map((txn, idx) => {
+                  const amt = Number(txn.Amount) || 0;
+                  const isPositive = amt > 0;
+                  const bal = txn.Balance !== undefined ? txn.Balance : txn['Running Balance'];
+                  const txnKey = `${txn.Date}_${Math.abs(Math.round(amt))}_${(txn.Description || '').slice(0, 15)}`;
+                  const anomaly = anomalyMap.get(txnKey);
 
                   return (
-                    <tr
-                      key={idx}
-                      className="hover:bg-white/[0.03] transition-colors group"
+                    <tr 
+                      key={idx} 
+                      className={`hover:bg-[#F7F5FA] transition-colors ${
+                        anomaly ? 'bg-[#FEF7EC]/40' : ''
+                      }`}
                     >
                       {/* Date */}
-                      <td className="py-3 px-4 font-mono text-white/60 text-[11px] whitespace-nowrap">
-                        {txn?.Date || '-'}
+                      <td className="py-3.5 px-4 whitespace-nowrap font-medium text-[#77758A] tabular-nums">
+                        {txn.Date}
                       </td>
 
                       {/* Description */}
-                      <td className="py-3 px-4 max-w-sm">
+                      <td className="py-3.5 px-4 max-w-sm">
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-white truncate group-hover:text-[#d9f154] transition-colors">
-                            {txn?.Description || 'Transaction'}
+                          <span className="font-semibold text-[#17152D] truncate" title={txn.Description}>
+                            {txn.Description}
                           </span>
-                        </div>
-                        {txn?.Reference_No && (
-                          <div className="text-[10px] font-mono text-white/30 mt-0.5">
-                            {txn.Reference_No}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Category */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-1.5">
-                          <select
-                            value={txn?.Category || 'Other'}
-                            onChange={(e) => handleCategoryChange(txn?.Description || '', e.target.value)}
-                            className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border bg-black/60 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#d9f154] ${getCategoryBadge(txn?.Category || 'Other')}`}
-                            title="Click to manually correct category"
-                          >
-                            {categories.filter(c => c !== 'All').map(c => (
-                              <option key={c} value={c} className="bg-[#121418] text-white">
-                                {c}
-                              </option>
-                            ))}
-                          </select>
-                          {txn?.is_ai_categorized && (
+                          {anomaly && (
                             <span 
-                              className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30"
-                              title="Categorized via AI LLM Fallback (DPDP Masked)"
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-[#FEF7EC] border border-[#FBD9A3] text-[#8F5805] text-[10px] font-bold shrink-0 cursor-help"
+                              title={anomaly.reason}
+                            >
+                              <AlertTriangle size={11} className="text-[#F5A623]" />
+                              <span>Anomaly</span>
+                            </span>
+                          )}
+                          {txn.is_ai_categorized && (
+                            <span 
+                              className="inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full bg-[#F3EDFA] text-[#7650A8] text-[9px] font-bold shrink-0 border border-[#EAE6F0]"
+                              title="Categorized via TF-IDF Logistic Regression & NLP"
                             >
                               <Sparkles size={9} />
-                              <span>AI-categorized</span>
+                              <span>AI</span>
                             </span>
                           )}
                         </div>
+                        {txn.Reference_No && (
+                          <div className="text-[11px] text-[#9896A9] truncate font-medium">
+                            Ref: {txn.Reference_No}
+                          </div>
+                        )}
+                        {anomaly && (
+                          <div className="text-[11px] text-[#8F5805] mt-0.5 font-medium">
+                            Notice: {anomaly.reason}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Category with Manual Edit Dropdown */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <select
+                          value={txn.Category || 'Other/Transfer'}
+                          onChange={(e) => handleCategoryChange(txn.Description, e.target.value)}
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-full border cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7650A8] ${getCategoryBadgeClass(txn.Category)}`}
+                          title="Click to manually correct category"
+                        >
+                          {categories.filter(c => c !== 'All').map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
                       </td>
 
                       {/* Amount */}
-                      <td className="py-3 px-4 text-right font-mono font-semibold whitespace-nowrap">
-                        <span className={isCredit ? 'text-[#d9f154]' : 'text-white'}>
-                          {isCredit ? '+' : ''}₹{Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap tabular-nums">
+                        <span className={`font-bold inline-flex items-center space-x-1 ${
+                          isPositive ? 'text-[#159B72]' : 'text-[#17152D]'
+                        }`}>
+                          {isPositive ? <ArrowDownLeft size={13} className="text-[#159B72]" /> : <ArrowUpRight size={13} className="text-[#77758A]" />}
+                          <span>
+                            {isPositive ? '+' : ''}₹{Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
                         </span>
                       </td>
 
-                      {/* Running Balance */}
-                      <td className="py-3 px-4 text-right font-mono text-white/60 whitespace-nowrap">
-                        ₹{Math.round(bal).toLocaleString('en-IN')}
-                      </td>
-
-                      {/* Status / Anomaly */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        {anomaly ? (
-                          <div className="flex flex-col items-center gap-1">
-                            <span
-                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help"
-                              title={anomalyData?.reason || "Statistical anomaly detected by Isolation Forest"}
-                            >
-                              <AlertTriangle size={11} />
-                              <span>ANOMALY</span>
-                            </span>
-                            {anomalyData?.reason && (
-                              <span className="text-[10px] text-amber-400/90 font-mono max-w-[200px] truncate" title={anomalyData.reason}>
-                                {anomalyData.reason}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] font-mono text-white/30">
-                            VERIFIED
-                          </span>
-                        )}
+                      {/* Balance */}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap tabular-nums font-medium text-[#77758A]">
+                        {bal !== undefined ? `₹${Number(bal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
                       </td>
                     </tr>
                   );
@@ -328,29 +312,28 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
           </table>
         </div>
 
-        {/* Pagination Bar */}
-        <div className="flex items-center justify-between p-4 border-t border-white/[0.08] text-xs font-mono text-white/50">
+        {/* Pagination Footer */}
+        <div className="py-3.5 px-4 bg-[#F7F5FA] border-t border-[#EAE6F0] flex items-center justify-between text-xs text-[#77758A]">
           <div>
-            Showing {paginatedTransactions.length} of {total} transactions
+            Page <span className="font-bold text-[#17152D]">{currentPage}</span> of <span className="font-bold text-[#17152D]">{totalPages}</span>
           </div>
 
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
-              className="p-1.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="min-h-[36px] flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white border border-[#EAE6F0] text-[#17152D] hover:bg-[#F3EDFA] hover:text-[#7650A8] transition-colors disabled:opacity-40 disabled:pointer-events-none"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={14} />
+              <span>Previous</span>
             </button>
-            <span className="text-white/80">
-              Page {currentPage} of {pages}
-            </span>
             <button
-              onClick={() => setPage((p) => Math.min(pages, p + 1))}
-              disabled={currentPage >= pages}
-              className="p-1.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage >= totalPages}
+              className="min-h-[36px] flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white border border-[#EAE6F0] text-[#17152D] hover:bg-[#F3EDFA] hover:text-[#7650A8] transition-colors disabled:opacity-40 disabled:pointer-events-none"
             >
-              <ChevronRight size={16} />
+              <span>Next</span>
+              <ChevronRight size={14} />
             </button>
           </div>
         </div>

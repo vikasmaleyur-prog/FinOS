@@ -4,11 +4,9 @@ import React from 'react';
 import { 
   UploadCloud, 
   FileSpreadsheet, 
-  ShieldCheck, 
-  Sparkles, 
-  Building2, 
   Smartphone, 
   UserCheck,
+  Building2,
   ArrowRight
 } from 'lucide-react';
 
@@ -24,22 +22,19 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   isLoadingSample
 }) => {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#121418] p-6 sm:p-10 text-center max-w-3xl mx-auto my-8 relative overflow-hidden">
-      {/* Background radial glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#d9f154]/10 rounded-full blur-[100px] pointer-events-none" />
-
+    <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-8 sm:p-12 text-center max-w-3xl mx-auto my-8 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.05)] relative overflow-hidden">
       <div className="relative z-10 space-y-6">
         {/* Icon & Title */}
         <div className="space-y-3">
-          <div className="h-14 w-14 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mx-auto text-[#d9f154] shadow-[0_0_25px_rgba(217,241,84,0.15)]">
-            <FileSpreadsheet size={26} />
+          <div className="h-16 w-16 rounded-2xl bg-[#F3EDFA] flex items-center justify-center mx-auto text-[#7650A8] shadow-xs">
+            <FileSpreadsheet size={30} />
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            No bank statement loaded
+          <h2 className="text-2xl font-bold text-[#17152D] tracking-tight">
+            No Bank Statement Loaded Yet
           </h2>
-          <p className="text-xs sm:text-sm text-white/50 max-w-lg mx-auto leading-relaxed">
-            Import your Indian bank statement (HDFC, SBI, ICICI, PhonePe CSV/PDF) or explore one of our realistic reference datasets for irregular earners and SMB shop owners.
+          <p className="text-sm text-[#77758A] max-w-lg mx-auto leading-relaxed font-medium">
+            Upload your Indian bank statement (HDFC, SBI, ICICI, PhonePe CSV/PDF) or explore one of our realistic reference datasets for irregular earners and SMB shop owners.
           </p>
         </div>
 
@@ -47,43 +42,43 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <div>
           <button
             onClick={onOpenUpload}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#d9f154] hover:bg-[#cbf037] text-black text-xs font-bold tracking-tight transition-all inline-flex items-center justify-center space-x-2 shadow-[0_0_20px_rgba(217,241,84,0.3)] cursor-pointer"
+            className="w-full sm:w-auto min-h-[44px] px-8 py-3 rounded-full bg-[#7650A8] hover:bg-[#633F94] active:bg-[#52327D] text-white text-sm font-semibold tracking-tight transition-all inline-flex items-center justify-center space-x-2 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7650A8] focus:ring-offset-2"
           >
-            <UploadCloud size={16} />
+            <UploadCloud size={18} />
             <span>Import Statement (CSV / PDF)</span>
           </button>
         </div>
 
         {/* 3 One-Click Sample Datasets */}
-        <div className="pt-4 border-t border-white/[0.08]">
-          <div className="text-[11px] font-mono text-white/40 uppercase tracking-wider mb-3">
-            Or load a reference dataset in 1-click
+        <div className="pt-6 border-t border-[#EAE6F0]">
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#77758A] mb-4">
+            Or explore an interactive reference profile in 1-click
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-left">
             {/* Dataset 1: Freelancer */}
             <button
               onClick={() => onLoadSample('freelancer')}
               disabled={isLoadingSample}
-              className="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] hover:border-[#d9f154]/40 transition-all text-left group cursor-pointer disabled:opacity-50 flex flex-col justify-between"
+              className="p-4 rounded-2xl bg-[#F7F5FA] hover:bg-[#F3EDFA] border border-[#EAE6F0] hover:border-[#7650A8]/30 transition-all text-left group cursor-pointer disabled:opacity-50 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <UserCheck size={14} />
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="p-2 rounded-xl bg-[#E8F8F2] text-[#159B72]">
+                    <UserCheck size={16} />
                   </span>
-                  <span className="text-[10px] font-mono text-white/40">24 Months</span>
+                  <span className="text-[11px] font-semibold text-[#77758A]">24 Months</span>
                 </div>
-                <h3 className="text-xs font-bold text-white group-hover:text-[#d9f154] transition-colors">
-                  Freelancer / Gig
+                <h3 className="text-xs font-bold text-[#17152D] group-hover:text-[#7650A8] transition-colors">
+                  Freelancer / Gig Earner
                 </h3>
-                <p className="text-[11px] text-white/50 mt-1 leading-snug">
-                  Irregular milestone retainers (Upwork/Razorpay), Rent on 1st, Personal Loan EMI on 5th.
+                <p className="text-xs text-[#77758A] mt-1 leading-snug">
+                  Irregular milestone retainers, Rent on 1st, Personal Loan EMI on 5th.
                 </p>
               </div>
-              <div className="mt-3 pt-2 border-t border-white/[0.04] text-[10px] font-mono text-[#d9f154] flex items-center gap-1">
+              <div className="mt-4 pt-2.5 border-t border-[#EAE6F0] text-xs font-bold text-[#7650A8] flex items-center gap-1">
                 <span>Load Dataset</span>
-                <ArrowRight size={11} />
+                <ArrowRight size={13} />
               </div>
             </button>
 
@@ -91,60 +86,54 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <button
               onClick={() => onLoadSample('phonepe_90d')}
               disabled={isLoadingSample}
-              className="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] hover:border-[#d9f154]/40 transition-all text-left group cursor-pointer disabled:opacity-50 flex flex-col justify-between"
+              className="p-4 rounded-2xl bg-[#F7F5FA] hover:bg-[#F3EDFA] border border-[#EAE6F0] hover:border-[#7650A8]/30 transition-all text-left group cursor-pointer disabled:opacity-50 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                    <Smartphone size={14} />
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="p-2 rounded-xl bg-[#FEF6E9] text-[#F5A623]">
+                    <Smartphone size={16} />
                   </span>
-                  <span className="text-[10px] font-mono text-white/40">90 Days</span>
+                  <span className="text-[11px] font-semibold text-[#77758A]">90 Days UPI</span>
                 </div>
-                <h3 className="text-xs font-bold text-white group-hover:text-[#d9f154] transition-colors">
-                  PhonePe Export
+                <h3 className="text-xs font-bold text-[#17152D] group-hover:text-[#7650A8] transition-colors">
+                  PhonePe UPI Export
                 </h3>
-                <p className="text-[11px] text-white/50 mt-1 leading-snug">
-                  Real 3-line preamble, newest-first ordering, no running balance column, UPI reference strings.
+                <p className="text-xs text-[#77758A] mt-1 leading-snug">
+                  90-day UPI export with transaction preambles and no running balance.
                 </p>
               </div>
-              <div className="mt-3 pt-2 border-t border-white/[0.04] text-[10px] font-mono text-[#d9f154] flex items-center gap-1">
+              <div className="mt-4 pt-2.5 border-t border-[#EAE6F0] text-xs font-bold text-[#7650A8] flex items-center gap-1">
                 <span>Load Dataset</span>
-                <ArrowRight size={11} />
+                <ArrowRight size={13} />
               </div>
             </button>
 
-            {/* Dataset 3: Shop Owner Current Account */}
+            {/* Dataset 3: SMB Retail Shop Owner */}
             <button
               onClick={() => onLoadSample('shop_owner')}
               disabled={isLoadingSample}
-              className="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] hover:border-[#d9f154]/40 transition-all text-left group cursor-pointer disabled:opacity-50 flex flex-col justify-between"
+              className="p-4 rounded-2xl bg-[#F7F5FA] hover:bg-[#F3EDFA] border border-[#EAE6F0] hover:border-[#7650A8]/30 transition-all text-left group cursor-pointer disabled:opacity-50 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                    <Building2 size={14} />
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="p-2 rounded-xl bg-[#F3EDFA] text-[#7650A8]">
+                    <Building2 size={16} />
                   </span>
-                  <span className="text-[10px] font-mono text-purple-300 font-bold">SMB Current A/C</span>
+                  <span className="text-[11px] font-semibold text-[#77758A]">SMB Current</span>
                 </div>
-                <h3 className="text-xs font-bold text-white group-hover:text-[#d9f154] transition-colors">
-                  Shop Owner
+                <h3 className="text-xs font-bold text-[#17152D] group-hover:text-[#7650A8] transition-colors">
+                  Shop Owner Current Account
                 </h3>
-                <p className="text-[11px] text-white/50 mt-1 leading-snug">
-                  Daily sales receipts, wholesale suppliers, salaries on 1st, GST on 20th, delayed B2B invoice crunch.
+                <p className="text-xs text-[#77758A] mt-1 leading-snug">
+                  Daily UPI sales, wholesale suppliers, staff salaries, GST, and 14-day credit delays.
                 </p>
               </div>
-              <div className="mt-3 pt-2 border-t border-white/[0.04] text-[10px] font-mono text-[#d9f154] flex items-center gap-1">
+              <div className="mt-4 pt-2.5 border-t border-[#EAE6F0] text-xs font-bold text-[#7650A8] flex items-center gap-1">
                 <span>Load Dataset</span>
-                <ArrowRight size={11} />
+                <ArrowRight size={13} />
               </div>
             </button>
           </div>
-        </div>
-
-        {/* Privacy badge */}
-        <div className="pt-4 border-t border-white/[0.06] flex items-center justify-center space-x-2 text-[11px] font-mono text-emerald-400">
-          <ShieldCheck size={14} />
-          <span>DPDP Act 2023 Compliant: 100% Stateless. PII masked in-memory. Zero server retention.</span>
         </div>
       </div>
     </div>

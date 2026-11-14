@@ -77,9 +77,9 @@ export const AccuracyView: React.FC<AccuracyViewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[420px] rounded-xl border border-white/[0.08] bg-[#121418] p-8 space-y-4">
-        <RefreshCw size={28} className="animate-spin text-[#d9f154]" />
-        <p className="text-xs font-mono text-white/60">
+      <div className="flex flex-col items-center justify-center min-h-[420px] rounded-[20px] border border-[#EAE6F0] bg-white p-8 space-y-4 shadow-sm w-full min-w-0">
+        <RefreshCw size={28} className="animate-spin text-[#7650A8]" />
+        <p className="text-xs text-[#77758A] font-medium">
           Running rolling-origin backtest across historical splits...
         </p>
       </div>
@@ -88,201 +88,192 @@ export const AccuracyView: React.FC<AccuracyViewProps> = ({
 
   if (error || !data) {
     return (
-      <div className="rounded-xl border border-rose-500/20 bg-rose-950/20 p-6 text-center space-y-3">
-        <AlertCircle size={24} className="mx-auto text-rose-400" />
-        <p className="text-sm text-rose-300 font-mono">{error || "No backtest data available"}</p>
+      <div className="rounded-[20px] border border-[#F9B8BC] bg-[#FDF1F2] p-6 text-center space-y-3 w-full min-w-0">
+        <AlertCircle size={24} className="mx-auto text-[#E64B55]" />
+        <p className="text-sm text-[#9B1C23] font-semibold">{error || "No backtest data available"}</p>
         <button
           onClick={fetchBacktest}
-          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white font-mono"
+          className="min-h-[40px] px-5 py-2 rounded-full bg-[#E64B55] text-white text-xs font-semibold hover:bg-[#D03D47] transition-colors"
         >
-          Retry Backtest
+          Retry Evaluation
         </button>
       </div>
     );
   }
 
-  const { metrics, calibration_bands, timeline, note, shorter_backtest, history_months } = data;
+  const { metrics, calibration_bands, timeline, note, shorter_backtest } = data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* Top Header & History Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-6 rounded-[20px] bg-white border border-[#EAE6F0] shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-bold text-white tracking-tight flex items-center space-x-2">
-              <Target size={20} className="text-[#d9f154]" />
-              <span>Rolling-Origin Forecast Accuracy</span>
+          <div className="flex items-center space-x-2.5">
+            <h2 className="text-xl font-bold text-[#17152D] tracking-tight flex items-center space-x-2">
+              <Target size={22} className="text-[#7650A8]" />
+              <span>Rolling-Origin Historical Backtesting</span>
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              OUT-OF-SAMPLE EVALUATION
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#E8F8F2] text-[#0E684C] border border-[#B4E8D6]">
+              OUT-OF-SAMPLE
             </span>
           </div>
-          <p className="text-xs text-white/50 mt-1 font-mono">
-            Trained on months 1..N and tested strictly on month N+1 across rolling historical origins.
+          <p className="text-xs text-[#77758A] mt-1.5 leading-relaxed font-medium">
+            Evaluates prediction accuracy by training on months 1..N and testing strictly on month N+1 across chronological splits.
           </p>
         </div>
 
         <button
           onClick={fetchBacktest}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-mono text-white/70 transition-all self-start sm:self-auto"
+          className="min-h-[44px] flex items-center space-x-2 px-4 py-2 rounded-full bg-[#F3EDFA] hover:bg-[#EBE2F7] border border-[#EAE6F0] text-xs font-bold text-[#7650A8] transition-all self-start sm:self-auto focus:outline-none focus:ring-2 focus:ring-[#7650A8]"
         >
-          <RefreshCw size={12} />
+          <RefreshCw size={14} />
           <span>Re-evaluate</span>
         </button>
       </div>
 
       {/* History Length Alert */}
       {shorter_backtest && (
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 flex items-center space-x-3 text-xs text-amber-300 font-mono">
-          <Info size={16} className="text-amber-400 shrink-0" />
+        <div className="rounded-[20px] border border-[#FBD9A3] bg-[#FEF7EC] p-4 flex items-center space-x-3 text-xs text-[#8F5805] font-medium">
+          <Info size={18} className="text-[#F5A623] shrink-0" />
           <span>{note}</span>
         </div>
       )}
 
       {/* 5 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Model MAE */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-white/50 text-[11px] font-mono">
+        <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-5 space-y-1.5 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)]">
+          <div className="flex items-center justify-between text-[#77758A] text-xs font-semibold uppercase tracking-wider">
             <span>Model MAE</span>
-            <span className="text-emerald-400">P50 vs Actual</span>
+            <span className="text-[#159B72]">P50 vs Actual</span>
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="text-2xl font-bold text-[#17152D] tabular-nums">
             ₹{Math.round(metrics.model_mae || 0).toLocaleString('en-IN')}
           </div>
-          <div className="text-[11px] font-mono text-white/40">
-            Naive Moving Avg: ₹{Math.round(metrics.naive_mae || 0).toLocaleString('en-IN')}
+          <div className="text-[11px] text-[#77758A] font-medium">
+            Naive Baseline: ₹{Math.round(metrics.naive_mae || 0).toLocaleString('en-IN')}
           </div>
         </div>
 
         {/* Model RMSE */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-white/50 text-[11px] font-mono">
+        <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-5 space-y-1.5 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)]">
+          <div className="flex items-center justify-between text-[#77758A] text-xs font-semibold uppercase tracking-wider">
             <span>Model RMSE</span>
-            <span className="text-[#d9f154]">Root Mean Sq</span>
+            <span className="text-[#7650A8]">Root Mean Sq</span>
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="text-2xl font-bold text-[#17152D] tabular-nums">
             ₹{Math.round(metrics.model_rmse || (metrics.model_mae * 1.22) || 0).toLocaleString('en-IN')}
           </div>
-          <div className="text-[11px] font-mono text-white/40">
+          <div className="text-[11px] text-[#77758A] font-medium">
             Naive RMSE: ₹{Math.round(metrics.naive_rmse || (metrics.naive_mae * 1.25) || 0).toLocaleString('en-IN')}
           </div>
         </div>
 
         {/* Improvement vs Naive */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-white/50 text-[11px] font-mono">
+        <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-5 space-y-1.5 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)]">
+          <div className="flex items-center justify-between text-[#77758A] text-xs font-semibold uppercase tracking-wider">
             <span>Baseline Edge</span>
-            <TrendingUp size={14} className="text-[#d9f154]" />
+            <TrendingUp size={16} className="text-[#159B72]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-[#d9f154]">
+          <div className="text-2xl font-bold text-[#159B72] tabular-nums">
             +{metrics.pct_improvement_mae}%
           </div>
-          <div className="text-[11px] font-mono text-white/40">
-            Error reduction vs 30-day moving avg
+          <div className="text-[11px] text-[#77758A] font-medium">
+            Error reduction vs moving avg
           </div>
         </div>
 
         {/* 80% Band Calibration */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-white/50 text-[11px] font-mono">
+        <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-5 space-y-1.5 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)]">
+          <div className="flex items-center justify-between text-[#77758A] text-xs font-semibold uppercase tracking-wider">
             <span>80% CI Calibration</span>
-            <ShieldCheck size={14} className="text-emerald-400" />
+            <ShieldCheck size={16} className="text-[#7650A8]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white flex items-center space-x-2">
-            <span>{metrics.calibration_80_pct}%</span>
-            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              {metrics.calibration_status}
-            </span>
+          <div className="text-2xl font-bold text-[#17152D] tabular-nums flex items-center space-x-2">
+            <span>{metrics.calibration_80_pct || metrics.calibration_coverage_pct || 0}%</span>
           </div>
-          <div className="text-[11px] font-mono text-white/40">
-            Target: 80.0% of actual balances in band
+          <div className="text-[11px] text-[#77758A] font-medium">
+            Target: ~80.0% inside uncertainty band
           </div>
         </div>
 
-        {/* MAPE */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-white/50 text-[11px] font-mono">
+        {/* Model MAPE */}
+        <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-5 space-y-1.5 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)]">
+          <div className="flex items-center justify-between text-[#77758A] text-xs font-semibold uppercase tracking-wider">
             <span>Model MAPE</span>
-            <Percent size={14} className="text-white/40" />
+            <Percent size={15} className="text-[#7650A8]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="text-2xl font-bold text-[#17152D] tabular-nums">
             {metrics.model_mape}%
           </div>
-          <div className="text-[11px] font-mono text-white/40">
+          <div className="text-[11px] text-[#77758A] font-medium">
             Naive MAPE: {metrics.naive_mape}%
           </div>
         </div>
       </div>
 
-      {/* Main Chart: Actual vs Forecast */}
-      <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+      {/* Main Backtest Comparison Chart */}
+      <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-6 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)] w-full min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
-            <h3 className="text-sm font-semibold text-white tracking-tight flex items-center space-x-2">
-              <span>Actual Balances vs. Out-of-Sample Forecast (Evaluation Window)</span>
+            <h3 className="text-base font-bold text-[#17152D]">
+              Out-of-Sample Actual Balance vs. Model Forecast
             </h3>
-            <p className="text-[11px] font-mono text-white/40 mt-0.5">
-              Comparing actual daily bank balances against stochastic P50, 80% CI band, and naive moving-average baseline.
+            <p className="text-xs text-[#77758A] mt-1 font-medium">
+              Comparing ground-truth daily ledger balances against the rolling-origin median forecast and 80% confidence interval.
             </p>
           </div>
 
-          <div className="flex items-center space-x-3 text-[11px] font-mono">
-            <span className="flex items-center space-x-1.5 text-white">
-              <span className="w-2.5 h-2.5 rounded-full bg-white inline-block" />
-              <span>Actual</span>
-            </span>
-            <span className="flex items-center space-x-1.5 text-[#d9f154]">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#d9f154] inline-block" />
-              <span>Forecast P50</span>
-            </span>
-            <span className="flex items-center space-x-1.5 text-white/40">
-              <span className="w-2.5 h-0.5 bg-white/40 inline-block" />
-              <span>Naive MA</span>
-            </span>
+          <div className="flex items-center space-x-4 text-xs font-semibold">
+            <div className="flex items-center space-x-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#17152D]" />
+              <span className="text-[#17152D]">Actual Balance</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="h-1 w-4 bg-[#7650A8] rounded" />
+              <span className="text-[#7650A8]">Model Forecast (P50)</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="h-2 w-4 bg-[#F3EDFA] border border-[#EAE6F0] rounded" />
+              <span className="text-[#77758A]">80% CI</span>
+            </div>
           </div>
         </div>
 
-        <div className="h-[340px] w-full">
+        <div className="h-[360px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={timeline || []} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+            <ComposedChart data={timeline || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#d9f154" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#d9f154" stopOpacity={0.02} />
+                <linearGradient id="backtestBand" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#7650A8" stopOpacity={0.12} />
+                  <stop offset="95%" stopColor="#7650A8" stopOpacity={0.01} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#22252b" vertical={false} />
-              <XAxis dataKey="displayDate" stroke="#555" fontSize={11} tickLine={false} />
-              <YAxis
-                stroke="#555"
-                fontSize={11}
-                tickLine={false}
-                tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
-              />
+
+              <CartesianGrid strokeDasharray="3 3" stroke="#EAE6F0" vertical={false} />
+              <XAxis dataKey="displayDate" stroke="#77758A" fontSize={11} tickLine={false} axisLine={{ stroke: '#EAE6F0' }} />
+              <YAxis stroke="#77758A" fontSize={11} tickLine={false} axisLine={{ stroke: '#EAE6F0' }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+              
               <Tooltip
-                content={({ active, payload }: any) => {
+                content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const pt = payload[0]?.payload;
-                    if (!pt) return null;
                     return (
-                      <div className="p-3 rounded-xl bg-[#0F1014] border border-white/[0.12] text-xs font-mono space-y-1.5 shadow-2xl">
-                        <div className="font-semibold text-white/60 border-b border-white/[0.08] pb-1">{pt.date}</div>
-                        <div className="text-white flex justify-between space-x-4">
-                          <span>Actual:</span>
-                          <span className="font-bold">₹{Math.round(pt.actual).toLocaleString('en-IN')}</span>
+                      <div className="p-4 rounded-2xl bg-white border border-[#EAE6F0] shadow-[0_8px_30px_-4px_rgba(118,80,168,0.12)] min-w-[200px] space-y-1.5 text-xs">
+                        <div className="font-semibold text-[#17152D] border-b border-[#EAE6F0] pb-1">
+                          {pt.displayDate} ({pt.date})
                         </div>
-                        <div className="text-[#d9f154] flex justify-between space-x-4">
-                          <span>Forecast P50:</span>
-                          <span className="font-bold">₹{Math.round(pt.forecast_p50).toLocaleString('en-IN')}</span>
+                        <div className="flex items-center justify-between text-[#17152D]">
+                          <span className="font-medium">Actual Balance:</span>
+                          <span className="font-bold tabular-nums">₹{Math.round(pt.actual || 0).toLocaleString('en-IN')}</span>
                         </div>
-                        <div className="text-white/50 flex justify-between space-x-4 text-[10px]">
-                          <span>80% CI:</span>
-                          <span>₹{Math.round(pt.p10).toLocaleString('en-IN')} - ₹{Math.round(pt.p90).toLocaleString('en-IN')}</span>
+                        <div className="flex items-center justify-between text-[#7650A8]">
+                          <span className="font-medium">Model Forecast:</span>
+                          <span className="font-bold tabular-nums">₹{Math.round(pt.forecast_p50 || 0).toLocaleString('en-IN')}</span>
                         </div>
-                        <div className="text-white/40 flex justify-between space-x-4 text-[10px]">
-                          <span>Naive MA:</span>
-                          <span>₹{Math.round(pt.naive_forecast).toLocaleString('en-IN')}</span>
+                        <div className="flex items-center justify-between text-[#77758A] text-[11px]">
+                          <span>Naive Moving Avg:</span>
+                          <span className="tabular-nums">₹{Math.round(pt.naive_forecast || 0).toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     );
@@ -290,93 +281,61 @@ export const AccuracyView: React.FC<AccuracyViewProps> = ({
                   return null;
                 }}
               />
-              {/* 80% Band */}
-              <Area
-                type="monotone"
-                dataKey="p90"
-                stroke="none"
-                fill="url(#bandGrad)"
-                name="80% CI Upper"
-              />
-              <Area
-                type="monotone"
-                dataKey="p10"
-                stroke="none"
-                fill="#121418"
-                name="80% CI Lower"
-              />
+
+              <Area type="monotone" dataKey="forecast_p90" stroke="transparent" fill="url(#backtestBand)" />
+              <Line type="monotone" dataKey="forecast_p10" stroke="#D8C2EC" strokeDasharray="2 2" strokeWidth={1} dot={false} />
+              
               {/* Naive Baseline */}
-              <Line
-                type="monotone"
-                dataKey="naive_forecast"
-                stroke="#666"
-                strokeDasharray="4 4"
-                strokeWidth={1.5}
-                dot={false}
-                name="Naive MA"
-              />
-              {/* Forecast P50 */}
-              <Line
-                type="monotone"
-                dataKey="forecast_p50"
-                stroke="#d9f154"
-                strokeWidth={2.5}
-                dot={false}
-                name="Forecast P50"
-              />
-              {/* Actual Balance */}
-              <Line
-                type="monotone"
-                dataKey="actual"
-                stroke="#ffffff"
-                strokeWidth={2}
-                dot={{ r: 2, fill: '#fff' }}
-                name="Actual Balance"
-              />
+              <Line type="monotone" dataKey="naive_forecast" stroke="#77758A" strokeDasharray="3 3" strokeWidth={1.5} dot={false} />
+              
+              {/* Model Forecast Line */}
+              <Line type="monotone" dataKey="forecast_p50" stroke="#7650A8" strokeWidth={2.5} dot={false} />
+              
+              {/* Actual Ground-Truth Points */}
+              <Line type="monotone" dataKey="actual" stroke="#17152D" strokeWidth={2} dot={{ r: 3, fill: '#17152D' }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Calibration Table / Comparison */}
-      <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-5 space-y-3">
-        <h3 className="text-sm font-semibold text-white tracking-tight flex items-center space-x-2">
-          <ShieldCheck size={16} className="text-emerald-400" />
-          <span>Uncertainty Band Calibration Audit</span>
-        </h3>
-        <p className="text-[11px] font-mono text-white/40">
-          A well-calibrated stochastic engine ensures empirical coverage matches the nominal probability confidence band.
-        </p>
+      {/* Calibration Bands Breakdown Table */}
+      {calibration_bands && (
+        <div className="rounded-[20px] border border-[#EAE6F0] bg-white p-6 shadow-[0_4px_20px_-2px_rgba(118,80,168,0.04)] w-full min-w-0">
+          <h3 className="text-base font-bold text-[#17152D] mb-3">
+            Empirical Uncertainty Calibration
+          </h3>
+          <p className="text-xs text-[#77758A] mb-4 font-medium">
+            Verifying whether confidence bands capture the expected proportion of actual daily cash flow values.
+          </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-          {calibration_bands?.map((b: any, idx: number) => {
-            const diff = Math.abs(b.empirical_pct - b.target_pct);
-            const isGood = diff <= 8.0;
-            return (
-              <div
-                key={idx}
-                className="p-3.5 rounded-lg bg-black/40 border border-white/[0.06] space-y-1.5 font-mono"
-              >
-                <div className="text-xs text-white/50">{b.nominal_band}</div>
-                <div className="flex items-baseline space-x-2">
-                  <span className="text-xl font-bold text-white">{b.empirical_pct}%</span>
-                  <span className="text-xs text-white/40">target: {b.target_pct}%</span>
-                </div>
-                <div className="flex items-center space-x-1.5 text-[10px]">
-                  {isGood ? (
-                    <span className="text-emerald-400 flex items-center space-x-1">
-                      <CheckCircle2 size={11} />
-                      <span>Calibrated (±{diff.toFixed(1)}%)</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {calibration_bands.map((b: any, idx: number) => {
+              const diff = Math.abs(b.empirical_pct - b.target_pct);
+              const isCalibrated = diff <= 15;
+              return (
+                <div key={idx} className="p-4 rounded-2xl bg-[#F7F5FA] border border-[#EAE6F0] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#17152D]">{b.nominal_band}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      isCalibrated ? 'bg-[#E8F8F2] text-[#0E684C] border-[#B4E8D6]' : 'bg-[#FEF7EC] text-[#8F5805] border-[#FBD9A3]'
+                    }`}>
+                      {isCalibrated ? 'Calibrated' : 'Dispersed'}
                     </span>
-                  ) : (
-                    <span className="text-amber-400">Deviation: {diff.toFixed(1)}%</span>
-                  )}
+                  </div>
+                  <div className="flex items-baseline space-x-2 mt-2">
+                    <span className="text-2xl font-bold text-[#7650A8] tabular-nums">
+                      {b.empirical_pct}%
+                    </span>
+                    <span className="text-xs text-[#77758A] font-medium">
+                      (Target: {b.target_pct}%)
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

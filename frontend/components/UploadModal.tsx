@@ -47,11 +47,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      setLocalError('Please select a CSV statement to upload.');
+      setLocalError('Please select a CSV or PDF statement to upload.');
       return;
     }
 
-    // CRITICAL: Reset previous state immediately when upload starts
     onUploadStart();
     setUploading(true);
     setLocalError(null);
@@ -84,11 +83,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         throw new Error('Statement contained no valid transaction records.');
       }
 
-      // Success: pass full processed stateless payload to dashboard
       onUploadSuccess(data);
       onClose();
     } catch (err: any) {
-      const msg = err.message || 'Failed to process statement. Please check CSV format.';
+      const msg = err.message || 'Failed to process statement. Please check file format.';
       setLocalError(msg);
       onError(msg);
     } finally {
@@ -97,79 +95,68 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg rounded-2xl bg-[#0F1014] border border-white/[0.12] p-6 shadow-2xl">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors"
-        >
-          <X size={18} />
-        </button>
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="relative w-full max-w-lg bg-white border border-[#EAE6F0] rounded-[20px] shadow-[0_10px_40px_-5px_rgba(118,80,168,0.18)] p-6 sm:p-8 space-y-6">
         {/* Modal Header */}
-        <div className="mb-5">
-          <div className="flex items-center space-x-2 text-[#d9f154] mb-1">
-            <UploadCloud size={18} />
-            <span className="text-xs font-mono font-semibold uppercase tracking-wider">
-              Stateless Ingestion
-            </span>
+        <div className="flex items-center justify-between pb-4 border-b border-[#EAE6F0]">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-xl bg-[#F3EDFA] flex items-center justify-center text-[#7650A8]">
+              <UploadCloud size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[#17152D] tracking-tight">Import Bank Statement</h2>
+              <p className="text-xs text-[#77758A]">HDFC, SBI, ICICI, PhonePe CSV/PDF exports</p>
+            </div>
           </div>
-          <h3 className="text-lg font-bold text-white tracking-tight">
-            Upload PhonePe or Bank Statement (CSV)
-          </h3>
-          <p className="text-xs text-white/50 mt-1">
-            Supports PhonePe UPI exports, HDFC, SBI, ICICI, Axis, Razorpay statements.
-          </p>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full text-[#77758A] hover:text-[#17152D] hover:bg-[#F3EDFA] transition-colors"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* DPDP Act 2023 Shield Banner */}
-        <div className="mb-5 p-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/20 flex items-start space-x-2.5">
-          <ShieldCheck size={18} className="text-emerald-400 mt-0.5 shrink-0" />
-          <div className="text-xs text-white/80 leading-relaxed">
-            <strong className="text-emerald-400 block font-medium mb-0.5">
-              DPDP Act 2023 Compliant Ingestion
-            </strong>
-            Zero server retention. UPI IDs, phone numbers, and UTRs are sanitized on-the-fly.
+        {/* Local Error Notice */}
+        {localError && (
+          <div className="p-3.5 rounded-xl bg-[#FDF0F0] border border-[#F7B5B7] text-[#8B1E22] text-xs flex items-center space-x-2 font-medium">
+            <AlertCircle size={16} className="text-[#E64B55] shrink-0" />
+            <span>{localError}</span>
           </div>
-        </div>
+        )}
 
-        {/* Form */}
+        {/* Upload Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Dropzone */}
+          {/* Drag & Drop File Area */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="border-2 border-dashed border-white/[0.12] hover:border-[#d9f154]/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-white/[0.01]"
-            onClick={() => document.getElementById('csv-file-input')?.click()}
+            className="border-2 border-dashed border-[#EAE6F0] hover:border-[#7650A8] bg-[#F7F5FA] hover:bg-[#F3EDFA] rounded-2xl p-6 text-center cursor-pointer transition-colors"
           >
             <input
-              id="csv-file-input"
               type="file"
               accept=".csv,.txt,.pdf"
               onChange={handleFileChange}
               className="hidden"
+              id="file-upload"
             />
-            <FileText size={28} className="mx-auto text-white/40 mb-2" />
-            {file ? (
-              <div className="text-xs font-mono text-white">
-                Selected: <span className="text-[#d9f154] font-semibold">{file.name}</span> ({(file.size / 1024).toFixed(1)} KB)
+            <label htmlFor="file-upload" className="cursor-pointer space-y-2 block">
+              <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center mx-auto text-[#7650A8] shadow-xs">
+                {file ? <CheckCircle2 size={24} className="text-[#159B72]" /> : <FileText size={24} />}
               </div>
-            ) : (
-              <>
-                <div className="text-xs font-medium text-white">
-                  Drop CSV or PDF statement here or <span className="text-[#d9f154]">browse files</span>
-                </div>
-                <div className="text-[10px] font-mono text-white/40 mt-1">
-                  Supports PhonePe (CSV/PDF), HDFC, SBI, ICICI, Razorpay, and Current Accounts
-                </div>
-              </>
-            )}
+              <div className="text-xs font-semibold text-[#17152D]">
+                {file ? file.name : 'Click to select CSV/PDF or drag and drop here'}
+              </div>
+              <p className="text-[11px] text-[#77758A]">
+                Supports auto-detection of messy transaction headers and preamble rows.
+              </p>
+            </label>
           </div>
 
-          {/* Account Type Toggle */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-mono text-white/50 block">Account Classification</label>
+          {/* Account Persona Selector */}
+          <div>
+            <label className="text-xs font-bold text-[#17152D] block mb-1.5">
+              Account Profile
+            </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -177,13 +164,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   setAccountType('savings');
                   setMinSafeBalance('5000');
                 }}
-                className={`px-3 py-2 rounded-lg text-xs font-medium border text-center transition-all ${
+                className={`min-h-[44px] py-2.5 px-3 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                   accountType === 'savings'
-                    ? 'bg-[#d9f154] text-black border-[#d9f154] font-bold'
-                    : 'bg-white/[0.03] text-white/70 border-white/[0.08] hover:text-white'
+                    ? 'bg-[#7650A8] text-white border-[#7650A8] shadow-xs'
+                    : 'bg-[#F7F5FA] text-[#77758A] border-[#EAE6F0] hover:bg-white'
                 }`}
               >
-                Savings / Freelancer
+                Personal / Freelance Savings
               </button>
               <button
                 type="button"
@@ -191,65 +178,64 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   setAccountType('current');
                   setMinSafeBalance('25000');
                 }}
-                className={`px-3 py-2 rounded-lg text-xs font-medium border text-center transition-all ${
+                className={`min-h-[44px] py-2.5 px-3 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                   accountType === 'current'
-                    ? 'bg-[#d9f154] text-black border-[#d9f154] font-bold'
-                    : 'bg-white/[0.03] text-white/70 border-white/[0.08] hover:text-white'
+                    ? 'bg-[#7650A8] text-white border-[#7650A8] shadow-xs'
+                    : 'bg-[#F7F5FA] text-[#77758A] border-[#EAE6F0] hover:bg-white'
                 }`}
               >
-                Current / SMB Overdraft
+                SMB Current Account
               </button>
             </div>
           </div>
 
-          {/* Inputs: Starting Balance & Minimum Safe Buffer */}
+          {/* Starting Balance & Safe Threshold Inputs */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-mono text-white/50 block mb-1">
-                Starting Balance (₹)
+              <label className="text-xs font-bold text-[#17152D] block mb-1.5">
+                Current Balance (₹)
               </label>
               <input
                 type="number"
                 value={startingBalance}
                 onChange={(e) => setStartingBalance(e.target.value)}
                 placeholder="75000"
-                className="w-full px-3 py-2 bg-black/40 border border-white/[0.1] rounded-lg text-xs font-mono text-white focus:outline-none focus:border-[#d9f154]"
+                className="w-full min-h-[44px] px-3.5 py-2 rounded-xl bg-[#F7F5FA] border border-[#EAE6F0] text-xs font-bold text-[#17152D] tabular-nums focus:outline-none focus:border-[#7650A8] focus:ring-2 focus:ring-[#F3EDFA]"
               />
             </div>
-
             <div>
-              <label className="text-[11px] font-mono text-white/50 block mb-1">
-                {accountType === 'current' ? 'Overdraft / Safe Buffer (₹)' : 'Minimum Safe Buffer (₹)'}
+              <label className="text-xs font-bold text-[#17152D] block mb-1.5">
+                Min Safe Buffer (₹)
               </label>
               <input
                 type="number"
                 value={minSafeBalance}
                 onChange={(e) => setMinSafeBalance(e.target.value)}
-                placeholder={accountType === 'current' ? '25000' : '5000'}
-                className="w-full px-3 py-2 bg-black/40 border border-white/[0.1] rounded-lg text-xs font-mono text-white focus:outline-none focus:border-[#d9f154]"
+                placeholder="5000"
+                className="w-full min-h-[44px] px-3.5 py-2 rounded-xl bg-[#F7F5FA] border border-[#EAE6F0] text-xs font-bold text-[#17152D] tabular-nums focus:outline-none focus:border-[#7650A8] focus:ring-2 focus:ring-[#F3EDFA]"
               />
             </div>
           </div>
 
-          {localError && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
-              <AlertCircle size={15} className="shrink-0 text-rose-400" />
-              <span>{localError}</span>
-            </div>
-          )}
+          {/* DPDP Sanitization Guarantee */}
+          <div className="p-3 rounded-xl bg-[#E8F8F2] border border-[#B4E8D2] flex items-center space-x-2 text-[11px] text-[#159B72] font-medium">
+            <ShieldCheck size={16} className="text-[#159B72] shrink-0" />
+            <span>DPDP Act 2023: Names, phone numbers, UPI IDs, and account numbers are sanitized in memory.</span>
+          </div>
 
+          {/* Submit Pill Button */}
           <button
             type="submit"
             disabled={uploading || !file}
-            className="w-full py-2.5 rounded-lg bg-[#d9f154] hover:bg-[#cbf037] text-black text-xs font-bold tracking-tight transition-colors disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center space-x-2 cursor-pointer shadow-[0_0_15px_rgba(217,241,84,0.25)]"
+            className="w-full min-h-[44px] py-3 rounded-full bg-[#7650A8] hover:bg-[#633F94] active:bg-[#52327D] text-white text-xs font-bold tracking-tight transition-all disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-[#7650A8] focus:ring-offset-2"
           >
             {uploading ? (
-              <div className="flex items-center space-x-2">
-                <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                <span>Processing & Categorizing...</span>
-              </div>
+              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
-              <span>Sanitize & Load Dataset</span>
+              <>
+                <UploadCloud size={16} />
+                <span>Process & Forecast Cash Flow</span>
+              </>
             )}
           </button>
         </form>
