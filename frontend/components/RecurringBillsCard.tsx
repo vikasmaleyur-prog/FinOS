@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Repeat, ArrowRight, Shield } from 'lucide-react';
+import { Repeat } from 'lucide-react';
 
 interface RecurringBill {
   merchant: string;
@@ -23,54 +23,54 @@ export const RecurringBillsCard: React.FC<RecurringBillsCardProps> = ({ bills, t
   const safeBills = bills || [];
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-5">
+    <section className="rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-white tracking-tight flex items-center space-x-2">
-            <Repeat size={15} className="text-[#d9f154]" />
+          <h3 className="flex items-center gap-2 text-base font-semibold text-finos-heading">
+            <Repeat size={18} className="text-finos-purple" />
             <span>Detected Recurring Obligations</span>
           </h3>
-          <p className="text-xs text-white/50 mt-0.5">
+          <p className="mt-1 text-sm text-finos-muted">
             Auto-detected recurring payments via amount variance & frequency
           </p>
         </div>
-        <span className="text-xs font-mono font-bold text-white bg-white/[0.05] px-2.5 py-1 rounded-md border border-white/[0.08]">
+        <span className="tabular-nums rounded-full border border-finos-purple-soft bg-finos-purple-tint px-3 py-2 text-xs font-semibold text-finos-purple">
           ₹{Math.round(totalMonthly || 0).toLocaleString('en-IN')}/mo
         </span>
       </div>
 
       <div className="space-y-2.5">
         {safeBills.length === 0 ? (
-          <div className="py-6 text-center text-xs text-white/40">
+          <div className="py-6 text-center text-sm text-finos-muted">
             No recurring payments detected yet.
           </div>
         ) : (
           safeBills.slice(0, 5)?.map((bill, idx) => (
             <div
               key={idx}
-              className="p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.05] transition-colors flex items-center justify-between"
+              className="flex items-center justify-between gap-3 rounded-2xl border border-finos-purple-soft bg-finos-purple-tint p-3 transition-colors hover:bg-finos-surface-hover"
             >
               <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 rounded-md bg-white/[0.05] flex items-center justify-center font-mono text-xs font-bold text-white/80">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-xs font-semibold text-finos-purple">
                   {bill?.day_of_month || 1}th
                 </div>
                 <div>
-                  <div className="text-xs font-medium text-white truncate max-w-[180px] sm:max-w-[240px]">
+                  <div className="max-w-[180px] truncate text-sm font-medium text-finos-heading sm:max-w-[240px]">
                     {bill?.merchant || 'Recurring Outflow'}
                   </div>
-                  <div className="flex items-center space-x-2 text-[10px] font-mono text-white/40 mt-0.5">
+                  <div className="mt-1 flex items-center gap-2 text-xs text-finos-muted">
                     <span>{bill?.cadence || 'Monthly'}</span>
                     <span>•</span>
-                    <span className="text-white/60">Due {bill?.next_due_date || 'Upcoming'}</span>
+                    <span>Due {bill?.next_due_date || 'Upcoming'}</span>
                   </div>
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-xs font-mono font-bold text-white">
+                <div className="tabular-nums text-sm font-bold text-finos-heading">
                   ₹{Math.round(bill?.average_amount || 0).toLocaleString('en-IN')}
                 </div>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-white/60 inline-block mt-0.5">
+                <span className="mt-1 inline-block rounded-full bg-white px-2 py-1 text-xs text-finos-body">
                   {bill?.category || 'Subscription'}
                 </span>
               </div>
@@ -78,6 +78,6 @@ export const RecurringBillsCard: React.FC<RecurringBillsCardProps> = ({ bills, t
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 };

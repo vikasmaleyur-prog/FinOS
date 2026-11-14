@@ -12,7 +12,7 @@ import {
   ReferenceLine,
   CartesianGrid
 } from 'recharts';
-import { TrendingDown, ShieldAlert, Sparkles, Layers } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 interface ForecastPoint {
   date: string;
@@ -34,6 +34,8 @@ interface ForecastChartProps {
   breachDate?: string | null;
 }
 
+const formatRupees = (value: number) => `₹${Math.round(value || 0).toLocaleString('en-IN')}`;
+
 export const ForecastChart: React.FC<ForecastChartProps> = ({
   data,
   currentBalance = 0,
@@ -47,47 +49,43 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
   const safeData = data && Array.isArray(data) ? data : [];
   const displayData = safeData.slice(0, dayRange);
 
-  // Custom Ramp-styled Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const pt: ForecastPoint = payload[0]?.payload;
       if (!pt) return null;
       return (
-        <div className="p-3.5 rounded-xl bg-[#0F1014] border border-white/[0.12] shadow-2xl backdrop-blur-md min-w-[210px] space-y-2">
-          <div className="flex items-center justify-between border-b border-white/[0.08] pb-1.5">
-            <span className="text-xs font-mono font-medium text-white/50">{pt.date}</span>
+        <div className="min-w-[220px] space-y-2 rounded-2xl border border-finos-border bg-white p-4 text-sm text-finos-body shadow-card">
+          <div className="flex items-center justify-between border-b border-finos-border pb-2">
+            <span className="text-sm font-medium text-finos-muted">{pt.date}</span>
             {(pt.p50 || 0) < minimumSafeBalance && (
-              <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                Breach Risk
+              <span className="rounded-full border border-finos-critical-border bg-finos-critical-tint px-2 py-1 text-xs font-semibold text-finos-critical-dark">
+                Below safe limit
               </span>
             )}
           </div>
-
-          <div className="space-y-1.5 text-xs font-mono">
-            <div className="flex items-center justify-between">
-              <span className="text-white/60">Expected Median (P50):</span>
-              <span className="font-bold text-[#d9f154]">₹{Math.round(pt.p50 || 0).toLocaleString('en-IN')}</span>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <span>Expected balance</span>
+              <strong className="tabular-nums text-finos-purple">{formatRupees(pt.p50)}</strong>
             </div>
-
             {showConfidenceBand && (
               <>
-                <div className="flex items-center justify-between text-[11px] text-white/40">
-                  <span>P90 (Optimistic):</span>
-                  <span className="text-white/80">₹{Math.round(pt.p90 || 0).toLocaleString('en-IN')}</span>
+                <div className="flex items-center justify-between gap-4 text-finos-muted">
+                  <span>Higher estimate (P90)</span>
+                  <span className="tabular-nums">{formatRupees(pt.p90)}</span>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-white/40">
-                  <span>P10 (Pessimistic):</span>
-                  <span className="text-rose-400/90">₹{Math.round(pt.p10 || 0).toLocaleString('en-IN')}</span>
+                <div className="flex items-center justify-between gap-4 text-finos-muted">
+                  <span>Lower estimate (P10)</span>
+                  <span className="tabular-nums">{formatRupees(pt.p10)}</span>
                 </div>
               </>
             )}
-
-            {pt.scheduledFixed && pt.scheduledFixed > 0 ? (
-              <div className="pt-1 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-amber-400">
-                <span>Scheduled Outflow:</span>
-                <span>-₹{Math.round(pt.scheduledFixed).toLocaleString('en-IN')}</span>
+            {pt.scheduledFixed && pt.scheduledFixed > 0 && (
+              <div className="flex items-center justify-between gap-4 border-t border-finos-border pt-2 text-finos-warning-dark">
+                <span>Scheduled bill</span>
+                <span className="tabular-nums">-{formatRupees(pt.scheduledFixed)}</span>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       );
@@ -96,160 +94,145 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
   };
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <section className="rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center space-x-2">
-            <h2 className="text-lg font-semibold text-white tracking-tight">
-              60-Day Stochastic Cash Flow Trajectory
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold text-finos-heading">
+              60-day cash flow forecast
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#d9f154]/10 text-[#d9f154] border border-[#d9f154]/20 font-semibold">
-              1,000 MONTE CARLO RUNS
+            <span className="rounded-full border border-finos-purple-soft bg-finos-purple-tint px-3 py-1.5 text-xs font-semibold text-finos-purple">
+              1,000 simulated futures
             </span>
           </div>
-          <p className="text-xs text-white/50 mt-1">
-            Simulates irregular client invoices, known recurring bills, and daily living burn rate.
+          <p className="mt-1 text-sm text-finos-muted">
+            Estimated balance from client payments, recurring bills and daily spending.
           </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
-          {/* Confidence Band Toggle */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={() => setShowConfidenceBand(!showConfidenceBand)}
-            className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors border ${
+            aria-pressed={showConfidenceBand}
+            className={`flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline ${
               showConfidenceBand
-                ? 'bg-white/[0.08] text-white border-white/[0.14]'
-                : 'text-white/40 border-transparent hover:text-white'
+                ? 'border-finos-purple bg-finos-purple-tint text-finos-purple'
+                : 'border-finos-control-border bg-white text-finos-body hover:bg-finos-surface-hover'
             }`}
           >
-            <Layers size={13} className={showConfidenceBand ? 'text-[#E2FD52]' : ''} />
-            <span>80% CI</span>
+            <Layers size={16} aria-hidden="true" />
+            <span>80% range</span>
           </button>
-
-          {/* Time range pills */}
-          <div className="flex items-center p-0.5 rounded-lg bg-black/40 border border-white/[0.08] text-xs font-mono">
+          <div className="flex min-h-11 items-center rounded-full border border-finos-control-border bg-white p-1">
             {([30, 45, 60] as const).map((days) => (
               <button
                 key={days}
+                type="button"
                 onClick={() => setDayRange(days)}
-                className={`px-2.5 py-1 rounded-md transition-all ${
+                aria-pressed={dayRange === days}
+                className={`min-h-9 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline ${
                   dayRange === days
-                    ? 'bg-[#1D2027] text-white font-medium shadow-sm'
-                    : 'text-white/40 hover:text-white'
+                    ? 'bg-finos-purple text-white'
+                    : 'text-finos-body hover:bg-finos-purple-tint'
                 }`}
               >
-                {days}D
+                {days} days
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Main Chart */}
-      <div className="h-[360px] w-full">
+      <div className="h-[320px] w-full sm:h-[360px]">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={displayData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+          <ComposedChart data={displayData} margin={{ top: 10, right: 12, left: -12, bottom: 0 }}>
             <defs>
-              {/* Neon Lime Shaded Confidence Area */}
-              <linearGradient id="rampConfidenceGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#d9f154" stopOpacity={0.22} />
-                <stop offset="95%" stopColor="#d9f154" stopOpacity={0.01} />
+              <linearGradient id="finosConfidenceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.16} />
+                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.03} />
               </linearGradient>
             </defs>
-
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.04)" vertical={false} />
-
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
             <XAxis
               dataKey="displayDate"
-              stroke="#525562"
-              fontSize={11}
+              tick={{ fill: 'var(--muted)', fontSize: 12, fontFamily: 'var(--font-inter)' }}
               tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+              axisLine={{ stroke: 'var(--chart-grid)' }}
               interval="preserveStartEnd"
             />
-
             <YAxis
-              stroke="#525562"
-              fontSize={11}
+              tick={{ fill: 'var(--muted)', fontSize: 12, fontFamily: 'var(--font-inter)' }}
               tickLine={false}
-              axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
-              tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+              axisLine={{ stroke: 'var(--chart-grid)' }}
+              tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
             />
-
             <Tooltip content={<CustomTooltip />} />
-
-            {/* Minimum Safe Balance Line */}
             <ReferenceLine
               y={minimumSafeBalance}
-              stroke="#EF4444"
-              strokeDasharray="4 4"
+              stroke="var(--critical)"
+              strokeDasharray="5 4"
               label={{
-                value: `Safe Buffer: ₹${minimumSafeBalance.toLocaleString('en-IN')}`,
+                value: `Safe balance: ₹${minimumSafeBalance.toLocaleString('en-IN')}`,
                 position: 'right',
-                fill: '#EF4444',
-                fontSize: 10,
-                fontFamily: 'monospace'
+                fill: 'var(--critical-dark)',
+                fontSize: 12,
+                fontFamily: 'var(--font-inter)'
               }}
             />
-
-            {/* Shaded 80% Confidence Interval */}
             {showConfidenceBand && (
               <Area
                 type="monotone"
                 dataKey="p90"
                 stroke="transparent"
-                fill="url(#rampConfidenceGradient)"
-                name="80% CI"
+                fill="url(#finosConfidenceGradient)"
+                name="80% confidence range"
               />
             )}
-
             {showConfidenceBand && (
               <Line
                 type="monotone"
                 dataKey="p10"
-                stroke="rgba(239, 68, 68, 0.5)"
-                strokeDasharray="2 2"
+                stroke="var(--chart-baseline)"
+                strokeDasharray="4 4"
                 strokeWidth={1.2}
                 dot={false}
+                name="Lower estimate (P10)"
               />
             )}
-
-            {/* Expected Median Trajectory (P50) */}
             <Line
               type="monotone"
               dataKey="p50"
-              stroke="#d9f154"
+              stroke="var(--primary)"
               strokeWidth={2.5}
               dot={false}
-              activeDot={{ r: 5, fill: '#d9f154', stroke: '#08090A', strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: 'var(--primary)', stroke: 'var(--card-background)', strokeWidth: 2 }}
+              name="Median balance"
             />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Legend & Stats footer */}
-      <div className="mt-4 pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between text-xs font-mono text-white/50 gap-3">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-[#E2FD52] inline-block" />
-            <span className="text-white/80">Median Trajectory (P50)</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="h-2 w-4 rounded-sm bg-[#E2FD52]/20 border border-[#E2FD52]/40 inline-block" />
-            <span>80% Confidence Band (P10 - P90)</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="h-0.5 w-4 border-b border-dashed border-rose-500 inline-block" />
-            <span className="text-rose-400">Min Buffer</span>
-          </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-finos-border pt-4 text-xs text-finos-muted">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="inline-flex items-center gap-2 text-finos-body">
+            <span className="h-2.5 w-2.5 rounded-full bg-finos-purple" />
+            Median balance
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span className="h-3 w-4 rounded-sm border border-finos-purple-soft bg-finos-purple-tint" />
+            80% confidence range (P10–P90)
+          </span>
+          <span className="inline-flex items-center gap-2 text-finos-critical-dark">
+            <span className="h-0 w-4 border-t-2 border-dashed border-finos-critical" />
+            Minimum safe balance
+          </span>
         </div>
-
-        <div className="text-[11px] text-white/40">
-          Last updated: Continuous Monte Carlo update on session change
-        </div>
+        <p>
+          {breachDate ? `Possible dip around ${breachDate}` : `${Math.round(probBelowSafe)}% chance of going below your safe balance`}
+        </p>
       </div>
-    </div>
+      <span className="sr-only">Current balance is {formatRupees(currentBalance)}.</span>
+    </section>
   );
 };

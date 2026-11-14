@@ -1,19 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  ReceiptText, 
-  SlidersHorizontal, 
-  UploadCloud, 
-  ShieldAlert, 
-  Trash2, 
-  ChevronLeft, 
+import React from 'react';
+import {
+  LayoutDashboard,
+  ReceiptText,
+  SlidersHorizontal,
+  UploadCloud,
+  ShieldAlert,
+  Trash2,
+  ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  Sparkles,
   RefreshCw,
-  Wallet
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,6 +24,8 @@ interface SidebarProps {
   hasData: boolean;
   onRefresh: () => void;
   isRefreshing: boolean;
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -37,121 +37,110 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteData,
   hasData,
   onRefresh,
-  isRefreshing
+  isRefreshing,
+  collapsed,
+  onCollapsedChange,
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
 
   const navItems = [
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'transactions' as const, label: 'Transactions', icon: ReceiptText },
-    { id: 'simulator' as const, label: 'What-If Simulator', icon: SlidersHorizontal },
+    { id: 'simulator' as const, label: 'What-If', icon: SlidersHorizontal },
   ];
 
   return (
-    <aside
-      className={`fixed top-0 left-0 h-screen z-30 transition-all duration-300 ease-in-out border-r border-white/[0.08] bg-[#0A0B0E] flex flex-col justify-between ${
-        collapsed ? 'w-[72px]' : 'w-[260px]'
-      }`}
-    >
-      {/* Top Header */}
-      <div>
-        <div className="h-16 flex items-center justify-between px-4 border-b border-white/[0.06]">
-          {!collapsed && (
-            <div className="flex items-center space-x-2.5">
-              <div className="h-7 w-7 rounded-md bg-[#d9f154] flex items-center justify-center font-bold text-black text-sm shadow-[0_0_12px_rgba(217,241,84,0.4)]">
-                F
-              </div>
-              <div className="flex items-center space-x-1.5">
-                <span className="font-semibold text-base tracking-tight text-white">FinOS</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-white/70 border border-white/[0.08]">
-                  PRO
-                </span>
-              </div>
-            </div>
-          )}
-
-          {collapsed && (
-            <div className="mx-auto h-7 w-7 rounded-md bg-[#d9f154] flex items-center justify-center font-bold text-black text-sm">
-              F
-            </div>
-          )}
-
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-md text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
-        </div>
-
-        {/* Primary Navigation */}
-        <div className="p-3 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-[#181A20] text-white border border-white/[0.12] shadow-sm'
-                    : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
-                }`}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon
-                  size={18}
-                  className={isActive ? 'text-[#d9f154]' : 'text-white/60'}
-                />
-                {!collapsed && <span>{item.label}</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="px-3 pt-2">
-          {!collapsed && (
-            <div className="text-[11px] font-mono uppercase tracking-wider text-white/40 px-3 mb-2">
-              Cash Controls
-            </div>
-          )}
-
-          <div className="space-y-1.5">
+    <>
+      <aside
+        className={`fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] flex-col justify-between rounded-r-3xl border-r border-finos-border bg-white px-3 py-5 shadow-card transition-[width] duration-300 ease-out md:flex ${
+          collapsed ? 'w-[84px]' : 'w-64'
+        }`}
+      >
+        <div>
+          <div className="mb-5 flex items-center justify-between px-1">
+            {!collapsed && (
+              <span className="px-3 text-xs font-semibold uppercase tracking-[0.12em] text-finos-muted">
+                Workspace
+              </span>
+            )}
             <button
-              onClick={openUploadModal}
-              className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium text-white bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] transition-colors"
-              title={collapsed ? "Upload Statement" : undefined}
+              type="button"
+              onClick={() => onCollapsedChange(!collapsed)}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-finos-muted transition-colors hover:bg-finos-purple-tint hover:text-finos-purple focus-visible:outline"
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              <UploadCloud size={16} className="text-[#d9f154]" />
-              {!collapsed && <span>Upload Statement</span>}
-            </button>
-
-            <button
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors"
-              title={collapsed ? "Sync Calculations" : undefined}
-            >
-              <RefreshCw size={15} className={`text-white/50 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {!collapsed && <span>Sync Calculations</span>}
+              {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             </button>
           </div>
-        </div>
 
-        {/* Minimum Safe Balance Slider in Sidebar */}
-        {!collapsed && (
-          <div className="px-3 mt-4">
-            <div className="p-3 rounded-lg bg-[#121418] border border-white/[0.06] space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-white/60 font-medium flex items-center space-x-1">
-                  <ShieldAlert size={12} className="text-amber-400" />
-                  <span>Min Safe Balance</span>
+          <nav aria-label="Main navigation" className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveTab(item.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex h-12 w-full items-center gap-3 rounded-full px-3 text-left text-sm font-medium transition-colors focus-visible:outline ${
+                    isActive
+                      ? 'bg-finos-purple-tint text-finos-purple'
+                      : 'text-finos-body hover:bg-finos-background hover:text-finos-heading'
+                  } ${collapsed ? 'justify-center' : ''}`}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <Icon size={19} aria-hidden="true" />
+                  {!collapsed && <span>{item.label}</span>}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="mt-7 space-y-2">
+            {!collapsed && (
+              <p className="px-3 text-xs font-semibold uppercase tracking-[0.12em] text-finos-muted">
+                Cash controls
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={openUploadModal}
+              className={`flex h-11 w-full items-center gap-3 rounded-full border border-finos-purple-soft bg-white px-3 text-sm font-semibold text-finos-purple transition-colors hover:bg-finos-purple-tint focus-visible:outline ${
+                collapsed ? 'justify-center' : ''
+              }`}
+              title={collapsed ? 'Upload statement' : undefined}
+            >
+              <UploadCloud size={18} aria-hidden="true" />
+              {!collapsed && <span>Upload statement</span>}
+            </button>
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className={`flex h-11 w-full items-center gap-3 rounded-full px-3 text-sm font-medium text-finos-body transition-colors hover:bg-finos-background focus-visible:outline disabled:cursor-wait ${
+                collapsed ? 'justify-center' : ''
+              }`}
+              title={collapsed ? 'Refresh calculations' : undefined}
+            >
+              <RefreshCw
+                size={17}
+                className={isRefreshing ? 'animate-spin' : ''}
+                aria-hidden="true"
+              />
+              {!collapsed && <span>Refresh calculations</span>}
+            </button>
+          </div>
+
+          {!collapsed && (
+            <div className="mt-5 rounded-2xl border border-finos-border bg-finos-background p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-finos-body">
+                  <ShieldAlert size={15} className="text-finos-warning-dark" aria-hidden="true" />
+                  Safe balance
                 </span>
-                <span className="text-xs font-mono font-semibold text-[#d9f154]">
+                <span className="tabular-nums text-xs font-semibold text-finos-purple">
                   ₹{minSafeBalance.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -162,66 +151,91 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 step={1000}
                 value={minSafeBalance}
                 onChange={(e) => setMinSafeBalance(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded-lg appearance-none cursor-pointer accent-[#d9f154]"
+                aria-label="Minimum safe balance"
+                className="w-full accent-finos-purple"
               />
-              <p className="text-[10px] text-white/40 leading-tight">
-                Alerts fire when 60-day Monte Carlo paths dip below this buffer.
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3 border-t border-finos-border pt-4">
+          {!collapsed && (
+            <div className="flex gap-2 rounded-2xl bg-finos-purple-tint p-3 text-xs leading-relaxed text-finos-body">
+              <ShieldCheck size={17} className="mt-0.5 shrink-0 text-finos-success-strong" aria-hidden="true" />
+              <p>
+                <span className="block font-semibold text-finos-heading">Privacy first</span>
+                Your data stays local to this session.
               </p>
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Bottom Section: Privacy & Delete My Data */}
-      <div className="p-3 border-t border-white/[0.06] space-y-2">
-        {!collapsed && (
-          <div className="p-2.5 rounded-lg bg-emerald-500/[0.06] border border-emerald-500/20 flex items-start space-x-2">
-            <ShieldCheck size={16} className="text-emerald-400 mt-0.5 shrink-0" />
-            <div className="text-[10px] text-white/70 leading-relaxed">
-              <span className="font-semibold text-emerald-400 block mb-0.5">DPDP Act 2023 Compliant</span>
-              PII is masked on-the-fly. Zero raw transaction persistence.
+          {showConfirmDelete ? (
+            <div className="space-y-2 rounded-2xl border border-finos-critical-border bg-finos-critical-tint p-3">
+              {!collapsed && (
+                <p className="text-xs leading-relaxed text-finos-body">
+                  Delete your data from this session?
+                </p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteData();
+                    setShowConfirmDelete(false);
+                  }}
+                  className="min-h-11 flex-1 rounded-full bg-finos-critical px-3 text-xs font-semibold text-white transition-colors hover:bg-finos-critical-dark"
+                >
+                  Confirm
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDelete(false)}
+                  className="min-h-11 flex-1 rounded-full border border-finos-border bg-white px-3 text-xs font-semibold text-finos-body hover:bg-finos-background"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowConfirmDelete(true)}
+              disabled={!hasData}
+              className={`flex min-h-11 w-full items-center gap-2 rounded-full px-3 text-sm font-medium text-finos-critical-dark transition-colors hover:bg-finos-critical-tint focus-visible:outline disabled:cursor-not-allowed disabled:bg-finos-critical-tint disabled:text-finos-muted ${
+                collapsed ? 'justify-center' : ''
+              }`}
+              title={collapsed ? 'Delete my data' : undefined}
+            >
+              <Trash2 size={17} aria-hidden="true" />
+              {!collapsed && <span>Delete my data</span>}
+            </button>
+          )}
+        </div>
+      </aside>
 
-        {/* Delete My Data Button */}
-        {showConfirmDelete ? (
-          <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 space-y-2">
-            {!collapsed && (
-              <p className="text-[10px] text-rose-300">
-                Permanently purge all data from session memory?
-              </p>
-            )}
-            <div className="flex items-center space-x-1.5">
-              <button
-                onClick={() => {
-                  onDeleteData();
-                  setShowConfirmDelete(false);
-                }}
-                className="flex-1 py-1 px-2 rounded bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-medium transition-colors"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => setShowConfirmDelete(false)}
-                className="py-1 px-2 rounded bg-white/10 hover:bg-white/20 text-white/80 text-[11px] transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowConfirmDelete(true)}
-            disabled={!hasData}
-            className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium text-white/40 hover:text-rose-400 hover:bg-rose-500/[0.06] transition-colors disabled:opacity-30 disabled:pointer-events-none"
-            title={collapsed ? "Delete My Data (DPDP)" : undefined}
-          >
-            <Trash2 size={15} />
-            {!collapsed && <span>Delete My Data</span>}
-          </button>
-        )}
-      </div>
-    </aside>
+      <nav
+        aria-label="Mobile navigation"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-finos-border bg-white px-2 pb-[env(safe-area-inset-bottom)] pt-1 shadow-card md:hidden"
+      >
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveTab(item.id)}
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-xs font-medium focus-visible:outline ${
+                isActive ? 'text-finos-purple' : 'text-finos-muted'
+              }`}
+            >
+              <Icon size={19} aria-hidden="true" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </>
   );
 };

@@ -1,9 +1,17 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'FinOS | Predictive Cash Flow Operating System',
-  description: 'Enterprise-grade predictive cash flow manager and stress-test simulator for irregular earners and freelancers.',
+  title: 'FinOS | Your cash flow, made clearer',
+  description: 'Understand your cash flow and plan ahead with FinOS.',
 };
 
 export default function RootLayout({
@@ -12,16 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="bg-[#08090A] text-white min-h-screen antialiased selection:bg-[#E2FD52] selection:text-black font-sans">
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen bg-finos-background font-sans text-finos-heading antialiased selection:bg-finos-purple-soft selection:text-finos-heading">
         {children}
       </body>
     </html>

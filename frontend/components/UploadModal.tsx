@@ -95,40 +95,41 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg rounded-2xl bg-[#0F1014] border border-white/[0.12] p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-finos-overlay p-4">
+      <div className="relative my-auto w-full max-w-lg rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors"
+          aria-label="Close upload dialog"
+          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full text-finos-muted transition-colors hover:bg-finos-purple-tint hover:text-finos-heading"
         >
           <X size={18} />
         </button>
 
         {/* Modal Header */}
-        <div className="mb-5">
-          <div className="flex items-center space-x-2 text-[#d9f154] mb-1">
+        <div className="mb-5 pr-10">
+          <div className="mb-2 flex items-center gap-2 text-finos-purple">
             <UploadCloud size={18} />
-            <span className="text-xs font-mono font-semibold uppercase tracking-wider">
-              Stateless Ingestion
+            <span className="text-xs font-semibold uppercase tracking-[0.06em]">
+              Secure import
             </span>
           </div>
-          <h3 className="text-lg font-bold text-white tracking-tight">
-            Upload PhonePe or Bank Statement (CSV)
+          <h3 className="text-xl font-bold text-finos-heading">
+            Upload a bank statement
           </h3>
-          <p className="text-xs text-white/50 mt-1">
-            Supports PhonePe UPI exports, HDFC, SBI, ICICI, Axis, Razorpay statements.
+          <p className="mt-2 text-sm text-finos-body">
+            Supports UPI exports and HDFC, SBI, ICICI, Axis and Razorpay statements.
           </p>
         </div>
 
         {/* DPDP Act 2023 Shield Banner */}
-        <div className="mb-5 p-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/20 flex items-start space-x-2.5">
-          <ShieldCheck size={18} className="text-emerald-400 mt-0.5 shrink-0" />
-          <div className="text-xs text-white/80 leading-relaxed">
-            <strong className="text-emerald-400 block font-medium mb-0.5">
-              DPDP Act 2023 Compliant Ingestion
+        <div className="mb-5 flex items-start gap-3 rounded-2xl border border-finos-success-border bg-finos-success-tint p-4">
+          <ShieldCheck size={18} className="mt-0.5 shrink-0 text-finos-success-strong" />
+          <div className="text-sm leading-relaxed text-finos-body">
+            <strong className="mb-1 block font-semibold text-finos-heading">
+              Your statement stays private
             </strong>
-            Zero server retention. UPI IDs, phone numbers, and UTRs are sanitized on-the-fly.
+            Identifying details are masked during processing and are not stored on the server.
           </div>
         </div>
 
@@ -138,7 +139,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="border-2 border-dashed border-white/[0.12] hover:border-[#d9f154]/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-white/[0.01]"
+            className="cursor-pointer rounded-2xl border-2 border-dashed border-finos-purple-soft bg-finos-purple-tint p-6 text-center transition-colors hover:border-finos-purple focus-within:ring-2 focus-within:ring-finos-purple"
             onClick={() => document.getElementById('csv-file-input')?.click()}
           >
             <input
@@ -148,18 +149,18 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               onChange={handleFileChange}
               className="hidden"
             />
-            <FileText size={28} className="mx-auto text-white/40 mb-2" />
+            <FileText size={28} className="mx-auto mb-2 text-finos-purple" />
             {file ? (
-              <div className="text-xs font-mono text-white">
-                Selected: <span className="text-[#d9f154] font-semibold">{file.name}</span> ({(file.size / 1024).toFixed(1)} KB)
+              <div className="text-sm text-finos-heading">
+                Selected: <span className="font-semibold text-finos-purple">{file.name}</span> ({(file.size / 1024).toFixed(1)} KB)
               </div>
             ) : (
               <>
-                <div className="text-xs font-medium text-white">
-                  Drop CSV statement here or <span className="text-[#d9f154]">browse files</span>
+                <div className="text-sm font-medium text-finos-heading">
+                  Drop a CSV statement here or <span className="text-finos-purple">browse files</span>
                 </div>
-                <div className="text-[10px] font-mono text-white/40 mt-1">
-                  Supports PhonePe 3-line preambles, HDFC, SBI statements
+                <div className="mt-2 text-xs text-finos-muted">
+                  Supports bank statement preambles and common CSV exports
                 </div>
               </>
             )}
@@ -168,7 +169,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           {/* Inputs: Starting Balance & Minimum Safe Buffer */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-mono text-white/50 block mb-1">
+              <label className="mb-2 block text-sm font-medium text-finos-body">
                 Starting Balance (₹)
               </label>
               <input
@@ -176,12 +177,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 value={startingBalance}
                 onChange={(e) => setStartingBalance(e.target.value)}
                 placeholder="75000"
-                className="w-full px-3 py-2 bg-black/40 border border-white/[0.1] rounded-lg text-xs font-mono text-white focus:outline-none focus:border-[#d9f154]"
+                className="min-h-12 w-full rounded-xl border border-finos-control-border bg-white px-3 text-sm text-finos-heading focus:border-finos-purple focus:outline-none focus:ring-2 focus:ring-finos-purple"
               />
             </div>
 
             <div>
-              <label className="text-[11px] font-mono text-white/50 block mb-1">
+              <label className="mb-2 block text-sm font-medium text-finos-body">
                 Minimum Buffer (₹)
               </label>
               <input
@@ -189,14 +190,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 value={minSafeBalance}
                 onChange={(e) => setMinSafeBalance(e.target.value)}
                 placeholder="5000"
-                className="w-full px-3 py-2 bg-black/40 border border-white/[0.1] rounded-lg text-xs font-mono text-white focus:outline-none focus:border-[#d9f154]"
+                className="min-h-12 w-full rounded-xl border border-finos-control-border bg-white px-3 text-sm text-finos-heading focus:border-finos-purple focus:outline-none focus:ring-2 focus:ring-finos-purple"
               />
             </div>
           </div>
 
           {localError && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
-              <AlertCircle size={15} className="shrink-0 text-rose-400" />
+            <div className="flex items-center gap-2 rounded-xl border border-finos-critical-border bg-finos-critical-tint p-3 text-sm text-finos-critical-dark">
+              <AlertCircle size={16} className="shrink-0" />
               <span>{localError}</span>
             </div>
           )}
@@ -204,11 +205,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           <button
             type="submit"
             disabled={uploading || !file}
-            className="w-full py-2.5 rounded-lg bg-[#d9f154] hover:bg-[#cbf037] text-black text-xs font-bold tracking-tight transition-colors disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center space-x-2 cursor-pointer shadow-[0_0_15px_rgba(217,241,84,0.25)]"
+            className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-finos-purple px-4 text-sm font-semibold text-white transition-colors hover:bg-finos-purple-hover focus-visible:outline disabled:cursor-not-allowed disabled:bg-finos-purple-soft disabled:text-finos-muted"
           >
             {uploading ? (
               <div className="flex items-center space-x-2">
-                <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 <span>Processing & Categorizing...</span>
               </div>
             ) : (

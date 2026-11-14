@@ -141,19 +141,19 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
       const pt = payload[0]?.payload;
       if (!pt) return null;
       return (
-        <div className="p-3 rounded-xl bg-[#0F1014] border border-white/[0.12] shadow-2xl backdrop-blur-md min-w-[220px] space-y-2 text-xs font-mono">
-          <div className="font-semibold text-white/50 border-b border-white/[0.08] pb-1">
+        <div className="min-w-[220px] space-y-2 rounded-2xl border border-finos-border bg-white p-4 text-sm text-finos-body shadow-card">
+          <div className="border-b border-finos-border pb-2 font-semibold text-finos-muted">
             {pt.date}
           </div>
-          <div className="flex items-center justify-between text-white/70">
+          <div className="flex items-center justify-between text-finos-body">
             <span>Baseline (P50):</span>
-            <span className="text-white font-bold">₹{Math.round(pt.baseline_p50 || 0).toLocaleString('en-IN')}</span>
+            <span className="tabular-nums font-bold text-finos-heading">₹{Math.round(pt.baseline_p50 || 0).toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex items-center justify-between text-[#d9f154]">
+          <div className="flex items-center justify-between text-finos-purple">
             <span>Simulated (P50):</span>
-            <span className="font-bold">₹{Math.round(pt.simulated_p50 || 0).toLocaleString('en-IN')}</span>
+            <span className="tabular-nums font-bold">₹{Math.round(pt.simulated_p50 || 0).toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex items-center justify-between text-rose-400 text-[11px] pt-1 border-t border-white/[0.06]">
+          <div className="flex items-center justify-between border-t border-finos-border pt-2 text-xs text-finos-critical-dark">
             <span>Safe Threshold:</span>
             <span>₹{Math.round(pt.safeThreshold || safeBalance).toLocaleString('en-IN')}</span>
           </div>
@@ -169,11 +169,11 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
     <div className="space-y-6">
       {/* Title & Introduction */}
       <div>
-        <h2 className="text-xl font-bold text-white tracking-tight flex items-center space-x-2">
-          <SlidersHorizontal size={20} className="text-[#d9f154]" />
+        <h2 className="flex items-center gap-2 text-xl font-bold text-finos-heading">
+          <SlidersHorizontal size={20} className="text-finos-purple" />
           <span>What-If Cash Flow Stress Testing</span>
         </h2>
-        <p className="text-xs text-white/50 mt-1">
+        <p className="mt-2 text-sm text-finos-body">
           Stress-test major capital expenditures, freelance payment delays, or new EMI debt before committing.
         </p>
       </div>
@@ -182,42 +182,42 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
       {delta && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           {/* Risk Change */}
-          <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-            <span className="text-xs font-mono text-white/50 block mb-1">Breach Probability Delta</span>
+          <div className="rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
+            <span className="mb-1 block text-sm font-medium text-finos-muted">Breach Probability Delta</span>
             <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-bold font-mono text-white">
+              <span className="tabular-nums text-2xl font-bold text-finos-heading">
                 {delta.baseline_risk}%
               </span>
-              <ArrowRight size={14} className="text-white/40" />
-              <span className={`text-2xl font-bold font-mono ${delta.simulated_risk > delta.baseline_risk ? 'text-rose-400' : 'text-[#d9f154]'}`}>
+              <ArrowRight size={16} className="text-finos-muted" />
+              <span className={`tabular-nums text-2xl font-bold ${delta.simulated_risk > delta.baseline_risk ? 'text-finos-critical-dark' : 'text-finos-success-strong'}`}>
                 {delta.simulated_risk}%
               </span>
             </div>
-            <div className="text-[11px] font-mono text-white/40 mt-1">
+            <div className="mt-2 text-xs text-finos-muted">
               {delta.risk_increase_pct > 0 ? `+${delta.risk_increase_pct}% increase in risk` : 'Risk unchanged'}
             </div>
           </div>
 
           {/* Lowest Balance Impact */}
-          <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-            <span className="text-xs font-mono text-white/50 block mb-1">Lowest Median Balance</span>
+          <div className="rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
+            <span className="mb-1 block text-sm font-medium text-finos-muted">Lowest Median Balance</span>
             <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-bold font-mono text-white">
+              <span className="tabular-nums text-2xl font-bold text-finos-heading">
                 ₹{Math.round(delta.simulated_min_balance || 0).toLocaleString('en-IN')}
               </span>
             </div>
-            <div className={`text-[11px] font-mono mt-1 ${delta.balance_impact < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+            <div className={`mt-2 text-xs font-medium ${delta.balance_impact < 0 ? 'text-finos-critical-dark' : 'text-finos-success-strong'}`}>
               Impact: {delta.balance_impact < 0 ? '' : '+'}₹{Math.round(delta.balance_impact || 0).toLocaleString('en-IN')}
             </div>
           </div>
 
           {/* First Breach Date */}
-          <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-            <span className="text-xs font-mono text-white/50 block mb-1">Simulated Breach Date</span>
-            <div className="text-2xl font-bold font-mono text-white">
+          <div className="rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
+            <span className="mb-1 block text-sm font-medium text-finos-muted">Simulated Breach Date</span>
+            <div className="text-2xl font-bold text-finos-heading">
               {delta.new_breach_date || 'No Breach'}
             </div>
-            <div className="text-[11px] font-mono text-white/40 mt-1">
+            <div className="mt-2 text-xs text-finos-muted">
               Safe buffer: ₹{safeBalance.toLocaleString('en-IN')}
             </div>
           </div>
@@ -225,21 +225,21 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
       )}
 
       {/* Main Comparative Chart */}
-      <div className="rounded-xl border border-white/[0.08] bg-[#121418] p-5">
+      <div className="rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-white tracking-tight">
+            <h3 className="text-base font-semibold text-finos-heading">
               Before vs. After Trajectory (P50 Comparison)
             </h3>
-            <p className="text-xs text-white/50 mt-0.5">
-              White line: Current Baseline • Neon Lime: Stress Scenario
+            <p className="mt-1 text-sm text-finos-muted">
+              Grey-purple line: current baseline · Purple line: simulated scenario
             </p>
           </div>
-          <div className="flex items-center space-x-2 text-xs font-mono text-white/50">
-            <span className="h-2 w-2 rounded-full bg-white inline-block" />
+          <div className="flex flex-wrap items-center gap-2 text-xs text-finos-body">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-finos-chart-baseline" />
             <span>Baseline</span>
-            <span className="h-2 w-2 rounded-full bg-[#d9f154] inline-block ml-2" />
-            <span className="text-[#d9f154]">Simulated</span>
+            <span className="ml-2 inline-block h-2.5 w-2.5 rounded-full bg-finos-purple" />
+            <span className="text-finos-purple">Simulated</span>
           </div>
         </div>
 
@@ -247,32 +247,30 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
           {simulationData && simulationData.timeline && simulationData.timeline.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={simulationData.timeline} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.04)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
                 <XAxis
                   dataKey="displayDate"
-                  stroke="#525562"
-                  fontSize={11}
+                  tick={{ fill: 'var(--muted)', fontSize: 12, fontFamily: 'var(--font-inter)' }}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+                  axisLine={{ stroke: 'var(--chart-grid)' }}
                 />
                 <YAxis
-                  stroke="#525562"
-                  fontSize={11}
+                  tick={{ fill: 'var(--muted)', fontSize: 12, fontFamily: 'var(--font-inter)' }}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+                  axisLine={{ stroke: 'var(--chart-grid)' }}
                   tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip content={<CustomSimTooltip />} />
                 <ReferenceLine
                   y={safeBalance}
-                  stroke="#EF4444"
+                  stroke="var(--critical)"
                   strokeDasharray="4 4"
                   label={{
                     value: `Buffer: ₹${safeBalance.toLocaleString('en-IN')}`,
                     position: 'right',
-                    fill: '#EF4444',
-                    fontSize: 10,
-                    fontFamily: 'monospace'
+                    fill: 'var(--critical-dark)',
+                    fontSize: 12,
+                    fontFamily: 'var(--font-inter)'
                   }}
                 />
 
@@ -280,7 +278,7 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 <Line
                   type="monotone"
                   dataKey="baseline_p50"
-                  stroke="#6B7280"
+                  stroke="var(--chart-baseline)"
                   strokeWidth={1.8}
                   strokeDasharray="4 4"
                   dot={false}
@@ -290,15 +288,15 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 <Line
                   type="monotone"
                   dataKey="simulated_p50"
-                  stroke="#d9f154"
+                  stroke="var(--primary)"
                   strokeWidth={2.5}
                   dot={false}
-                  activeDot={{ r: 5, fill: '#d9f154', stroke: '#08090A', strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: 'var(--primary)', stroke: 'var(--card-background)', strokeWidth: 2 }}
                 />
               </ComposedChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex items-center justify-center text-xs font-mono text-white/40">
+            <div className="flex h-full items-center justify-center text-sm text-finos-muted">
               Running simulation...
             </div>
           )}
@@ -308,35 +306,35 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
       {/* Interactive Controls Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Module 1: Large One-Time Expense */}
-        <div className="p-5 rounded-xl bg-[#121418] border border-white/[0.08] space-y-4">
+        <div className="space-y-4 rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-white flex items-center space-x-2">
-              <DollarSign size={16} className="text-[#d9f154]" />
+            <span className="flex items-center gap-2 text-sm font-semibold text-finos-heading">
+              <DollarSign size={18} className="text-finos-purple" />
               <span>Simulate One-Time Purchase</span>
             </span>
             <input
               type="checkbox"
               checked={includePurchase}
               onChange={(e) => setIncludePurchase(e.target.checked)}
-              className="accent-[#d9f154] h-4 w-4 rounded cursor-pointer"
+              className="h-5 w-5 cursor-pointer accent-finos-purple focus-visible:outline"
             />
           </div>
 
-          <div className={`space-y-3 ${!includePurchase ? 'opacity-40 pointer-events-none' : ''}`}>
+          <div className={`space-y-4 ${!includePurchase ? 'pointer-events-none' : ''}`}>
             <div>
-              <label className="text-[11px] font-mono text-white/50 block mb-1">Item Name</label>
+              <label className="mb-2 block text-sm font-medium text-finos-body">Item Name</label>
               <input
                 type="text"
                 value={purchaseName}
                 onChange={(e) => setPurchaseName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-black/40 border border-white/[0.1] rounded-lg text-xs text-white"
+                className="min-h-12 w-full rounded-xl border border-finos-control-border bg-white px-3 text-sm text-finos-heading focus:border-finos-purple focus:outline-none focus:ring-2 focus:ring-finos-purple"
               />
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-white/60">Amount</span>
-                <span className="text-[#d9f154] font-bold">₹{purchaseAmount.toLocaleString('en-IN')}</span>
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-finos-body">Amount</span>
+                <span className="tabular-nums font-bold text-finos-purple">₹{purchaseAmount.toLocaleString('en-IN')}</span>
               </div>
               <input
                 type="range"
@@ -345,14 +343,14 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 step={5000}
                 value={purchaseAmount}
                 onChange={(e) => setPurchaseAmount(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded appearance-none accent-[#d9f154]"
+                className="w-full accent-finos-purple"
               />
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-white/60">Purchase Date Offset</span>
-                <span className="text-white/80">Day {purchaseDayOffset}</span>
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-finos-body">Purchase Date Offset</span>
+                <span className="text-finos-heading">Day {purchaseDayOffset}</span>
               </div>
               <input
                 type="range"
@@ -361,29 +359,29 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 step={1}
                 value={purchaseDayOffset}
                 onChange={(e) => setPurchaseDayOffset(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded appearance-none accent-[#d9f154]"
+                className="w-full accent-finos-purple"
               />
             </div>
           </div>
         </div>
 
         {/* Module 2: Freelance Client Payment Delay */}
-        <div className="p-5 rounded-xl bg-[#121418] border border-white/[0.08] space-y-4">
+        <div className="space-y-4 rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-white flex items-center space-x-2">
-              <Calendar size={16} className="text-amber-400" />
+            <span className="flex items-center gap-2 text-sm font-semibold text-finos-heading">
+              <Calendar size={18} className="text-finos-warning-dark" />
               <span>Client Invoice Payment Delay</span>
             </span>
-            <span className="text-xs font-mono text-amber-400 font-bold">
+            <span className="rounded-full bg-finos-warning-tint px-3 py-1.5 text-xs font-semibold text-finos-warning-dark">
               +{incomeDelayDays} Days
             </span>
           </div>
 
           <div className="space-y-4 pt-1">
             <div>
-              <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-white/60">Simulated Payment Lag</span>
-                <span className="text-white/80">{incomeDelayDays} days delayed</span>
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-finos-body">Simulated Payment Lag</span>
+                <span className="text-finos-heading">{incomeDelayDays} days delayed</span>
               </div>
               <input
                 type="range"
@@ -392,17 +390,17 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 step={1}
                 value={incomeDelayDays}
                 onChange={(e) => setIncomeDelayDays(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded appearance-none accent-amber-400"
+                className="w-full accent-finos-purple"
               />
-              <p className="text-[10px] text-white/40 mt-1">
+              <p className="mt-2 text-xs text-finos-muted">
                 Simulates late client approval or escrow clearance delay.
               </p>
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-white/60">Client Payout Variation</span>
-                <span className="text-white/80">{incomeBoostPct >= 0 ? `+${incomeBoostPct}%` : `${incomeBoostPct}%`}</span>
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-finos-body">Client Payout Variation</span>
+                <span className="text-finos-heading">{incomeBoostPct >= 0 ? `+${incomeBoostPct}%` : `${incomeBoostPct}%`}</span>
               </div>
               <input
                 type="range"
@@ -411,42 +409,42 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 step={5}
                 value={incomeBoostPct}
                 onChange={(e) => setIncomeBoostPct(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded appearance-none accent-[#d9f154]"
+                className="w-full accent-finos-purple"
               />
             </div>
           </div>
         </div>
 
         {/* Module 3: New Loan / Monthly EMI */}
-        <div className="p-5 rounded-xl bg-[#121418] border border-white/[0.08] space-y-4">
+        <div className="space-y-4 rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-white flex items-center space-x-2">
-              <PlusCircle size={16} className="text-purple-400" />
+            <span className="flex items-center gap-2 text-sm font-semibold text-finos-heading">
+              <PlusCircle size={18} className="text-finos-purple" />
               <span>Simulate New Monthly EMI</span>
             </span>
             <input
               type="checkbox"
               checked={includeEmi}
               onChange={(e) => setIncludeEmi(e.target.checked)}
-              className="accent-purple-400 h-4 w-4 rounded cursor-pointer"
+              className="h-5 w-5 cursor-pointer accent-finos-purple focus-visible:outline"
             />
           </div>
 
-          <div className={`space-y-3 ${!includeEmi ? 'opacity-40 pointer-events-none' : ''}`}>
+          <div className={`space-y-4 ${!includeEmi ? 'pointer-events-none' : ''}`}>
             <div>
-              <label className="text-[11px] font-mono text-white/50 block mb-1">Loan Purpose</label>
+              <label className="mb-2 block text-sm font-medium text-finos-body">Loan Purpose</label>
               <input
                 type="text"
                 value={emiName}
                 onChange={(e) => setEmiName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-black/40 border border-white/[0.1] rounded-lg text-xs text-white"
+                className="min-h-12 w-full rounded-xl border border-finos-control-border bg-white px-3 text-sm text-finos-heading focus:border-finos-purple focus:outline-none focus:ring-2 focus:ring-finos-purple"
               />
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-white/60">Monthly Installment</span>
-                <span className="text-purple-400 font-bold">₹{emiAmount.toLocaleString('en-IN')}/mo</span>
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-finos-body">Monthly Installment</span>
+                <span className="tabular-nums font-bold text-finos-purple">₹{emiAmount.toLocaleString('en-IN')}/mo</span>
               </div>
               <input
                 type="range"
@@ -455,14 +453,14 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 step={1000}
                 value={emiAmount}
                 onChange={(e) => setEmiAmount(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded appearance-none accent-purple-400"
+                className="w-full accent-finos-purple"
               />
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-white/60">Debit Day of Month</span>
-                <span className="text-white/80">{emiDayOfMonth}th of month</span>
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-finos-body">Debit Day of Month</span>
+                <span className="text-finos-heading">{emiDayOfMonth}th of month</span>
               </div>
               <input
                 type="range"
@@ -471,29 +469,29 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 step={1}
                 value={emiDayOfMonth}
                 onChange={(e) => setEmiDayOfMonth(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded appearance-none accent-purple-400"
+                className="w-full accent-finos-purple"
               />
             </div>
           </div>
         </div>
 
         {/* Module 4: Minimum Safe Buffer */}
-        <div className="p-5 rounded-xl bg-[#121418] border border-white/[0.08] space-y-4">
+        <div className="space-y-4 rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-white flex items-center space-x-2">
-              <Zap size={16} className="text-rose-400" />
+            <span className="flex items-center gap-2 text-sm font-semibold text-finos-heading">
+              <Zap size={18} className="text-finos-critical-dark" />
               <span>Safe Buffer Threshold</span>
             </span>
-            <span className="text-xs font-mono font-bold text-rose-400">
+            <span className="tabular-nums rounded-full bg-finos-critical-tint px-3 py-1.5 text-xs font-semibold text-finos-critical-dark">
               ₹{safeBalance.toLocaleString('en-IN')}
             </span>
           </div>
 
           <div className="space-y-4 pt-1">
             <div>
-              <div className="flex justify-between text-xs font-mono mb-1">
-                <span className="text-white/60">Trigger Limit</span>
-                <span className="text-white/80">₹{safeBalance.toLocaleString('en-IN')}</span>
+              <div className="mb-2 flex justify-between text-sm">
+                <span className="text-finos-body">Trigger Limit</span>
+                <span className="tabular-nums text-finos-heading">₹{safeBalance.toLocaleString('en-IN')}</span>
               </div>
               <input
                 type="range"
@@ -502,9 +500,9 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
                 step={1000}
                 value={safeBalance}
                 onChange={(e) => setSafeBalance(Number(e.target.value))}
-                className="w-full h-1 bg-white/[0.1] rounded appearance-none accent-rose-400"
+                className="w-full accent-finos-purple"
               />
-              <p className="text-[10px] text-white/40 mt-1">
+              <p className="mt-2 text-xs text-finos-muted">
                 The minimum emergency balance you refuse to drop below.
               </p>
             </div>
@@ -514,26 +512,26 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
 
       {/* AI Explainability & Diagnostic Analysis */}
       {simulationData && simulationData.explanation && (
-        <div className="p-5 rounded-xl bg-[#121418] border border-white/[0.08] space-y-3">
+        <div className="space-y-4 rounded-card border border-finos-border bg-finos-card p-6 shadow-card">
           <div className="flex items-center space-x-2">
-            <Sparkles size={16} className="text-[#d9f154]" />
-            <h4 className="text-sm font-semibold text-white">
+            <Sparkles size={18} className="text-finos-purple" />
+            <h4 className="text-base font-semibold text-finos-heading">
               Stress Test Diagnosis & Strategy
             </h4>
           </div>
 
-          <p className="text-xs text-white/70 leading-relaxed font-sans">
+          <p className="text-sm leading-relaxed text-finos-body">
             {simulationData.explanation.root_cause || ''}
           </p>
 
           {simulationData.explanation.actionable_recommendations && (
-            <div className="pt-2 border-t border-white/[0.06] space-y-1.5">
-              <span className="text-[11px] font-mono text-white/50 uppercase tracking-wider block">
+            <div className="space-y-2 border-t border-finos-border pt-3">
+              <span className="block text-xs font-semibold uppercase tracking-[0.06em] text-finos-muted">
                 Suggested Mitigations:
               </span>
               {simulationData.explanation.actionable_recommendations?.map((rec, i) => (
-                <div key={i} className="flex items-start space-x-2 text-xs text-white/80">
-                  <span className="text-[#d9f154] mt-0.5">•</span>
+                <div key={i} className="flex items-start gap-2 text-sm text-finos-body">
+                  <span className="mt-0.5 text-finos-purple">•</span>
                   <span>{rec}</span>
                 </div>
               ))}

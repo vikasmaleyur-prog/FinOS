@@ -14,16 +14,17 @@ import { UploadModal } from '@/components/UploadModal';
 import { EmptyState } from '@/components/EmptyState';
 import { 
   UploadCloud, 
-  CircleAlert, 
-  LogOut, 
   X,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck,
+  UserRound,
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator'>('overview');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [minSafeBalance, setMinSafeBalance] = useState<number>(5000);
   
@@ -118,11 +119,54 @@ export default function DashboardPage() {
   const hasData = Boolean(transactions && Array.isArray(transactions) && transactions.length > 0);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex font-sans selection:bg-[#d9f154] selection:text-black">
+    <div className="min-h-screen bg-finos-background font-sans text-finos-heading">
+      <header className="sticky top-0 z-40 border-b border-finos-border bg-white">
+        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <Link href="/dashboard" className="flex min-h-11 items-center gap-2.5 rounded-lg focus-visible:outline">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-finos-purple text-sm font-bold text-white shadow-sm">
+              F
+            </span>
+            <span className="text-lg font-bold text-finos-heading">FinOS</span>
+          </Link>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span
+              aria-label="Privacy: data stays local"
+              className="inline-flex h-10 w-10 items-center justify-center gap-1.5 rounded-full bg-finos-purple-tint text-xs font-medium text-finos-purple sm:h-auto sm:w-auto sm:px-3 sm:py-2"
+            >
+              <ShieldCheck size={15} aria-hidden="true" />
+              <span className="hidden sm:inline">Privacy: data stays local</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setUploadError(null);
+                setIsUploadModalOpen(true);
+              }}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-finos-purple px-4 text-xs font-semibold text-white transition-colors hover:bg-finos-purple-hover focus-visible:outline sm:text-sm"
+            >
+              <UploadCloud size={16} aria-hidden="true" />
+              <span className="hidden sm:inline">Import statement</span>
+              <span className="sm:hidden">Import</span>
+            </button>
+            <Link
+              href="/login"
+              aria-label="Sign out"
+              title="Sign out"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-finos-purple-soft bg-finos-purple-tint text-sm font-semibold text-finos-purple transition-colors hover:bg-finos-purple-soft focus-visible:outline"
+            >
+              <UserRound size={18} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </header>
+
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        collapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
         openUploadModal={() => {
           setUploadError(null);
           setIsUploadModalOpen(true);
@@ -141,59 +185,37 @@ export default function DashboardPage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-[72px] md:ml-[260px] p-5 md:p-8 max-w-7xl transition-all">
-        {/* Top Ramp-style Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
-          <div>
-            <div className="flex items-center space-x-2 text-xs font-mono text-white/50 mb-1">
-              <span>FINOS WORKSPACE</span>
-              <span>/</span>
-              <span className="text-[#d9f154] font-semibold uppercase">{activeTab}</span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white capitalize">
-              {activeTab === 'overview' && 'Cash Flow Overview & Risk Radar'}
-              {activeTab === 'transactions' && 'Ledger & Categorized Transactions'}
-              {activeTab === 'simulator' && 'What-If Cash Flow Stress Testing'}
+      <main
+        className={`min-w-0 pb-24 transition-[margin] duration-300 ease-out md:pb-8 ${
+          isSidebarCollapsed ? 'md:ml-[84px]' : 'md:ml-64'
+        }`}
+      >
+        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+          <header className="mb-6 border-b border-finos-border pb-5">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-finos-purple">
+              Your workspace <span className="px-1 text-finos-muted">/</span> {activeTab}
+            </p>
+            <h1 className="text-2xl font-bold text-finos-heading sm:text-3xl">
+              {activeTab === 'overview' && 'Cash flow overview'}
+              {activeTab === 'transactions' && 'Your transactions'}
+              {activeTab === 'simulator' && 'Plan a what-if'}
             </h1>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {/* Quick Upload Button */}
-            <button
-              onClick={() => {
-                setUploadError(null);
-                setIsUploadModalOpen(true);
-              }}
-              className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-[#d9f154] hover:bg-[#cbf037] text-black text-xs font-bold tracking-tight transition-all shadow-[0_0_15px_rgba(217,241,84,0.25)] cursor-pointer"
-            >
-              <UploadCloud size={15} />
-              <span>Import Statement</span>
-            </button>
-
-            {/* User Avatar & Logout */}
-            <Link
-              href="/login"
-              className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors border border-white/[0.08]"
-              title="Sign Out to Login Page"
-            >
-              <LogOut size={16} />
-            </Link>
-          </div>
-        </header>
+          </header>
 
         {/* Upload Error Alert / Toast Notification */}
         {uploadError && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start justify-between">
+          <div className="mb-6 flex items-start justify-between rounded-2xl border border-finos-critical-border bg-finos-critical-tint p-4 text-sm text-finos-critical-dark">
             <div className="flex items-start space-x-3">
-              <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-400" />
+              <AlertCircle size={18} className="mt-0.5 shrink-0" />
               <div>
-                <strong className="block font-semibold mb-0.5">Failed to Process Statement</strong>
+                <strong className="mb-0.5 block font-semibold">Could not process your statement</strong>
                 <span>{uploadError}</span>
               </div>
             </div>
             <button
               onClick={() => setUploadError(null)}
-              className="p-1 rounded text-rose-400 hover:text-white hover:bg-rose-500/20 transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-finos-critical-tint focus-visible:outline"
+              aria-label="Dismiss error"
             >
               <X size={15} />
             </button>
@@ -250,8 +272,8 @@ export default function DashboardPage() {
                     breachDate={forecast?.forecast_meta?.first_breach_date}
                   />
                 ) : (
-                  <div className="p-12 text-center rounded-xl border border-white/[0.08] bg-[#121418] text-white/40 font-mono text-xs">
-                    Computing 1,000 Monte Carlo paths...
+                  <div className="rounded-card border border-finos-border bg-finos-card p-12 text-center text-sm text-finos-muted shadow-card">
+                    Preparing your forecast…
                   </div>
                 )}
 
@@ -292,6 +314,7 @@ export default function DashboardPage() {
             )}
           </>
         )}
+        </div>
       </main>
 
       {/* CSV Upload Modal */}

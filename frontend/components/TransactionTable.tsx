@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Search, 
-  ShieldCheck, 
-  AlertTriangle, 
-  ChevronLeft, 
-  ChevronRight, 
-  ArrowDownLeft, 
+import {
+  Search,
+  ShieldCheck,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  ArrowDownLeft,
   ArrowUpRight
 } from 'lucide-react';
 
@@ -37,6 +37,13 @@ interface TransactionTableProps {
   piiStats?: Record<string, number> | null;
 }
 
+const formatRupees = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 export const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   anomalies,
@@ -49,30 +56,22 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const categories = ['All', 'Income', 'Investments', 'Food', 'Travel', 'Bills & Utilities', 'Shopping', 'Health', 'EMI/Loans', 'Rent', 'Subscriptions', 'Other/Transfer'];
 
-  // Safe client-side filtering with optional chaining
   const filteredTransactions = useMemo(() => {
     if (!transactions || !Array.isArray(transactions)) return [];
-    
+
     return transactions.filter((txn) => {
       if (!txn) return false;
-      
-      // Category filter
       if (categoryFilter !== 'All') {
         const cat = (txn.Category || '').toLowerCase();
         if (cat !== categoryFilter.toLowerCase()) return false;
       }
-
-      // Search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const desc = (txn.Description || '').toLowerCase();
         const ref = (txn.Reference_No || '').toLowerCase();
         const cat = (txn.Category || '').toLowerCase();
-        if (!desc.includes(query) && !ref.includes(query) && !cat.includes(query)) {
-          return false;
-        }
+        if (!desc.includes(query) && !ref.includes(query) && !cat.includes(query)) return false;
       }
-
       return true;
     });
   }, [transactions, categoryFilter, searchQuery]);
@@ -86,7 +85,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     return filteredTransactions.slice(start, start + pageSize);
   }, [filteredTransactions, currentPage, pageSize]);
 
-  // Check if a transaction is flagged as anomaly safely
   const isAnomaly = (txn: Transaction) => {
     if (!anomalies || !Array.isArray(anomalies) || !txn) return false;
     return anomalies.some(
@@ -104,70 +102,64 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   const getCategoryBadge = (cat: string) => {
     switch ((cat || '').toLowerCase()) {
       case 'income':
-        return 'bg-[#d9f154]/10 text-[#d9f154] border-[#d9f154]/30';
       case 'investments':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'border-finos-category-income bg-finos-category-income-tint text-finos-success-strong';
       case 'rent':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+        return 'border-finos-category-rent bg-finos-category-rent-tint text-finos-category-rent';
       case 'emi/loans':
       case 'emi':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'border-finos-category-emi bg-finos-category-emi-tint text-finos-category-emi';
       case 'food':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+        return 'border-finos-category-food bg-finos-category-food-tint text-finos-category-food-strong';
       case 'travel':
-        return 'bg-teal-500/10 text-teal-400 border-teal-500/30';
+        return 'border-finos-category-travel bg-finos-category-travel-tint text-finos-category-travel';
       case 'bills & utilities':
-        return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
-      case 'shopping':
-        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+        return 'border-finos-warning bg-finos-warning-tint text-finos-warning-dark';
       case 'health':
-        return 'bg-pink-500/10 text-pink-400 border-pink-500/30';
+        return 'border-finos-category-health bg-finos-category-health-tint text-finos-category-health';
       case 'subscriptions':
-        return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+        return 'border-finos-category-travel bg-finos-category-travel-tint text-finos-category-travel';
       default:
-        return 'bg-white/[0.06] text-white/70 border-white/[0.1]';
+        return 'border-finos-border bg-finos-category-other-tint text-finos-category-other';
     }
   };
 
   return (
     <div className="space-y-4">
-      {/* Top Controls Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-xl bg-[#121418] border border-white/[0.08]">
-        {/* Search Input */}
-        <div className="relative flex-1 max-w-md">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+      <section className="flex flex-col gap-4 rounded-card border border-finos-border bg-finos-card p-6 shadow-card md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full max-w-md">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-finos-muted" aria-hidden="true" />
           <input
             type="text"
-            placeholder="Search merchant, narration, reference number..."
+            placeholder="Search merchant, narration or reference..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2 bg-black/40 border border-white/[0.1] rounded-lg text-xs font-sans text-white placeholder-white/40 focus:outline-none focus:border-[#d9f154] transition-colors"
+            className="min-h-12 w-full rounded-xl border border-finos-control-border bg-white pl-11 pr-4 text-sm text-finos-heading placeholder:text-finos-muted focus:border-finos-purple focus:outline-none focus:ring-2 focus:ring-finos-purple"
           />
         </div>
-
-        {/* DPDP Act 2023 Masking Indicator */}
-        <div className="flex items-center space-x-2 text-[11px] font-mono text-emerald-400 bg-emerald-500/[0.08] border border-emerald-500/20 px-3 py-1.5 rounded-lg shrink-0">
-          <ShieldCheck size={14} />
-          <span>DPDP Act 2023: PII Masked & Zero-Retention</span>
+        <div className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border border-finos-success-border bg-finos-success-tint px-4 text-xs font-medium text-finos-success-strong md:self-auto">
+          <ShieldCheck size={16} aria-hidden="true" />
+          <span>PII masked for your privacy</span>
         </div>
-      </div>
+      </section>
 
-      {/* Category Filter Pills */}
-      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none">
-        {categories?.map((cat) => (
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {categories.map((cat) => (
           <button
             key={cat}
+            type="button"
             onClick={() => {
               setCategoryFilter(cat);
               setPage(1);
             }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer ${
+            aria-pressed={categoryFilter === cat}
+            className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline ${
               categoryFilter === cat
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'text-white/60 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white border border-white/[0.06]'
+                ? 'border-finos-purple bg-finos-purple text-white'
+                : 'border-finos-control-border bg-white text-finos-body hover:bg-finos-purple-tint'
             }`}
           >
             {cat}
@@ -175,98 +167,84 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         ))}
       </div>
 
-      {/* Data Table */}
-      <div className="rounded-xl border border-white/[0.08] bg-[#121418] overflow-hidden">
+      <section className="overflow-hidden rounded-card border border-finos-border bg-finos-card shadow-card">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-white/[0.08] bg-white/[0.02] text-[11px] font-mono uppercase tracking-wider text-white/40">
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4">Description (PII Sanitized)</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4 text-right">Amount</th>
-                <th className="py-3 px-4 text-right">Running Balance</th>
-                <th className="py-3 px-4 text-center">Status</th>
+          <table className="w-full min-w-[780px] text-left text-sm">
+            <thead className="sticky top-16 z-10 bg-finos-purple-tint text-finos-body">
+              <tr className="border-b border-finos-purple-soft text-xs font-semibold">
+                <th scope="col" className="px-4 py-4">Date</th>
+                <th scope="col" className="px-4 py-4">Description</th>
+                <th scope="col" className="px-4 py-4">Category</th>
+                <th scope="col" className="px-4 py-4 text-right">Amount</th>
+                <th scope="col" className="px-4 py-4 text-right">Running balance</th>
+                <th scope="col" className="px-4 py-4 text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.05] font-sans">
+            <tbody className="divide-y divide-finos-border text-finos-body">
               {!transactions || transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-white/40 font-mono">
+                  <td colSpan={6} className="py-12 text-center text-sm text-finos-muted">
                     No transactions loaded. Please import a bank statement.
                   </td>
                 </tr>
               ) : paginatedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-white/40 font-mono">
+                  <td colSpan={6} className="py-12 text-center text-sm text-finos-muted">
                     No transactions match current filters.
                   </td>
                 </tr>
               ) : (
-                paginatedTransactions?.map((txn, idx) => {
+                paginatedTransactions.map((txn, idx) => {
                   const amt = Number(txn?.Amount || 0);
                   const isCredit = amt > 0;
                   const anomaly = isAnomaly(txn);
                   const anomalyData = anomaly ? getAnomalyDetails(txn) : null;
                   const bal = Number(txn?.['Running Balance'] ?? txn?.Balance ?? 0);
+                  const category = txn?.Category || 'Other';
 
                   return (
-                    <tr
-                      key={idx}
-                      className="hover:bg-white/[0.03] transition-colors group"
-                    >
-                      {/* Date */}
-                      <td className="py-3 px-4 font-mono text-white/60 text-[11px] whitespace-nowrap">
-                        {txn?.Date || '-'}
-                      </td>
-
-                      {/* Description */}
-                      <td className="py-3 px-4 max-w-sm">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-white truncate group-hover:text-[#d9f154] transition-colors">
-                            {txn?.Description || 'Transaction'}
+                    <tr key={idx} className="transition-colors hover:bg-finos-surface-hover">
+                      <td className="whitespace-nowrap px-4 py-4 text-sm text-finos-muted">{txn?.Date || '-'}</td>
+                      <td className="max-w-sm px-4 py-4">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${getCategoryBadge(category)}`}>
+                            <span className="text-sm font-semibold">{category.charAt(0)}</span>
                           </span>
-                        </div>
-                        {txn?.Reference_No && (
-                          <div className="text-[10px] font-mono text-white/30 mt-0.5">
-                            {txn.Reference_No}
+                          <div className="min-w-0">
+                            <span className="block truncate text-sm font-medium text-finos-heading">
+                              {txn?.Description || 'Transaction'}
+                            </span>
+                            {txn?.Reference_No && (
+                              <span className="mt-0.5 block truncate text-xs text-finos-muted">{txn.Reference_No}</span>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </td>
-
-                      {/* Category */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${getCategoryBadge(txn?.Category || 'Other')}`}>
-                          {txn?.Category || 'Other'}
+                      <td className="whitespace-nowrap px-4 py-4">
+                        <span className={`inline-flex min-h-7 items-center rounded-full border px-3 text-xs font-medium ${getCategoryBadge(category)}`}>
+                          {category}
                         </span>
                       </td>
-
-                      {/* Amount */}
-                      <td className="py-3 px-4 text-right font-mono font-semibold whitespace-nowrap">
-                        <span className={isCredit ? 'text-[#d9f154]' : 'text-white'}>
-                          {isCredit ? '+' : ''}₹{Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <td className="whitespace-nowrap px-4 py-4 text-right">
+                        <span className={`inline-flex items-center justify-end gap-1 tabular-nums text-sm font-semibold ${isCredit ? 'text-finos-success-strong' : 'text-finos-heading'}`}>
+                          {isCredit ? <ArrowDownLeft size={15} /> : <ArrowUpRight size={15} />}
+                          {isCredit ? '+' : ''}{formatRupees.format(Math.abs(amt))}
                         </span>
                       </td>
-
-                      {/* Running Balance */}
-                      <td className="py-3 px-4 text-right font-mono text-white/60 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-4 py-4 text-right text-sm tabular-nums text-finos-body">
                         ₹{Math.round(bal).toLocaleString('en-IN')}
                       </td>
-
-                      {/* Status / Anomaly */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <td className="whitespace-nowrap px-4 py-4 text-center">
                         {anomaly ? (
                           <span
-                            className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help"
-                            title={anomalyData?.reason || "Statistical anomaly detected by Isolation Forest"}
+                            className="inline-flex min-h-7 items-center gap-1 rounded-full border border-finos-warning-border bg-finos-warning-tint px-3 text-xs font-semibold text-finos-warning-dark"
+                            title={anomalyData?.reason || 'Statistical anomaly detected'}
                           >
-                            <AlertTriangle size={11} />
-                            <span>ANOMALY</span>
+                            <AlertTriangle size={14} aria-hidden="true" />
+                            <span>Review</span>
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono text-white/30">
-                            VERIFIED
-                          </span>
+                          <span className="text-xs font-medium text-finos-success-strong">Verified</span>
                         )}
                       </td>
                     </tr>
@@ -277,33 +255,31 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
           </table>
         </div>
 
-        {/* Pagination Bar */}
-        <div className="flex items-center justify-between p-4 border-t border-white/[0.08] text-xs font-mono text-white/50">
-          <div>
-            Showing {paginatedTransactions.length} of {total} transactions
-          </div>
-
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col gap-3 border-t border-finos-border p-4 text-sm text-finos-body sm:flex-row sm:items-center sm:justify-between">
+          <div>Showing {paginatedTransactions.length} of {total} transactions</div>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <button
+              type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
-              className="p-1.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              aria-label="Previous page"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-finos-control-border bg-white text-finos-purple transition-colors hover:bg-finos-purple-tint focus-visible:outline disabled:cursor-not-allowed disabled:bg-finos-purple-tint disabled:text-finos-muted"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
             </button>
-            <span className="text-white/80">
-              Page {currentPage} of {pages}
-            </span>
+            <span className="px-2 text-sm text-finos-body">Page {currentPage} of {pages}</span>
             <button
+              type="button"
               onClick={() => setPage((p) => Math.min(pages, p + 1))}
               disabled={currentPage >= pages}
-              className="p-1.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              aria-label="Next page"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-finos-control-border bg-white text-finos-purple transition-colors hover:bg-finos-purple-tint focus-visible:outline disabled:cursor-not-allowed disabled:bg-finos-purple-tint disabled:text-finos-muted"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

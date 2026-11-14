@@ -3,48 +3,152 @@
 @tailwind utilities;
 
 :root {
-  --background: #08090A;
-  --foreground: #FFFFFF;
+  color-scheme: light;
+  --primary: #663399;
+  --primary-hover: #55297F;
+  --primary-pressed: #46216A;
+  --purple-tint: #F4EEFA;
+  --purple-soft: #EBDDF7;
+  --background: #F7F5FA;
+  --card-background: #FFFFFF;
+  --card-border: #ECE7F2;
+  --control-border: #D9D2E6;
+  --surface-hover: #FAF7FD;
+  --heading: #1B1230;
+  --body: #3B3552;
+  --muted: #6B6584;
+  --success: #1FA971;
+  --success-strong: #14764D;
+  --success-tint: #E8F7F0;
+  --success-border: #B9E8D3;
+  --warning: #F5A623;
+  --warning-tint: #FFF4E0;
+  --warning-dark: #8A4B08;
+  --warning-border: #F5D49A;
+  --critical: #E5484D;
+  --critical-dark: #B42318;
+  --critical-tint: #FDECEC;
+  --critical-border: #F7C5C5;
+  --medium: #8E5CC9;
+  --chart-confidence: rgba(102, 51, 153, 0.12);
+  --chart-grid: #ECE7F2;
+  --chart-baseline: #8A84A0;
+  --overlay: rgba(27, 18, 48, 0.2);
+  --category-food: #C65D11;
+  --category-food-strong: #A3440A;
+  --category-food-tint: #FFF1E8;
+  --category-rent: #663399;
+  --category-rent-tint: #F4EEFA;
+  --category-emi: #2864A8;
+  --category-emi-tint: #EAF2FC;
+  --category-income: #1FA971;
+  --category-income-tint: #E8F7F0;
+  --category-travel: #087C77;
+  --category-travel-tint: #E7F6F4;
+  --category-health: #B64272;
+  --category-health-tint: #FCECF3;
+  --category-other: #6B6584;
+  --category-other-tint: #F0EEF4;
+  --foreground: var(--heading);
+  --card-radius: 20px;
+  --card-shadow: 0 4px 20px rgba(102, 51, 153, 0.08);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom crisp dark scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #08090A;
+  background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--purple-soft);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--medium);
 }
 
-/* Tabular digits for financial precision */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Glassmorphism Ramp effect */
-.ramp-glass {
-  background: rgba(20, 22, 26, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
-.ramp-glass-card {
-  background: linear-gradient(180deg, rgba(27, 29, 35, 0.75) 0%, rgba(18, 19, 23, 0.85) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+input[type="checkbox"],
+input[type="range"] {
+  accent-color: var(--primary);
+}
+
+input[type="range"] {
+  height: 28px;
+  cursor: pointer;
+  appearance: none;
+  background: transparent;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--purple-soft);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  appearance: none;
+  border: 2px solid var(--card-background);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: var(--card-shadow);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--purple-soft);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--card-background);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: var(--card-shadow);
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -11,8 +11,8 @@ export default function RootPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-      <div className="h-6 w-6 border-2 border-[#d9f154] border-t-transparent rounded-full animate-spin" />
+    <div className="flex min-h-screen items-center justify-center bg-finos-background">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-finos-purple border-t-transparent" />
     </div>
   );
 }

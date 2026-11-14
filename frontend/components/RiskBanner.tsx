@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, CheckCircle2, Info, ArrowUpRight, ShieldCheck, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info, ArrowRight, Zap } from 'lucide-react';
 
 interface RiskBannerProps {
   probBelowSafe: number;
@@ -14,6 +14,12 @@ interface RiskBannerProps {
   lowestExpectedBalance?: number;
 }
 
+const formatRupees = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+
 export const RiskBanner: React.FC<RiskBannerProps> = ({
   probBelowSafe,
   riskLevel,
@@ -22,90 +28,100 @@ export const RiskBanner: React.FC<RiskBannerProps> = ({
   headline,
   rootCause,
   recommendations,
-  lowestExpectedBalance
+  lowestExpectedBalance,
 }) => {
   const isCritical = riskLevel === 'CRITICAL' || probBelowSafe >= 50;
   const isWarning = (riskLevel === 'WARNING' || probBelowSafe >= 20) && !isCritical;
-  const isHealthy = !isCritical && !isWarning;
-
-  const badgeColor = isCritical
-    ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+  const severity = isCritical
+    ? { label: 'Critical', color: 'var(--critical)', tint: 'var(--critical-tint)', text: 'var(--critical-dark)', border: 'var(--critical-border)' }
     : isWarning
-    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-    : 'bg-[#d9f154]/10 text-[#d9f154] border-[#d9f154]/30';
-
-  const containerGlow = isCritical
-    ? 'border-rose-500/30 bg-gradient-to-r from-rose-950/20 via-[#131418] to-[#131418]'
-    : isWarning
-    ? 'border-amber-500/30 bg-gradient-to-r from-amber-950/20 via-[#131418] to-[#131418]'
-    : 'border-white/[0.08] bg-[#121418]';
+      ? probBelowSafe >= 35
+        ? { label: 'High', color: 'var(--warning)', tint: 'var(--warning-tint)', text: 'var(--warning-dark)', border: 'var(--warning-border)' }
+        : { label: 'Medium', color: 'var(--medium)', tint: 'var(--purple-tint)', text: 'var(--primary)', border: 'var(--purple-soft)' }
+      : { label: 'Low', color: 'var(--success)', tint: 'var(--success-tint)', text: 'var(--success-strong)', border: 'var(--success-border)' };
+  const ringProgress = Math.max(0, Math.min(100, probBelowSafe));
 
   return (
-    <div className={`rounded-xl border p-5 relative overflow-hidden transition-all duration-200 ${containerGlow}`}>
-      {/* Top Banner Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-lg bg-white/[0.04] border border-white/[0.08]">
-            {isCritical && <AlertTriangle className="text-rose-400" size={20} />}
-            {isWarning && <AlertTriangle className="text-amber-400" size={20} />}
-            {isHealthy && <CheckCircle2 className="text-[#d9f154]" size={20} />}
-          </div>
-
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className={`text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border font-semibold ${badgeColor}`}>
-                {riskLevel} RISK • {probBelowSafe}% BREACH PROBABILITY
+    <section
+      aria-label="Cash flow risk summary"
+      className="relative overflow-hidden rounded-card border border-finos-border bg-finos-card p-6 shadow-card"
+      style={{ borderLeft: `6px solid ${severity.color}` }}
+    >
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex min-h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold"
+              style={{ backgroundColor: severity.tint, color: severity.text, borderColor: severity.border }}
+            >
+              {isCritical ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
+              {severity.label} risk
+            </span>
+            {firstBreachDate && (
+              <span className="inline-flex min-h-7 items-center rounded-full bg-finos-surface-hover px-3 text-xs font-medium text-finos-muted">
+                Expected around {firstBreachDate}
               </span>
-              {firstBreachDate && (
-                <span className="text-[11px] font-mono text-white/50">
-                  Breach window: ~{firstBreachDate}
-                </span>
-              )}
-            </div>
-
-            <h3 className="text-base font-semibold text-white mt-1">
-              {headline || (isCritical
-                ? `${probBelowSafe}% chance your balance drops below ₹${minSafeBalance.toLocaleString('en-IN')} around ${firstBreachDate || 'mid-month'}`
-                : `60-Day Cash Flow Stable: Safe balance buffer intact`)}
-            </h3>
+            )}
           </div>
+          <h2 className="max-w-3xl text-2xl font-bold leading-tight text-finos-heading sm:text-[28px]">
+            {headline || (isCritical
+              ? `${probBelowSafe}% chance your balance drops below ${formatRupees.format(minSafeBalance)} around ${firstBreachDate || 'mid-month'}`
+              : 'Your balance is expected to stay above your safe limit.')}
+          </h2>
         </div>
 
-        {lowestExpectedBalance !== undefined && (
-          <div className="flex items-center md:flex-col md:items-end justify-between border-t md:border-t-0 border-white/[0.06] pt-2 md:pt-0">
-            <span className="text-[11px] font-mono text-white/40 uppercase">Projected Dip</span>
-            <span className={`text-base font-mono font-bold ${lowestExpectedBalance < minSafeBalance ? 'text-rose-400' : 'text-white'}`}>
-              ₹{Math.round(lowestExpectedBalance).toLocaleString('en-IN')}
-            </span>
+        <div className="flex items-center justify-between gap-5 sm:min-w-[220px] sm:flex-col sm:items-end">
+          <div
+            className="grid h-24 w-24 shrink-0 place-items-center rounded-full p-2"
+            style={{ background: `conic-gradient(${severity.color} ${ringProgress}%, var(--purple-soft) ${ringProgress}% 100%)` }}
+            role="img"
+            aria-label={`${probBelowSafe}% chance of falling below your safe balance`}
+          >
+            <div className="grid h-full w-full place-items-center rounded-full bg-white text-center">
+              <span className="tabular-nums text-2xl font-bold text-finos-heading">
+                {Math.round(probBelowSafe)}%
+              </span>
+            </div>
           </div>
-        )}
+          {lowestExpectedBalance !== undefined && (
+            <div className="sm:text-right">
+              <p className="text-xs font-semibold uppercase tracking-[0.06em] text-finos-muted">Projected dip</p>
+              <p className="tabular-nums text-2xl font-bold text-finos-critical-dark">
+                {formatRupees.format(lowestExpectedBalance)}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Root Cause Explainability */}
       {rootCause && (
-        <div className="mt-3 p-3 rounded-lg bg-black/40 border border-white/[0.05] text-xs text-white/80 leading-relaxed font-sans">
-          <span className="font-semibold text-white flex items-center space-x-1.5 mb-1 text-[11px] text-white/90">
-            <Info size={13} className="text-[#d9f154]" />
-            <span>Root-Cause Asymmetry Analysis:</span>
-          </span>
-          <p className="text-white/70">{rootCause}</p>
+        <div className="mt-5 rounded-2xl border border-finos-purple-soft bg-finos-purple-tint p-6">
+          <div className="mb-2 flex items-center gap-2">
+            <Info size={18} className="shrink-0 text-finos-purple" aria-hidden="true" />
+            <h3 className="text-sm font-bold text-finos-heading">Why this may happen</h3>
+          </div>
+          <p className="text-sm leading-relaxed text-finos-body">{rootCause}</p>
+          <p className="mt-3 text-xs text-finos-body">
+            Your safe balance is <strong className="tabular-nums font-semibold text-finos-heading">{formatRupees.format(minSafeBalance)}</strong>
+            {firstBreachDate && <> · Expected window: <strong className="font-semibold text-finos-heading">{firstBreachDate}</strong></>}
+          </p>
         </div>
       )}
 
-      {/* Actionable Remedies */}
       {recommendations && recommendations.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {recommendations?.map((action, idx) => (
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {recommendations.slice(0, 3).map((action, idx) => (
             <div
               key={idx}
-              className="flex items-center space-x-1.5 text-[11px] font-medium text-white/85 bg-white/[0.04] hover:bg-white/[0.08] px-2.5 py-1.5 rounded-md border border-white/[0.08] transition-colors"
+              className="group flex min-h-12 items-center gap-2 rounded-2xl border border-finos-purple-soft bg-white px-3 py-2 text-sm font-medium text-finos-heading transition-colors hover:bg-finos-purple-tint"
             >
-              <Zap size={11} className="text-[#d9f154]" />
-              <span>{action}</span>
+              <Zap size={16} className="shrink-0 text-finos-purple" aria-hidden="true" />
+              <span className="min-w-0 flex-1">{action}</span>
+              <ArrowRight size={15} className="shrink-0 text-finos-purple transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </div>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 };
