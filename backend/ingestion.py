@@ -319,3 +319,63 @@ class StatementParser:
         }
 
         return final_df, stats
+
+    @classmethod
+    def parse_pdf(cls, file_bytes: bytes, starting_balance: Optional[float] = 75000.0) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+        """
+        Parses PhonePe or Indian bank PDF statement using pdfplumber:
+        - Extracts tabular rows across all pages
+        - Dynamically locates header row containing Date and Amount
+        - Cleans, standardizes, sorts chronologically, and builds running balance
+        """
+        try:
+            import pdfplumber
+        except ImportError:
+            raise StatementIngestionError("pdfplumber is required for PDF ingestion. Please run 'pip install pdfplumber'.")
+
+        all_rows = []
+        try:
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                for page in pdf.pages:
+                    tables = page.extract_tables()
+                    for table in tables:
+                        for row in table:
+                            if row and any(cell and str(cell).strip() for cell in row):
+                                cleaned_cells = [str(c or "").replace('\n', ' ').strip() for c in row]
+                                all_rows.append(cleaned_cells)
+        except Exception as e:
+            raise StatementIngestionError(f"Failed to read PDF pages: {str(e)}")
+
+        if not all_rows:
+            raise StatementIngestionError("No readable table data could be extracted from this PDF statement.")
+
+        # Find header row
+        header_idx = None
+        for i, row in enumerate(all_rows[:15]):
+            row_lower = [str(c).lower() for c in row]
+            has_date = any('date' in c for c in row_lower)
+            has_amt = any('amount' in c or 'debit' in c or 'credit' in c for c in row_lower)
+            if has_date and has_amt:
+                header_idx = i
+                break
+
+        if header_idx is None:
+            header_idx = 0
+
+        header = all_rows[header_idx]
+        data_rows = all_rows[header_idx + 1:]
+
+        # Convert to in-memory CSV string
+        csv_buffer = io.StringIO()
+        def fmt_row(r):
+            # Normalize row length to header length
+            r_padded = r[:len(header)] + [""] * max(0, len(header) - len(r))
+            return ",".join([f'"{cell.replace("\"", "\"\"")}"' for cell in r_padded])
+
+        csv_buffer.write(fmt_row(header) + "\n")
+        for r in data_rows:
+            if any(cell.strip() for cell in r):
+                csv_buffer.write(fmt_row(r) + "\n")
+
+        csv_bytes = csv_buffer.getvalue().encode('utf-8')
+        return cls.parse_csv(csv_bytes, starting_balance=starting_balance)

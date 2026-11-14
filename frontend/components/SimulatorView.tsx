@@ -60,13 +60,15 @@ interface SimulatorViewProps {
   currentBalance: number;
   minimumSafeBalance: number;
   transactions?: any[] | null;
+  accountType?: string;
 }
 
 export const SimulatorView: React.FC<SimulatorViewProps> = ({
   apiBase,
   currentBalance,
   minimumSafeBalance,
-  transactions
+  transactions,
+  accountType = 'savings'
 }) => {
   // Simulator Inputs
   const [purchaseName, setPurchaseName] = useState('New MacBook Pro M3');
@@ -83,8 +85,33 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
   const [incomeBoostPct, setIncomeBoostPct] = useState<number>(0);
   const [safeBalance, setSafeBalance] = useState<number>(minimumSafeBalance);
 
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [simulationData, setSimulationData] = useState<SimulationResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+
+  const applyPreset = (preset: 'late_payment' | 'bulk_purchase' | 'new_hire') => {
+    setActiveScenario(preset);
+    if (preset === 'late_payment') {
+      setIncomeDelayDays(20);
+      setIncomeBoostPct(0);
+      setIncludePurchase(false);
+      setIncludeEmi(false);
+    } else if (preset === 'bulk_purchase') {
+      setPurchaseName('Bulk Wholesale Stock Purchase');
+      setPurchaseAmount(75000);
+      setPurchaseDayOffset(5);
+      setIncludePurchase(true);
+      setIncomeDelayDays(0);
+      setIncludeEmi(false);
+    } else if (preset === 'new_hire') {
+      setEmiName('New Staff Hire Salary');
+      setEmiAmount(20000);
+      setEmiDayOfMonth(1);
+      setIncludeEmi(true);
+      setIncludePurchase(false);
+      setIncomeDelayDays(0);
+    }
+  };
 
   const runSimulation = async () => {
     setLoading(true);
@@ -95,6 +122,7 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
         minimum_safe_balance: safeBalance,
         income_delay_days: incomeDelayDays,
         income_boost_pct: incomeBoostPct,
+        account_type: accountType,
         one_time_expenses: includePurchase && purchaseAmount > 0 ? [
           { name: purchaseName, amount: purchaseAmount, day_offset: purchaseDayOffset }
         ] : [],
@@ -176,6 +204,44 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
         <p className="text-xs text-white/50 mt-1">
           Stress-test major capital expenditures, freelance payment delays, or new EMI debt before committing.
         </p>
+      </div>
+
+      {/* One-Click Scenario Presets */}
+      <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] flex flex-wrap items-center gap-2.5">
+        <span className="text-xs font-mono text-white/50 flex items-center space-x-1.5 mr-1">
+          <Zap size={14} className="text-[#d9f154]" />
+          <span>Quick Scenarios:</span>
+        </span>
+        <button
+          onClick={() => applyPreset('late_payment')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'late_payment'
+              ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
+              : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
+          }`}
+        >
+          <span>⏱️ Customer Pays 20d Late</span>
+        </button>
+        <button
+          onClick={() => applyPreset('bulk_purchase')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'bulk_purchase'
+              ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
+              : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
+          }`}
+        >
+          <span>📦 Bulk Stock Purchase (₹75k)</span>
+        </button>
+        <button
+          onClick={() => applyPreset('new_hire')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 border ${
+            activeScenario === 'new_hire'
+              ? 'bg-[#d9f154] text-black border-[#d9f154] font-semibold'
+              : 'bg-white/[0.04] text-white/80 hover:text-white hover:bg-white/[0.08] border-white/[0.08]'
+          }`}
+        >
+          <span>👥 New Staff Hire (₹20k/mo)</span>
+        </button>
       </div>
 
       {/* Delta Metrics Headline Row */}

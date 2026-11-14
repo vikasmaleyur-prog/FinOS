@@ -21,6 +21,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   onError
 }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [accountType, setAccountType] = useState<'savings' | 'current'>('savings');
   const [startingBalance, setStartingBalance] = useState<string>('75000');
   const [minSafeBalance, setMinSafeBalance] = useState<string>('5000');
   const [uploading, setUploading] = useState<boolean>(false);
@@ -57,6 +58,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('account_type', accountType);
     if (startingBalance) {
       formData.append('starting_balance', startingBalance);
       formData.append('opening_balance', startingBalance);
@@ -144,7 +146,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             <input
               id="csv-file-input"
               type="file"
-              accept=".csv,.txt"
+              accept=".csv,.txt,.pdf"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -156,13 +158,48 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             ) : (
               <>
                 <div className="text-xs font-medium text-white">
-                  Drop CSV statement here or <span className="text-[#d9f154]">browse files</span>
+                  Drop CSV or PDF statement here or <span className="text-[#d9f154]">browse files</span>
                 </div>
                 <div className="text-[10px] font-mono text-white/40 mt-1">
-                  Supports PhonePe 3-line preambles, HDFC, SBI statements
+                  Supports PhonePe (CSV/PDF), HDFC, SBI, ICICI, Razorpay, and Current Accounts
                 </div>
               </>
             )}
+          </div>
+
+          {/* Account Type Toggle */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-mono text-white/50 block">Account Classification</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAccountType('savings');
+                  setMinSafeBalance('5000');
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-medium border text-center transition-all ${
+                  accountType === 'savings'
+                    ? 'bg-[#d9f154] text-black border-[#d9f154] font-bold'
+                    : 'bg-white/[0.03] text-white/70 border-white/[0.08] hover:text-white'
+                }`}
+              >
+                Savings / Freelancer
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAccountType('current');
+                  setMinSafeBalance('25000');
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-medium border text-center transition-all ${
+                  accountType === 'current'
+                    ? 'bg-[#d9f154] text-black border-[#d9f154] font-bold'
+                    : 'bg-white/[0.03] text-white/70 border-white/[0.08] hover:text-white'
+                }`}
+              >
+                Current / SMB Overdraft
+              </button>
+            </div>
           </div>
 
           {/* Inputs: Starting Balance & Minimum Safe Buffer */}
@@ -182,13 +219,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
             <div>
               <label className="text-[11px] font-mono text-white/50 block mb-1">
-                Minimum Buffer (₹)
+                {accountType === 'current' ? 'Overdraft / Safe Buffer (₹)' : 'Minimum Safe Buffer (₹)'}
               </label>
               <input
                 type="number"
                 value={minSafeBalance}
                 onChange={(e) => setMinSafeBalance(e.target.value)}
-                placeholder="5000"
+                placeholder={accountType === 'current' ? '25000' : '5000'}
                 className="w-full px-3 py-2 bg-black/40 border border-white/[0.1] rounded-lg text-xs font-mono text-white focus:outline-none focus:border-[#d9f154]"
               />
             </div>

@@ -60,10 +60,12 @@ Thumbs.db
 *.swp
 *.swo
 
-# Local test bank statements & raw PII data (keep synthetic_transactions.csv)
+# Local test bank statements & raw PII data (keep synthetic sample datasets)
 PhonePe_Statement_*.csv
 *phonepe*.csv
 *statement*.csv
 !data/synthetic_transactions.csv
+!data/phonepe_sample_90d.csv
+!data/shop_owner_current_account.csv
 test_*.csv
 *.log

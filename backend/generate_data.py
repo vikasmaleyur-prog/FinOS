@@ -220,6 +220,309 @@ def generate_synthetic_transactions(output_path="data/synthetic_transactions.csv
     print(f"Ending Balance: ₹{balances[-1]:,.2f} | Min Balance reached: ₹{min(balances):,.2f}")
     return df
 
+
+def generate_phonepe_sample(output_path="data/phonepe_sample_90d.csv", seed=42):
+    """
+    Generates realistic 90-day PhonePe export format:
+    - 3-line preamble metadata
+    - Header: Date,Transaction Details,Amount,Type
+    - Newest-first reverse chronological ordering
+    - No running balance column (must be rebuilt by parser)
+    - Authentic Indian UPI reference strings
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+
+    start_date = datetime.date(2025, 10, 1)
+    end_date = datetime.date(2025, 12, 31)
+
+    records = []
+    curr = start_date
+    ref_counter = 41920000
+
+    food_payees = [
+        ("Swiggy India Food", "swiggy@icici", (-150, -750)),
+        ("Zomato Online Order", "zomato@hdfcbank", (-200, -950)),
+        ("Blinkit Commerce", "blinkit@kotak", (-300, -1800)),
+        ("Zepto Quick Grocery", "zepto@icici", (-250, -1400)),
+        ("Chai Point Koramangala", "chaipoint@axis", (-80, -240)),
+    ]
+
+    travel_payees = [
+        ("Uber Rides Bangalore", "uber.india@icici", (-120, -650)),
+        ("Ola Cabs Auto", "olacabs@axisbank", (-90, -420)),
+        ("Fastag Toll Plaza NH44", "fastag@icici", (-200, -800)),
+        ("Indian Oil Petrol Pump", "iocl@sbi", (-800, -2500)),
+    ]
+
+    income_sources = [
+        ("Upwork Escrow Milestone Release", "upwork@hsbc", 45000.0, 85000.0),
+        ("Razorpay Retainer Client Payout", "razorpay@icici", 35000.0, 75000.0),
+        ("Freelance Consulting UX Sprint", "clientpay@axis", 28000.0, 60000.0),
+    ]
+
+    next_income_day = 12
+
+    while curr <= end_date:
+        ref_counter += 1
+        day = curr.day
+
+        # Fixed bills
+        if day == 1:
+            records.append({
+                "Date": curr.strftime("%d/%m/%Y"),
+                "date_dt": curr,
+                "Transaction Details": f"UPI/{ref_counter}/Paid to Landlord Sunita Rao/sunita.rao@okaxis/House Rent Flat 302",
+                "Amount": -28000.0,
+                "Type": "DEBIT"
+            })
+        elif day == 5:
+            records.append({
+                "Date": curr.strftime("%d/%m/%Y"),
+                "date_dt": curr,
+                "Transaction Details": f"UPI/{ref_counter}/HDFC Personal Loan EMI AutoDebit/hdfcloan@hdfcbank/A/C 501004928172",
+                "Amount": -16500.0,
+                "Type": "DEBIT"
+            })
+        elif day == 8:
+            records.append({
+                "Date": curr.strftime("%d/%m/%Y"),
+                "date_dt": curr,
+                "Transaction Details": f"UPI/{ref_counter}/ACT Fibernet Broadband Bill/actcorp@icici",
+                "Amount": -1499.0,
+                "Type": "DEBIT"
+            })
+
+        # Income arrivals
+        next_income_day -= 1
+        if next_income_day <= 0:
+            src = random.choice(income_sources)
+            amt = round(random.uniform(src[2], src[3]), 2)
+            records.append({
+                "Date": curr.strftime("%d/%m/%Y"),
+                "date_dt": curr,
+                "Transaction Details": f"UPI/{ref_counter}/Received from {src[0]}/{src[1]}/Ref N{ref_counter}",
+                "Amount": amt,
+                "Type": "CREDIT"
+            })
+            next_income_day = random.randint(18, 32)
+
+        # Daily variable
+        n_var = random.randint(1, 3)
+        for _ in range(n_var):
+            ref_counter += 1
+            if random.random() < 0.60:
+                p = random.choice(food_payees)
+            elif random.random() < 0.85:
+                p = random.choice(travel_payees)
+            else:
+                p = ("Apollo Pharmacy Koramangala", "apollo@hdfc", (-150, -800))
+
+            amt = round(random.uniform(p[2][0], p[2][1]), 2)
+            records.append({
+                "Date": curr.strftime("%d/%m/%Y"),
+                "date_dt": curr,
+                "Transaction Details": f"UPI/{ref_counter}/Paid to {p[0]}/{p[1]}",
+                "Amount": amt,
+                "Type": "DEBIT"
+            })
+
+        curr += datetime.timedelta(days=1)
+
+    # Sort NEWEST-FIRST (Real PhonePe export standard)
+    records.sort(key=lambda x: x["date_dt"], reverse=True)
+
+    # Ensure output directory exists
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("Statement Period: 01 Oct 2025 to 31 Dec 2025\n")
+        f.write("Account: UPI Linked - State Bank of India - 4829\n")
+        f.write(f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("Date,Transaction Details,Amount,Type\n")
+        for r in records:
+            f.write(f"{r['Date']},\"{r['Transaction Details']}\",{r['Amount']},{r['Type']}\n")
+
+    print(f"Generated {len(records)} transactions in PhonePe 90-day format: {output_path}")
+    return records
+
+
+def generate_shop_owner_current_account(output_path="data/shop_owner_current_account.csv", seed=101):
+    """
+    Generates 12 months of realistic Indian SMB current account banking:
+    - High daily sales receipts via UPI QR & POS settlements
+    - Supplier wholesale payments every 4-7 days
+    - Monthly staff salaries on 1st
+    - Commercial shop rent on 5th
+    - Working capital loan EMI on 10th
+    - GST / TDS tax payments around 20th
+    - Monthly owner drawings on 25th
+    - Planted working capital cash crunch in Month 8 (big B2B client invoice delayed 25 days)
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+
+    start_date = datetime.date(2025, 1, 1)
+    end_date = datetime.date(2025, 12, 31)
+
+    records = []
+    curr = start_date
+    running_balance = 150000.0  # Opening balance ₹1.5L
+    ref_counter = 881000
+
+    suppliers = [
+        ("Metro Cash & Carry Wholesale", "metro.cash@hdfcbank", (-25000, -75000)),
+        ("HUL Consumer Distributor Bangalore", "huldist@icici", (-30000, -90000)),
+        ("ITC Wholesale Distribution", "itcwholesale@sbi", (-20000, -65000)),
+        ("Packaging & Paper Boxes Ltd", "packaging@axis", (-8000, -22000)),
+    ]
+
+    next_supplier_day = 4
+
+    while curr <= end_date:
+        ref_counter += 1
+        day = curr.day
+        month = curr.month
+
+        # 1. Staff Salaries on 1st
+        if day == 1:
+            for staff, sal in [("Salaries / Staff Ramesh Store Mgr", -22000.0), ("Salaries / Staff Priya Cashier", -18000.0), ("Salaries / Staff Sunil Helper", -15000.0)]:
+                ref_counter += 1
+                running_balance += sal
+                records.append({
+                    "Date": curr.strftime("%Y-%m-%d"),
+                    "Description": f"NEFT/SAL/{ref_counter}/{staff}/A/C 3928172910",
+                    "Amount": sal,
+                    "Category": "Salaries",
+                    "Balance": round(running_balance, 2),
+                    "Reference_No": f"SAL{ref_counter}"
+                })
+
+        # 2. Commercial Shop Rent on 5th
+        if day == 5:
+            ref_counter += 1
+            running_balance -= 35000.0
+            records.append({
+                "Date": curr.strftime("%Y-%m-%d"),
+                "Description": f"RTGS/RENT/{ref_counter}/Shop Landlord Commercial Estate Bangalore",
+                "Amount": -35000.0,
+                "Category": "Rent",
+                "Balance": round(running_balance, 2),
+                "Reference_No": f"RNT{ref_counter}"
+            })
+
+        # 3. Business Working Capital Loan EMI on 10th
+        if day == 10:
+            ref_counter += 1
+            running_balance -= 24500.0
+            records.append({
+                "Date": curr.strftime("%Y-%m-%d"),
+                "Description": f"ACH Dr/HDFC-MSME-LOAN-EMI/{ref_counter}/A/C 5010049281",
+                "Amount": -24500.0,
+                "Category": "EMI/Loans",
+                "Balance": round(running_balance, 2),
+                "Reference_No": f"EMI{ref_counter}"
+            })
+
+        # 4. GST & TDS Payments around 20th
+        if day == 20:
+            ref_counter += 1
+            gst_amt = -round(random.uniform(18000.0, 32000.0), 2)
+            running_balance += gst_amt
+            records.append({
+                "Date": curr.strftime("%Y-%m-%d"),
+                "Description": f"NEFT/GSTN-PORTAL/{ref_counter}/CBIC GST TAX PAYMENT/CIN 2025091827",
+                "Amount": gst_amt,
+                "Category": "GST/TDS",
+                "Balance": round(running_balance, 2),
+                "Reference_No": f"GST{ref_counter}"
+            })
+
+        # 5. Owner Drawings on 25th
+        if day == 25:
+            ref_counter += 1
+            draw_amt = -45000.0
+            running_balance += draw_amt
+            records.append({
+                "Date": curr.strftime("%Y-%m-%d"),
+                "Description": f"UPI/{ref_counter}/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis",
+                "Amount": draw_amt,
+                "Category": "Owner Drawings",
+                "Balance": round(running_balance, 2),
+                "Reference_No": f"DRW{ref_counter}"
+            })
+
+        # 6. Supplier Wholesale Outflows every 4-7 days
+        next_supplier_day -= 1
+        if next_supplier_day <= 0:
+            supp = random.choice(suppliers)
+            sup_amt = round(random.uniform(supp[2][0], supp[2][1]), 2)
+            ref_counter += 1
+            running_balance += sup_amt
+            records.append({
+                "Date": curr.strftime("%Y-%m-%d"),
+                "Description": f"IMPS/{ref_counter}/Supplier Payment to {supp[0]}/{supp[1]}/INV-Wholesale",
+                "Amount": sup_amt,
+                "Category": "Supplier Payments",
+                "Balance": round(running_balance, 2),
+                "Reference_No": f"SUP{ref_counter}"
+            })
+            next_supplier_day = random.randint(4, 7)
+
+        # 7. Daily Sales Receipts (UPI QR & POS Card Settlements)
+        # Normal days: ₹12,000 - ₹38,000 across 2-3 daily batch settlements
+        # Planted crunch in August (Month 8): B2B bulk customer delays ₹1,95,000 invoice
+        daily_sales = round(random.uniform(14000.0, 36000.0), 2)
+        ref_counter += 1
+        running_balance += daily_sales
+        records.append({
+            "Date": curr.strftime("%Y-%m-%d"),
+            "Description": f"UPI/SETTLE/{ref_counter}/BharatPe Daily QR Counter Collections / Store Sales",
+            "Amount": daily_sales,
+            "Category": "Sales Receipts",
+            "Balance": round(running_balance, 2),
+            "Reference_No": f"SALES{ref_counter}"
+        })
+
+        # Occasional B2B Corporate Bulk Orders (₹80k - ₹1.8L)
+        # In Month 8 (August), we plant a delay where B2B invoice that was expected on Aug 5 does not arrive until Aug 31
+        if month != 8 and day == 15 and random.random() < 0.70:
+            b2b_amt = round(random.uniform(75000.0, 160000.0), 2)
+            ref_counter += 1
+            running_balance += b2b_amt
+            records.append({
+                "Date": curr.strftime("%Y-%m-%d"),
+                "Description": f"RTGS/B2B-INVOICE/{ref_counter}/Corporate Institutional Sales Order Clearance/A/C 50100",
+                "Amount": b2b_amt,
+                "Category": "Sales Receipts",
+                "Balance": round(running_balance, 2),
+                "Reference_No": f"B2B{ref_counter}"
+            })
+        elif month == 8 and day == 30:
+            # Delayed clearance arrives at month end
+            b2b_amt = 195000.0
+            ref_counter += 1
+            running_balance += b2b_amt
+            records.append({
+                "Date": curr.strftime("%Y-%m-%d"),
+                "Description": f"RTGS/B2B-DELAYED/{ref_counter}/Delayed Corporate Bulk Order Clearance/A/C 50100",
+                "Amount": b2b_amt,
+                "Category": "Sales Receipts",
+                "Balance": round(running_balance, 2),
+                "Reference_No": f"B2B{ref_counter}"
+            })
+
+        curr += datetime.timedelta(days=1)
+
+    df_shop = pd.DataFrame(records)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df_shop.to_csv(output_path, index=False)
+    print(f"Generated {len(df_shop)} SMB current account transactions: {output_path}")
+    print(f"Ending Balance: ₹{running_balance:,.2f} | Min Balance: ₹{df_shop['Balance'].min():,.2f}")
+    return df_shop
+
+
 if __name__ == "__main__":
-    default_output = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "synthetic_transactions.csv")
-    generate_synthetic_transactions(default_output)
+    default_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    generate_synthetic_transactions(os.path.join(default_dir, "synthetic_transactions.csv"))
+    generate_phonepe_sample(os.path.join(default_dir, "phonepe_sample_90d.csv"))
+    generate_shop_owner_current_account(os.path.join(default_dir, "shop_owner_current_account.csv"))

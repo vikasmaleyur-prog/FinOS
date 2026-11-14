@@ -6,7 +6,34 @@ All notable changes to the FinOS Predictive Cash Flow Operating System will be d
 
 ---
 
-## [Phase 2: AI Layer & Conversational Copilot] - 2026-11-14
+## [Phase 3: Data & Business Support - SMB Current Accounts, PhonePe & Multi-Account] - 2026-11-14
+
+### Added
+- **PhonePe 90-Day Real-World Statement Ingestion (`generate_phonepe_sample`)**:
+  - Synthesized `data/phonepe_sample_90d.csv` matching actual PhonePe UPI statement exports (3-line preamble, newest-first descending chronological sort, no running-balance column, realistic UPI reference strings).
+  - Enhanced `StatementParser.parse_csv` to dynamically detect variable-length preambles, reverse reverse-chronological rows, and compute running balance automatically from `starting_balance + Amount.cumsum()`.
+- **Small Shop Owner SMB Current Account (`generate_shop_owner_current_account`)**:
+  - Generated `data/shop_owner_current_account.csv` with 12 months of high-velocity retail SMB transactions: daily counter sales, weekly supplier payments, employee payroll on the 1st, GST on the 20th, commercial store rent, EMI, owner drawings, and a planted B2B delayed payment crunch.
+  - Extended `AutoCategorizer` with canonical SMB categories: `Sales Receipts`, `Supplier Payments`, `Salaries`, `GST/TDS`, and `Owner Drawings`.
+- **Account Types & B2B Receivables Delay Modeling**:
+  - Added Savings vs Current Account toggle across backend and frontend (`/upload`, `/forecast`, `/simulate`, header toggle).
+  - Added support for user-configurable minimum safe buffers and overdraft limits (₹5,000 default for Savings, ₹25,000 for Current).
+  - Hardened `CashFlowForecaster.run_monte_carlo` for Current Accounts: models counter receipts plus B2B receivables using right-skewed log-normal delay distributions that widen the uncertainty cone ($P_{10}-P_{90}$) to reflect payment lags.
+- **Simulator One-Click Business Stress Scenarios (`frontend/components/SimulatorView.tsx`)**:
+  - Added one-click scenario chips for business decision testing:
+    1. *Customer Pays 20d Late* (client receivable delay stress test)
+    2. *Bulk Stock Purchase (₹75k)* (major inventory capital expenditure)
+    3. *New Staff Hire (₹20k/mo)* (new recurring employee salary obligation)
+- **Multi-Account Consolidation & Liquidity Balancing (`MultiAccountEngine`)**:
+  - Analyzes dual accounts simultaneously (e.g. Primary Current Business Account + Liquid Savings Reserve).
+  - **Internal Transfer Neutralization**: High-speed $O(N)$ hash-table detector (`detect_internal_transfers`) identifies round-trips (opposite sign, identical amount within 2 days), tags them as `"Internal Transfer"`, and excludes them from operating cash burn to prevent double-counting.
+  - **Suggested Transfer Optimizer**: Binary search algorithm computes the smallest inter-account transfer and execution date that brings an at-risk account's buffer breach risk under 10% (e.g. *"Transfer ₹20,000 from Savings Reserve on 22 Aug reduces Current Account breach risk from 18.2% to 3.5%"*).
+  - **Consolidated Dual-Account UI (`frontend/components/MultiAccountView.tsx`)**: Dedicated dashboard view with account risk cards, recommended transfer card with before/after risk impact, 60-day consolidated multi-account liquidity cone, and neutralized transfers audit table.
+  - Backed by `POST /multi-account/analyze` endpoint.
+- **PDF Statement Parsing (`StatementParser.parse_pdf`)**:
+  - Integrated `pdfplumber` to extract tabular data from statement PDFs, locate header rows, and standardize to FinOS schema. Updated `/upload` to accept `.pdf`.
+- **Automated Tests (`tests/test_phase3.py`)**:
+  - Added 8 tests covering PhonePe 90d ingestion, shop owner current account categorization, receivables delay Monte Carlo, internal transfer neutralization, transfer optimizer, dynamic `/forecast` recalculation, `/multi-account/analyze` integration, and PDF parser validation (8/8 passing; 23/23 overall across the entire test suite).
 
 ### Added
 - **Multi-Feature Isolation Forest Anomaly Detection (`AnomalyDetector`)**:

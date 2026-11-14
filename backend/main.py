@@ -27,7 +27,8 @@ from backend.ml_engine import (
     FinancialExplainer,
     SpendingLimitOptimizer,
     BacktestEngine,
-    FinOSLLMService
+    FinOSLLMService,
+    MultiAccountEngine
 )
 
 app = FastAPI(
@@ -48,7 +49,10 @@ app.add_middleware(
 # Shared stateless categorizer instance (model weights only, zero user data)
 categorizer = AutoCategorizer()
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "synthetic_transactions.csv")
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+DATA_PATH = os.path.join(DATA_DIR, "synthetic_transactions.csv")
+PHONEPE_PATH = os.path.join(DATA_DIR, "phonepe_sample_90d.csv")
+SHOP_PATH = os.path.join(DATA_DIR, "shop_owner_current_account.csv")
 
 
 # ==========================================
@@ -78,6 +82,13 @@ class SimulateRequest(BaseModel):
     income_boost_pct: float = 0.0
     one_time_expenses: Optional[List[OneTimeExpense]] = None
     new_recurring_emis: Optional[List[RecurringEMI]] = None
+    account_type: Optional[str] = "savings"
+
+class ForecastRequest(BaseModel):
+    transactions: Optional[List[Dict[str, Any]]] = None
+    current_balance: Optional[float] = None
+    minimum_safe_balance: Optional[float] = 5000.0
+    account_type: Optional[str] = "savings"
 
 class LimitsRequest(BaseModel):
     transactions: Optional[List[Dict[str, Any]]] = None
@@ -108,6 +119,22 @@ class ChatRequest(BaseModel):
     history: Optional[List[ChatMessage]] = None
     transactions: Optional[List[Dict[str, Any]]] = None
 
+class SampleLoadRequest(BaseModel):
+    dataset_name: Optional[str] = "freelancer"
+    starting_balance: Optional[float] = None
+    minimum_safe_balance: Optional[float] = None
+    account_type: Optional[str] = None
+
+class MultiAccountRequest(BaseModel):
+    account_a_transactions: Optional[List[Dict[str, Any]]] = None
+    account_b_transactions: Optional[List[Dict[str, Any]]] = None
+    account_a_balance: Optional[float] = 45000.0
+    account_b_balance: Optional[float] = 120000.0
+    account_a_min_safe: Optional[float] = 25000.0
+    account_b_min_safe: Optional[float] = 5000.0
+    account_a_name: Optional[str] = "Current Business Account"
+    account_b_name: Optional[str] = "Savings Reserve Account"
+
 
 # ==========================================
 # HELPER: RUN COMPLETE STATELESS PIPELINE
@@ -118,7 +145,8 @@ def run_pipeline_for_dataframe(
     start_bal: float,
     min_safe: float,
     header_line: int = 1,
-    date_range: str = ""
+    date_range: str = "",
+    account_type: str = "savings"
 ) -> Dict[str, Any]:
     """
     Executes full predictive cash flow pipeline on a DataFrame
@@ -126,6 +154,14 @@ def run_pipeline_for_dataframe(
     """
     # 1. Hybrid Categorization (Heuristics First, ML Second)
     categorized_df = categorizer.categorize_dataframe(df)
+
+    if "Balance" not in categorized_df.columns:
+        if "Running Balance" in categorized_df.columns:
+            categorized_df["Balance"] = categorized_df["Running Balance"]
+        elif "Amount" in categorized_df.columns:
+            categorized_df["Balance"] = float(start_bal) + categorized_df["Amount"].cumsum()
+        else:
+            categorized_df["Balance"] = float(start_bal)
 
     # 2. Extract Key Financials
     ending_balance = float(categorized_df["Balance"].iloc[-1]) if len(categorized_df) > 0 else float(start_bal)
@@ -156,7 +192,8 @@ def run_pipeline_for_dataframe(
         current_balance=ending_balance,
         forecast_days=60,
         num_simulations=1000,
-        minimum_safe_balance=min_safe
+        minimum_safe_balance=min_safe,
+        account_type=account_type
     )
 
     # 6. Personalized Spending Limits via Binary Search (<10% breach probability)
@@ -213,6 +250,7 @@ def run_pipeline_for_dataframe(
         "header_line_detected": int(header_line),
         "date_range": date_range or f"{categorized_df['Date'].min()} to {categorized_df['Date'].max()}",
         "current_balance": round(ending_balance, 2),
+        "account_type": account_type,
         "starting_balance": round(start_bal, 2),
         "minimum_safe_balance": float(min_safe),
         "data_sufficiency": forecast_res.get("data_sufficiency", {}),
@@ -286,7 +324,8 @@ async def upload_csv(
     file: UploadFile = File(...),
     starting_balance: Optional[float] = Form(None),
     opening_balance: Optional[float] = Form(None),
-    minimum_safe_balance: Optional[float] = Form(5000.0)
+    minimum_safe_balance: Optional[float] = Form(5000.0),
+    account_type: Optional[str] = Form("savings")
 ):
     """
     Stateless Ingestion Endpoint:
@@ -296,18 +335,25 @@ async def upload_csv(
     - Runs NLP hybrid categorization, Monte Carlo forecast, anomaly detection.
     - Returns full JSON payload in the response without saving server-side state.
     """
-    if not file.filename.lower().endswith((".csv", ".txt")):
-        raise HTTPException(status_code=400, detail="Only CSV files are supported.")
+    filename_lower = file.filename.lower()
+    if not (filename_lower.endswith((".csv", ".txt", ".pdf"))):
+        raise HTTPException(status_code=400, detail="Only CSV, TXT, and PDF files are supported.")
 
     start_bal = starting_balance if starting_balance is not None else (opening_balance if opening_balance is not None else 75000.0)
     min_safe = minimum_safe_balance if minimum_safe_balance is not None else 5000.0
 
     try:
         contents = await file.read()
-        parsed_df, parse_stats = StatementParser.parse_csv(
-            contents,
-            starting_balance=float(start_bal)
-        )
+        if filename_lower.endswith(".pdf"):
+            parsed_df, parse_stats = StatementParser.parse_pdf(
+                contents,
+                starting_balance=float(start_bal)
+            )
+        else:
+            parsed_df, parse_stats = StatementParser.parse_csv(
+                contents,
+                starting_balance=float(start_bal)
+            )
     except StatementIngestionError as sie:
         raise HTTPException(status_code=422, detail=str(sie))
     except Exception as e:
@@ -319,7 +365,8 @@ async def upload_csv(
             start_bal=float(start_bal),
             min_safe=float(min_safe),
             header_line=parse_stats["header_line_detected"],
-            date_range=parse_stats["date_range"]
+            date_range=parse_stats["date_range"],
+            account_type=account_type or "savings"
         )
         return payload
     except Exception as e:
@@ -344,14 +391,14 @@ def simulate_scenario(payload: SimulateRequest):
                 df["Date"] = df["date"]
             if "Category" not in df.columns and "category" in df.columns:
                 df["Category"] = df["category"]
-            start_bal = payload.current_balance if payload.current_balance is not None else float(df["Balance"].iloc[-1])
+            start_bal = payload.current_balance if payload.current_balance is not None else (float(df["Balance"].iloc[-1]) if "Balance" in df.columns else 75000.0)
         else:
             # Fallback to reference dataset
             if os.path.exists(DATA_PATH):
                 with open(DATA_PATH, "rb") as f:
                     df, _ = StatementParser.parse_csv(f.read())
                     df = categorizer.categorize_dataframe(df)
-                    start_bal = payload.current_balance if payload.current_balance is not None else float(df["Balance"].iloc[-1])
+                    start_bal = payload.current_balance if payload.current_balance is not None else (float(df["Balance"].iloc[-1]) if "Balance" in df.columns else 75000.0)
             else:
                 raise HTTPException(status_code=400, detail="No transactions provided for simulation.")
 
@@ -361,7 +408,8 @@ def simulate_scenario(payload: SimulateRequest):
             current_balance=float(start_bal),
             forecast_days=60,
             num_simulations=1000,
-            minimum_safe_balance=float(min_safe)
+            minimum_safe_balance=float(min_safe),
+            account_type=payload.account_type or "savings"
         )
 
         # 2. Simulated Forecast with Modifiers
@@ -377,7 +425,8 @@ def simulate_scenario(payload: SimulateRequest):
             one_time_expenses=ote_dicts,
             new_recurring_emis=emi_dicts,
             income_delay_days=payload.income_delay_days,
-            income_boost_pct=payload.income_boost_pct
+            income_boost_pct=payload.income_boost_pct,
+            account_type=payload.account_type or "savings"
         )
 
         recurring_bills = RecurringPaymentDetector.detect_recurring(df)
@@ -422,25 +471,104 @@ def simulate_scenario(payload: SimulateRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Simulation error: {str(e)}")
 
-@app.post("/sample/load")
-def load_sample_dataset(starting_balance: Optional[float] = 75000.0, minimum_safe_balance: Optional[float] = 5000.0):
-    """Statelessly generates and returns the 2-year sample dataset without server retention."""
-    if not os.path.exists(DATA_PATH):
-        from backend.generate_data import generate_synthetic_transactions
-        generate_synthetic_transactions(DATA_PATH)
+@app.post("/forecast")
+def recalculate_forecast(payload: ForecastRequest):
+    """
+    Statelessly recalculates 1,000-run Monte Carlo forecast, risk metrics,
+    and spending limits when user switches account type (savings vs current)
+    or updates minimum buffer / overdraft threshold.
+    """
+    min_safe = payload.minimum_safe_balance if payload.minimum_safe_balance is not None else 5000.0
+    acc_type = (payload.account_type or "savings").lower().strip()
 
     try:
-        with open(DATA_PATH, "rb") as f:
-            df, stats = StatementParser.parse_csv(f.read(), starting_balance=float(starting_balance))
+        if payload.transactions and len(payload.transactions) > 0:
+            df = pd.DataFrame(payload.transactions)
+            for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance"), ("Description", "description")]:
+                if col not in df.columns and alt in df.columns:
+                    df[col] = df[alt]
+            start_bal = payload.current_balance if payload.current_balance is not None else (float(df["Balance"].iloc[-1]) if "Balance" in df.columns else 75000.0)
+        elif os.path.exists(DATA_PATH):
+            with open(DATA_PATH, "rb") as f:
+                df, _ = StatementParser.parse_csv(f.read())
+            start_bal = payload.current_balance if payload.current_balance is not None else (float(df["Balance"].iloc[-1]) if "Balance" in df.columns else 75000.0)
+        else:
+            raise HTTPException(status_code=400, detail="No transactions provided for forecasting.")
+
         return run_pipeline_for_dataframe(
             df=df,
-            start_bal=float(starting_balance),
-            min_safe=float(minimum_safe_balance),
-            header_line=stats["header_line_detected"],
-            date_range=stats["date_range"]
+            start_bal=float(start_bal),
+            min_safe=float(min_safe),
+            account_type=acc_type
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load sample dataset: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Forecast recalculation error: {str(e)}")
+
+@app.post("/sample/load")
+def load_sample_dataset(
+    payload: Optional[SampleLoadRequest] = None,
+    starting_balance: Optional[float] = None,
+    minimum_safe_balance: Optional[float] = None,
+    dataset: Optional[str] = None
+):
+    """
+    Statelessly loads one of three reference datasets:
+    1. 'freelancer' (24-month irregular earner statement)
+    2. 'phonepe_90d' (90-day PhonePe export with preamble and no running balance)
+    3. 'shop_owner' (SMB retail shop current account with sales, suppliers, salaries, GST)
+    """
+    ds_name = (payload.dataset_name if payload and payload.dataset_name else dataset) or "freelancer"
+    ds_name = ds_name.lower().strip()
+
+    if "phonepe" in ds_name:
+        target_path = PHONEPE_PATH
+        default_start = 45000.0
+        default_min_safe = 5000.0
+        acc_type = "savings"
+        if not os.path.exists(target_path):
+            from backend.generate_data import generate_phonepe_sample
+            generate_phonepe_sample(target_path)
+    elif "shop" in ds_name or "current" in ds_name:
+        target_path = SHOP_PATH
+        default_start = 150000.0
+        default_min_safe = 25000.0
+        acc_type = "current"
+        if not os.path.exists(target_path):
+            from backend.generate_data import generate_shop_owner_current_account
+            generate_shop_owner_current_account(target_path)
+    else:
+        target_path = DATA_PATH
+        default_start = 75000.0
+        default_min_safe = 5000.0
+        acc_type = "savings"
+        if not os.path.exists(target_path):
+            from backend.generate_data import generate_synthetic_transactions
+            generate_synthetic_transactions(target_path)
+
+    start_bal = (payload.starting_balance if payload and payload.starting_balance is not None else starting_balance)
+    if start_bal is None:
+        start_bal = default_start
+
+    min_safe = (payload.minimum_safe_balance if payload and payload.minimum_safe_balance is not None else minimum_safe_balance)
+    if min_safe is None:
+        min_safe = default_min_safe
+
+    try:
+        with open(target_path, "rb") as f:
+            df, stats = StatementParser.parse_csv(f.read(), starting_balance=float(start_bal))
+        res = run_pipeline_for_dataframe(
+            df=df,
+            start_bal=float(start_bal),
+            min_safe=float(min_safe),
+            header_line=stats["header_line_detected"],
+            date_range=stats["date_range"],
+            account_type=acc_type
+        )
+        res["dataset_loaded"] = ds_name
+        res["account_type"] = acc_type
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load sample dataset '{ds_name}': {str(e)}")
 
 @app.post("/categorize")
 def categorize_endpoint(payload: CategorizeRequest):
@@ -607,6 +735,55 @@ def post_chat(payload: ChatRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat copilot error: {str(e)}")
+
+@app.post("/multi-account/analyze")
+def post_multi_account_analyze(payload: Optional[MultiAccountRequest] = None):
+    """
+    Multi-Account Consolidation & Internal Transfer Isolation:
+    - Accepts two accounts (or uses reference shop owner + savings accounts).
+    - Detects internal transfers (opposite sign, equal amount within 2 days).
+    - Excludes internal transfers to prevent double counting.
+    - Runs individual forecasts + consolidated combined view.
+    - Recommends optimal suggested transfer to bring breach risk under 10%.
+    """
+    try:
+        p = payload or MultiAccountRequest()
+        if p.account_a_transactions and len(p.account_a_transactions) > 0:
+            df_a = pd.DataFrame(p.account_a_transactions)
+            for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
+                if col not in df_a.columns and alt in df_a.columns:
+                    df_a[col] = df_a[alt]
+        else:
+            with open(SHOP_PATH, "rb") as f:
+                df_a, _ = StatementParser.parse_csv(f.read(), starting_balance=float(p.account_a_balance or 45000.0))
+
+        if p.account_b_transactions and len(p.account_b_transactions) > 0:
+            df_b = pd.DataFrame(p.account_b_transactions)
+            for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
+                if col not in df_b.columns and alt in df_b.columns:
+                    df_b[col] = df_b[alt]
+        else:
+            with open(DATA_PATH, "rb") as f:
+                df_b, _ = StatementParser.parse_csv(f.read(), starting_balance=float(p.account_b_balance or 120000.0))
+
+        df_a = categorizer.categorize_dataframe(df_a)
+        df_b = categorizer.categorize_dataframe(df_b)
+
+        bal_a = p.account_a_balance if p.account_a_balance is not None else float(df_a["Balance"].iloc[-1])
+        bal_b = p.account_b_balance if p.account_b_balance is not None else float(df_b["Balance"].iloc[-1])
+
+        return MultiAccountEngine.analyze_multi_account(
+            df_a=df_a,
+            df_b=df_b,
+            bal_a=float(bal_a),
+            bal_b=float(bal_b),
+            min_safe_a=float(p.account_a_min_safe or 25000.0),
+            min_safe_b=float(p.account_b_min_safe or 5000.0),
+            name_a=p.account_a_name or "Current Business Account",
+            name_b=p.account_b_name or "Savings Reserve Account"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Multi-account analytics error: {str(e)}")
 
 @app.post("/privacy/delete")
 def delete_all_data():

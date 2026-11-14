@@ -1,0 +1,525 @@
+Date,Description,Amount,Category,Balance,Reference_No
+2025-01-01,NEFT/SAL/881002/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,128000.0,SAL881002
+2025-01-01,NEFT/SAL/881003/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,110000.0,SAL881003
+2025-01-01,NEFT/SAL/881004/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,95000.0,SAL881004
+2025-01-01,UPI/SETTLE/881005/BharatPe Daily QR Counter Collections / Store Sales,26785.35,Sales Receipts,121785.35,SALES881005
+2025-01-02,UPI/SETTLE/881007/BharatPe Daily QR Counter Collections / Store Sales,18284.6,Sales Receipts,140069.95,SALES881007
+2025-01-03,UPI/SETTLE/881009/BharatPe Daily QR Counter Collections / Store Sales,35235.52,Sales Receipts,175305.47,SALES881009
+2025-01-04,IMPS/881011/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-41021.24,Supplier Payments,134284.23,SUP881011
+2025-01-04,UPI/SETTLE/881012/BharatPe Daily QR Counter Collections / Store Sales,27244.94,Sales Receipts,161529.17,SALES881012
+2025-01-05,RTGS/RENT/881014/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,126529.17,RNT881014
+2025-01-05,UPI/SETTLE/881015/BharatPe Daily QR Counter Collections / Store Sales,34185.73,Sales Receipts,160714.9,SALES881015
+2025-01-06,UPI/SETTLE/881017/BharatPe Daily QR Counter Collections / Store Sales,24680.2,Sales Receipts,185395.1,SALES881017
+2025-01-07,UPI/SETTLE/881019/BharatPe Daily QR Counter Collections / Store Sales,31226.28,Sales Receipts,216621.38,SALES881019
+2025-01-08,UPI/SETTLE/881021/BharatPe Daily QR Counter Collections / Store Sales,21238.82,Sales Receipts,237860.2,SALES881021
+2025-01-09,IMPS/881023/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-8984.98,Supplier Payments,228875.22,SUP881023
+2025-01-09,UPI/SETTLE/881024/BharatPe Daily QR Counter Collections / Store Sales,17543.46,Sales Receipts,246418.68,SALES881024
+2025-01-10,ACH Dr/HDFC-MSME-LOAN-EMI/881026/A/C 5010049281,-24500.0,EMI/Loans,221918.68,EMI881026
+2025-01-10,UPI/SETTLE/881027/BharatPe Daily QR Counter Collections / Store Sales,23794.66,Sales Receipts,245713.34,SALES881027
+2025-01-11,UPI/SETTLE/881029/BharatPe Daily QR Counter Collections / Store Sales,25821.22,Sales Receipts,271534.56,SALES881029
+2025-01-12,UPI/SETTLE/881031/BharatPe Daily QR Counter Collections / Store Sales,18215.45,Sales Receipts,289750.01,SALES881031
+2025-01-13,UPI/SETTLE/881033/BharatPe Daily QR Counter Collections / Store Sales,31298.12,Sales Receipts,321048.13,SALES881033
+2025-01-14,IMPS/881035/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-68245.62,Supplier Payments,252802.51,SUP881035
+2025-01-14,UPI/SETTLE/881036/BharatPe Daily QR Counter Collections / Store Sales,23290.65,Sales Receipts,276093.16,SALES881036
+2025-01-15,UPI/SETTLE/881038/BharatPe Daily QR Counter Collections / Store Sales,15383.78,Sales Receipts,291476.94,SALES881038
+2025-01-15,RTGS/B2B-INVOICE/881039/Corporate Institutional Sales Order Clearance/A/C 50100,92998.56,Sales Receipts,384475.5,B2B881039
+2025-01-16,UPI/SETTLE/881041/BharatPe Daily QR Counter Collections / Store Sales,28350.11,Sales Receipts,412825.61,SALES881041
+2025-01-17,UPI/SETTLE/881043/BharatPe Daily QR Counter Collections / Store Sales,27748.11,Sales Receipts,440573.72,SALES881043
+2025-01-18,UPI/SETTLE/881045/BharatPe Daily QR Counter Collections / Store Sales,21227.69,Sales Receipts,461801.41,SALES881045
+2025-01-19,UPI/SETTLE/881047/BharatPe Daily QR Counter Collections / Store Sales,32895.17,Sales Receipts,494696.58,SALES881047
+2025-01-20,NEFT/GSTN-PORTAL/881049/CBIC GST TAX PAYMENT/CIN 2025091827,-21742.46,GST/TDS,472954.12,GST881049
+2025-01-20,UPI/SETTLE/881050/BharatPe Daily QR Counter Collections / Store Sales,31210.76,Sales Receipts,504164.88,SALES881050
+2025-01-21,IMPS/881052/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-55378.02,Supplier Payments,448786.86,SUP881052
+2025-01-21,UPI/SETTLE/881053/BharatPe Daily QR Counter Collections / Store Sales,30378.32,Sales Receipts,479165.18,SALES881053
+2025-01-22,UPI/SETTLE/881055/BharatPe Daily QR Counter Collections / Store Sales,23205.58,Sales Receipts,502370.76,SALES881055
+2025-01-23,UPI/SETTLE/881057/BharatPe Daily QR Counter Collections / Store Sales,33180.23,Sales Receipts,535550.99,SALES881057
+2025-01-24,UPI/SETTLE/881059/BharatPe Daily QR Counter Collections / Store Sales,18767.4,Sales Receipts,554318.39,SALES881059
+2025-01-25,UPI/881061/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,509318.39,DRW881061
+2025-01-25,UPI/SETTLE/881062/BharatPe Daily QR Counter Collections / Store Sales,16083.4,Sales Receipts,525401.79,SALES881062
+2025-01-26,UPI/SETTLE/881064/BharatPe Daily QR Counter Collections / Store Sales,31503.32,Sales Receipts,556905.11,SALES881064
+2025-01-27,UPI/SETTLE/881066/BharatPe Daily QR Counter Collections / Store Sales,22159.9,Sales Receipts,579065.01,SALES881066
+2025-01-28,IMPS/881068/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-20424.97,Supplier Payments,558640.04,SUP881068
+2025-01-28,UPI/SETTLE/881069/BharatPe Daily QR Counter Collections / Store Sales,35683.69,Sales Receipts,594323.73,SALES881069
+2025-01-29,UPI/SETTLE/881071/BharatPe Daily QR Counter Collections / Store Sales,23499.34,Sales Receipts,617823.07,SALES881071
+2025-01-30,UPI/SETTLE/881073/BharatPe Daily QR Counter Collections / Store Sales,20110.36,Sales Receipts,637933.43,SALES881073
+2025-01-31,UPI/SETTLE/881075/BharatPe Daily QR Counter Collections / Store Sales,30799.36,Sales Receipts,668732.79,SALES881075
+2025-02-01,NEFT/SAL/881077/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,646732.79,SAL881077
+2025-02-01,NEFT/SAL/881078/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,628732.79,SAL881078
+2025-02-01,NEFT/SAL/881079/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,613732.79,SAL881079
+2025-02-01,UPI/SETTLE/881080/BharatPe Daily QR Counter Collections / Store Sales,22902.84,Sales Receipts,636635.63,SALES881080
+2025-02-02,IMPS/881082/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-60338.72,Supplier Payments,576296.91,SUP881082
+2025-02-02,UPI/SETTLE/881083/BharatPe Daily QR Counter Collections / Store Sales,17659.27,Sales Receipts,593956.18,SALES881083
+2025-02-03,UPI/SETTLE/881085/BharatPe Daily QR Counter Collections / Store Sales,32564.81,Sales Receipts,626520.99,SALES881085
+2025-02-04,UPI/SETTLE/881087/BharatPe Daily QR Counter Collections / Store Sales,25229.6,Sales Receipts,651750.59,SALES881087
+2025-02-05,RTGS/RENT/881089/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,616750.59,RNT881089
+2025-02-05,UPI/SETTLE/881090/BharatPe Daily QR Counter Collections / Store Sales,33101.41,Sales Receipts,649852.0,SALES881090
+2025-02-06,UPI/SETTLE/881092/BharatPe Daily QR Counter Collections / Store Sales,17985.46,Sales Receipts,667837.46,SALES881092
+2025-02-07,UPI/SETTLE/881094/BharatPe Daily QR Counter Collections / Store Sales,25672.66,Sales Receipts,693510.12,SALES881094
+2025-02-08,UPI/SETTLE/881096/BharatPe Daily QR Counter Collections / Store Sales,33206.73,Sales Receipts,726716.85,SALES881096
+2025-02-09,IMPS/881098/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-28297.43,Supplier Payments,698419.42,SUP881098
+2025-02-09,UPI/SETTLE/881099/BharatPe Daily QR Counter Collections / Store Sales,25752.17,Sales Receipts,724171.59,SALES881099
+2025-02-10,ACH Dr/HDFC-MSME-LOAN-EMI/881101/A/C 5010049281,-24500.0,EMI/Loans,699671.59,EMI881101
+2025-02-10,UPI/SETTLE/881102/BharatPe Daily QR Counter Collections / Store Sales,29447.11,Sales Receipts,729118.7,SALES881102
+2025-02-11,UPI/SETTLE/881104/BharatPe Daily QR Counter Collections / Store Sales,23729.89,Sales Receipts,752848.59,SALES881104
+2025-02-12,UPI/SETTLE/881106/BharatPe Daily QR Counter Collections / Store Sales,31978.92,Sales Receipts,784827.51,SALES881106
+2025-02-13,UPI/SETTLE/881108/BharatPe Daily QR Counter Collections / Store Sales,28868.18,Sales Receipts,813695.69,SALES881108
+2025-02-14,UPI/SETTLE/881110/BharatPe Daily QR Counter Collections / Store Sales,27417.17,Sales Receipts,841112.86,SALES881110
+2025-02-15,IMPS/881112/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-19091.28,Supplier Payments,822021.58,SUP881112
+2025-02-15,UPI/SETTLE/881113/BharatPe Daily QR Counter Collections / Store Sales,29086.9,Sales Receipts,851108.48,SALES881113
+2025-02-16,UPI/SETTLE/881115/BharatPe Daily QR Counter Collections / Store Sales,18418.94,Sales Receipts,869527.42,SALES881115
+2025-02-17,UPI/SETTLE/881117/BharatPe Daily QR Counter Collections / Store Sales,34524.23,Sales Receipts,904051.65,SALES881117
+2025-02-18,UPI/SETTLE/881119/BharatPe Daily QR Counter Collections / Store Sales,26041.39,Sales Receipts,930093.04,SALES881119
+2025-02-19,UPI/SETTLE/881121/BharatPe Daily QR Counter Collections / Store Sales,35452.26,Sales Receipts,965545.3,SALES881121
+2025-02-20,NEFT/GSTN-PORTAL/881123/CBIC GST TAX PAYMENT/CIN 2025091827,-31561.96,GST/TDS,933983.34,GST881123
+2025-02-20,IMPS/881124/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-72856.17,Supplier Payments,861127.17,SUP881124
+2025-02-20,UPI/SETTLE/881125/BharatPe Daily QR Counter Collections / Store Sales,21426.25,Sales Receipts,882553.42,SALES881125
+2025-02-21,UPI/SETTLE/881127/BharatPe Daily QR Counter Collections / Store Sales,15486.16,Sales Receipts,898039.58,SALES881127
+2025-02-22,UPI/SETTLE/881129/BharatPe Daily QR Counter Collections / Store Sales,26067.81,Sales Receipts,924107.39,SALES881129
+2025-02-23,UPI/SETTLE/881131/BharatPe Daily QR Counter Collections / Store Sales,29162.52,Sales Receipts,953269.91,SALES881131
+2025-02-24,UPI/SETTLE/881133/BharatPe Daily QR Counter Collections / Store Sales,21708.24,Sales Receipts,974978.15,SALES881133
+2025-02-25,UPI/881135/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,929978.15,DRW881135
+2025-02-25,UPI/SETTLE/881136/BharatPe Daily QR Counter Collections / Store Sales,15264.85,Sales Receipts,945243.0,SALES881136
+2025-02-26,IMPS/881138/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-50557.9,Supplier Payments,894685.1,SUP881138
+2025-02-26,UPI/SETTLE/881139/BharatPe Daily QR Counter Collections / Store Sales,15993.84,Sales Receipts,910678.94,SALES881139
+2025-02-27,UPI/SETTLE/881141/BharatPe Daily QR Counter Collections / Store Sales,34619.71,Sales Receipts,945298.65,SALES881141
+2025-02-28,UPI/SETTLE/881143/BharatPe Daily QR Counter Collections / Store Sales,19500.4,Sales Receipts,964799.05,SALES881143
+2025-03-01,NEFT/SAL/881145/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,942799.05,SAL881145
+2025-03-01,NEFT/SAL/881146/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,924799.05,SAL881146
+2025-03-01,NEFT/SAL/881147/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,909799.05,SAL881147
+2025-03-01,UPI/SETTLE/881148/BharatPe Daily QR Counter Collections / Store Sales,18497.64,Sales Receipts,928296.69,SALES881148
+2025-03-02,UPI/SETTLE/881150/BharatPe Daily QR Counter Collections / Store Sales,16468.24,Sales Receipts,944764.93,SALES881150
+2025-03-03,UPI/SETTLE/881152/BharatPe Daily QR Counter Collections / Store Sales,35582.69,Sales Receipts,980347.62,SALES881152
+2025-03-04,IMPS/881154/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-30995.64,Supplier Payments,949351.98,SUP881154
+2025-03-04,UPI/SETTLE/881155/BharatPe Daily QR Counter Collections / Store Sales,28372.81,Sales Receipts,977724.79,SALES881155
+2025-03-05,RTGS/RENT/881157/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,942724.79,RNT881157
+2025-03-05,UPI/SETTLE/881158/BharatPe Daily QR Counter Collections / Store Sales,33526.64,Sales Receipts,976251.43,SALES881158
+2025-03-06,UPI/SETTLE/881160/BharatPe Daily QR Counter Collections / Store Sales,14266.45,Sales Receipts,990517.88,SALES881160
+2025-03-07,UPI/SETTLE/881162/BharatPe Daily QR Counter Collections / Store Sales,27927.01,Sales Receipts,1018444.89,SALES881162
+2025-03-08,UPI/SETTLE/881164/BharatPe Daily QR Counter Collections / Store Sales,32847.79,Sales Receipts,1051292.68,SALES881164
+2025-03-09,UPI/SETTLE/881166/BharatPe Daily QR Counter Collections / Store Sales,24094.04,Sales Receipts,1075386.72,SALES881166
+2025-03-10,ACH Dr/HDFC-MSME-LOAN-EMI/881168/A/C 5010049281,-24500.0,EMI/Loans,1050886.72,EMI881168
+2025-03-10,IMPS/881169/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-65213.43,Supplier Payments,985673.29,SUP881169
+2025-03-10,UPI/SETTLE/881170/BharatPe Daily QR Counter Collections / Store Sales,31398.68,Sales Receipts,1017071.97,SALES881170
+2025-03-11,UPI/SETTLE/881172/BharatPe Daily QR Counter Collections / Store Sales,24367.63,Sales Receipts,1041439.6,SALES881172
+2025-03-12,UPI/SETTLE/881174/BharatPe Daily QR Counter Collections / Store Sales,18307.01,Sales Receipts,1059746.61,SALES881174
+2025-03-13,UPI/SETTLE/881176/BharatPe Daily QR Counter Collections / Store Sales,27048.68,Sales Receipts,1086795.29,SALES881176
+2025-03-14,UPI/SETTLE/881178/BharatPe Daily QR Counter Collections / Store Sales,20937.98,Sales Receipts,1107733.27,SALES881178
+2025-03-15,IMPS/881180/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-71848.71,Supplier Payments,1035884.56,SUP881180
+2025-03-15,UPI/SETTLE/881181/BharatPe Daily QR Counter Collections / Store Sales,21601.98,Sales Receipts,1057486.54,SALES881181
+2025-03-15,RTGS/B2B-INVOICE/881182/Corporate Institutional Sales Order Clearance/A/C 50100,109275.51,Sales Receipts,1166762.05,B2B881182
+2025-03-16,UPI/SETTLE/881184/BharatPe Daily QR Counter Collections / Store Sales,28043.97,Sales Receipts,1194806.02,SALES881184
+2025-03-17,UPI/SETTLE/881186/BharatPe Daily QR Counter Collections / Store Sales,30390.6,Sales Receipts,1225196.62,SALES881186
+2025-03-18,UPI/SETTLE/881188/BharatPe Daily QR Counter Collections / Store Sales,25359.78,Sales Receipts,1250556.4,SALES881188
+2025-03-19,UPI/SETTLE/881190/BharatPe Daily QR Counter Collections / Store Sales,18755.25,Sales Receipts,1269311.65,SALES881190
+2025-03-20,NEFT/GSTN-PORTAL/881192/CBIC GST TAX PAYMENT/CIN 2025091827,-27308.96,GST/TDS,1242002.69,GST881192
+2025-03-20,UPI/SETTLE/881193/BharatPe Daily QR Counter Collections / Store Sales,17208.79,Sales Receipts,1259211.48,SALES881193
+2025-03-21,IMPS/881195/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-43496.67,Supplier Payments,1215714.81,SUP881195
+2025-03-21,UPI/SETTLE/881196/BharatPe Daily QR Counter Collections / Store Sales,32924.04,Sales Receipts,1248638.85,SALES881196
+2025-03-22,UPI/SETTLE/881198/BharatPe Daily QR Counter Collections / Store Sales,18452.82,Sales Receipts,1267091.67,SALES881198
+2025-03-23,UPI/SETTLE/881200/BharatPe Daily QR Counter Collections / Store Sales,28768.26,Sales Receipts,1295859.93,SALES881200
+2025-03-24,UPI/SETTLE/881202/BharatPe Daily QR Counter Collections / Store Sales,32111.29,Sales Receipts,1327971.22,SALES881202
+2025-03-25,UPI/881204/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,1282971.22,DRW881204
+2025-03-25,UPI/SETTLE/881205/BharatPe Daily QR Counter Collections / Store Sales,25289.5,Sales Receipts,1308260.72,SALES881205
+2025-03-26,UPI/SETTLE/881207/BharatPe Daily QR Counter Collections / Store Sales,27781.05,Sales Receipts,1336041.77,SALES881207
+2025-03-27,UPI/SETTLE/881209/BharatPe Daily QR Counter Collections / Store Sales,18596.33,Sales Receipts,1354638.1,SALES881209
+2025-03-28,IMPS/881211/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-15641.78,Supplier Payments,1338996.32,SUP881211
+2025-03-28,UPI/SETTLE/881212/BharatPe Daily QR Counter Collections / Store Sales,20604.55,Sales Receipts,1359600.87,SALES881212
+2025-03-29,UPI/SETTLE/881214/BharatPe Daily QR Counter Collections / Store Sales,20624.7,Sales Receipts,1380225.57,SALES881214
+2025-03-30,UPI/SETTLE/881216/BharatPe Daily QR Counter Collections / Store Sales,19622.39,Sales Receipts,1399847.96,SALES881216
+2025-03-31,UPI/SETTLE/881218/BharatPe Daily QR Counter Collections / Store Sales,33406.55,Sales Receipts,1433254.51,SALES881218
+2025-04-01,NEFT/SAL/881220/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,1411254.51,SAL881220
+2025-04-01,NEFT/SAL/881221/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,1393254.51,SAL881221
+2025-04-01,NEFT/SAL/881222/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,1378254.51,SAL881222
+2025-04-01,UPI/SETTLE/881223/BharatPe Daily QR Counter Collections / Store Sales,18478.23,Sales Receipts,1396732.74,SALES881223
+2025-04-02,UPI/SETTLE/881225/BharatPe Daily QR Counter Collections / Store Sales,35431.57,Sales Receipts,1432164.31,SALES881225
+2025-04-03,IMPS/881227/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-37303.87,Supplier Payments,1394860.44,SUP881227
+2025-04-03,UPI/SETTLE/881228/BharatPe Daily QR Counter Collections / Store Sales,30278.5,Sales Receipts,1425138.94,SALES881228
+2025-04-04,UPI/SETTLE/881230/BharatPe Daily QR Counter Collections / Store Sales,23652.75,Sales Receipts,1448791.69,SALES881230
+2025-04-05,RTGS/RENT/881232/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,1413791.69,RNT881232
+2025-04-05,UPI/SETTLE/881233/BharatPe Daily QR Counter Collections / Store Sales,28666.62,Sales Receipts,1442458.31,SALES881233
+2025-04-06,UPI/SETTLE/881235/BharatPe Daily QR Counter Collections / Store Sales,19917.69,Sales Receipts,1462376.0,SALES881235
+2025-04-07,UPI/SETTLE/881237/BharatPe Daily QR Counter Collections / Store Sales,29628.38,Sales Receipts,1492004.38,SALES881237
+2025-04-08,UPI/SETTLE/881239/BharatPe Daily QR Counter Collections / Store Sales,34918.3,Sales Receipts,1526922.68,SALES881239
+2025-04-09,IMPS/881241/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-21646.75,Supplier Payments,1505275.93,SUP881241
+2025-04-09,UPI/SETTLE/881242/BharatPe Daily QR Counter Collections / Store Sales,14291.33,Sales Receipts,1519567.26,SALES881242
+2025-04-10,ACH Dr/HDFC-MSME-LOAN-EMI/881244/A/C 5010049281,-24500.0,EMI/Loans,1495067.26,EMI881244
+2025-04-10,UPI/SETTLE/881245/BharatPe Daily QR Counter Collections / Store Sales,34404.03,Sales Receipts,1529471.29,SALES881245
+2025-04-11,UPI/SETTLE/881247/BharatPe Daily QR Counter Collections / Store Sales,28680.34,Sales Receipts,1558151.63,SALES881247
+2025-04-12,UPI/SETTLE/881249/BharatPe Daily QR Counter Collections / Store Sales,30940.96,Sales Receipts,1589092.59,SALES881249
+2025-04-13,IMPS/881251/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-59243.77,Supplier Payments,1529848.82,SUP881251
+2025-04-13,UPI/SETTLE/881252/BharatPe Daily QR Counter Collections / Store Sales,14783.31,Sales Receipts,1544632.13,SALES881252
+2025-04-14,UPI/SETTLE/881254/BharatPe Daily QR Counter Collections / Store Sales,33141.07,Sales Receipts,1577773.2,SALES881254
+2025-04-15,UPI/SETTLE/881256/BharatPe Daily QR Counter Collections / Store Sales,27298.07,Sales Receipts,1605071.27,SALES881256
+2025-04-15,RTGS/B2B-INVOICE/881257/Corporate Institutional Sales Order Clearance/A/C 50100,82320.1,Sales Receipts,1687391.37,B2B881257
+2025-04-16,UPI/SETTLE/881259/BharatPe Daily QR Counter Collections / Store Sales,27742.91,Sales Receipts,1715134.28,SALES881259
+2025-04-17,IMPS/881261/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-12745.47,Supplier Payments,1702388.81,SUP881261
+2025-04-17,UPI/SETTLE/881262/BharatPe Daily QR Counter Collections / Store Sales,17229.65,Sales Receipts,1719618.46,SALES881262
+2025-04-18,UPI/SETTLE/881264/BharatPe Daily QR Counter Collections / Store Sales,29699.81,Sales Receipts,1749318.27,SALES881264
+2025-04-19,UPI/SETTLE/881266/BharatPe Daily QR Counter Collections / Store Sales,23177.24,Sales Receipts,1772495.51,SALES881266
+2025-04-20,NEFT/GSTN-PORTAL/881268/CBIC GST TAX PAYMENT/CIN 2025091827,-21712.52,GST/TDS,1750782.99,GST881268
+2025-04-20,UPI/SETTLE/881269/BharatPe Daily QR Counter Collections / Store Sales,19247.19,Sales Receipts,1770030.18,SALES881269
+2025-04-21,IMPS/881271/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-68654.88,Supplier Payments,1701375.3,SUP881271
+2025-04-21,UPI/SETTLE/881272/BharatPe Daily QR Counter Collections / Store Sales,35590.42,Sales Receipts,1736965.72,SALES881272
+2025-04-22,UPI/SETTLE/881274/BharatPe Daily QR Counter Collections / Store Sales,30137.77,Sales Receipts,1767103.49,SALES881274
+2025-04-23,UPI/SETTLE/881276/BharatPe Daily QR Counter Collections / Store Sales,28327.37,Sales Receipts,1795430.86,SALES881276
+2025-04-24,UPI/SETTLE/881278/BharatPe Daily QR Counter Collections / Store Sales,17784.32,Sales Receipts,1813215.18,SALES881278
+2025-04-25,UPI/881280/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,1768215.18,DRW881280
+2025-04-25,IMPS/881281/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-56923.92,Supplier Payments,1711291.26,SUP881281
+2025-04-25,UPI/SETTLE/881282/BharatPe Daily QR Counter Collections / Store Sales,35684.0,Sales Receipts,1746975.26,SALES881282
+2025-04-26,UPI/SETTLE/881284/BharatPe Daily QR Counter Collections / Store Sales,33716.14,Sales Receipts,1780691.4,SALES881284
+2025-04-27,UPI/SETTLE/881286/BharatPe Daily QR Counter Collections / Store Sales,34721.32,Sales Receipts,1815412.72,SALES881286
+2025-04-28,UPI/SETTLE/881288/BharatPe Daily QR Counter Collections / Store Sales,31477.68,Sales Receipts,1846890.4,SALES881288
+2025-04-29,IMPS/881290/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-36300.82,Supplier Payments,1810589.58,SUP881290
+2025-04-29,UPI/SETTLE/881291/BharatPe Daily QR Counter Collections / Store Sales,21325.57,Sales Receipts,1831915.15,SALES881291
+2025-04-30,UPI/SETTLE/881293/BharatPe Daily QR Counter Collections / Store Sales,34483.26,Sales Receipts,1866398.41,SALES881293
+2025-05-01,NEFT/SAL/881295/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,1844398.41,SAL881295
+2025-05-01,NEFT/SAL/881296/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,1826398.41,SAL881296
+2025-05-01,NEFT/SAL/881297/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,1811398.41,SAL881297
+2025-05-01,UPI/SETTLE/881298/BharatPe Daily QR Counter Collections / Store Sales,33883.82,Sales Receipts,1845282.23,SALES881298
+2025-05-02,UPI/SETTLE/881300/BharatPe Daily QR Counter Collections / Store Sales,26691.53,Sales Receipts,1871973.76,SALES881300
+2025-05-03,IMPS/881302/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-20706.59,Supplier Payments,1851267.17,SUP881302
+2025-05-03,UPI/SETTLE/881303/BharatPe Daily QR Counter Collections / Store Sales,16430.69,Sales Receipts,1867697.86,SALES881303
+2025-05-04,UPI/SETTLE/881305/BharatPe Daily QR Counter Collections / Store Sales,14900.43,Sales Receipts,1882598.29,SALES881305
+2025-05-05,RTGS/RENT/881307/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,1847598.29,RNT881307
+2025-05-05,UPI/SETTLE/881308/BharatPe Daily QR Counter Collections / Store Sales,27450.42,Sales Receipts,1875048.71,SALES881308
+2025-05-06,UPI/SETTLE/881310/BharatPe Daily QR Counter Collections / Store Sales,29679.37,Sales Receipts,1904728.08,SALES881310
+2025-05-07,IMPS/881312/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-74689.12,Supplier Payments,1830038.96,SUP881312
+2025-05-07,UPI/SETTLE/881313/BharatPe Daily QR Counter Collections / Store Sales,30585.54,Sales Receipts,1860624.5,SALES881313
+2025-05-08,UPI/SETTLE/881315/BharatPe Daily QR Counter Collections / Store Sales,29400.54,Sales Receipts,1890025.04,SALES881315
+2025-05-09,UPI/SETTLE/881317/BharatPe Daily QR Counter Collections / Store Sales,16561.42,Sales Receipts,1906586.46,SALES881317
+2025-05-10,ACH Dr/HDFC-MSME-LOAN-EMI/881319/A/C 5010049281,-24500.0,EMI/Loans,1882086.46,EMI881319
+2025-05-10,UPI/SETTLE/881320/BharatPe Daily QR Counter Collections / Store Sales,29060.47,Sales Receipts,1911146.93,SALES881320
+2025-05-11,UPI/SETTLE/881322/BharatPe Daily QR Counter Collections / Store Sales,15359.92,Sales Receipts,1926506.85,SALES881322
+2025-05-12,UPI/SETTLE/881324/BharatPe Daily QR Counter Collections / Store Sales,16118.53,Sales Receipts,1942625.38,SALES881324
+2025-05-13,UPI/SETTLE/881326/BharatPe Daily QR Counter Collections / Store Sales,20340.95,Sales Receipts,1962966.33,SALES881326
+2025-05-14,IMPS/881328/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-73394.24,Supplier Payments,1889572.09,SUP881328
+2025-05-14,UPI/SETTLE/881329/BharatPe Daily QR Counter Collections / Store Sales,28427.14,Sales Receipts,1917999.23,SALES881329
+2025-05-15,UPI/SETTLE/881331/BharatPe Daily QR Counter Collections / Store Sales,22338.29,Sales Receipts,1940337.52,SALES881331
+2025-05-16,UPI/SETTLE/881333/BharatPe Daily QR Counter Collections / Store Sales,33312.66,Sales Receipts,1973650.18,SALES881333
+2025-05-17,UPI/SETTLE/881335/BharatPe Daily QR Counter Collections / Store Sales,29588.83,Sales Receipts,2003239.01,SALES881335
+2025-05-18,UPI/SETTLE/881337/BharatPe Daily QR Counter Collections / Store Sales,29585.29,Sales Receipts,2032824.3,SALES881337
+2025-05-19,UPI/SETTLE/881339/BharatPe Daily QR Counter Collections / Store Sales,27939.15,Sales Receipts,2060763.45,SALES881339
+2025-05-20,NEFT/GSTN-PORTAL/881341/CBIC GST TAX PAYMENT/CIN 2025091827,-27758.94,GST/TDS,2033004.51,GST881341
+2025-05-20,UPI/SETTLE/881342/BharatPe Daily QR Counter Collections / Store Sales,19283.23,Sales Receipts,2052287.74,SALES881342
+2025-05-21,IMPS/881344/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-20569.47,Supplier Payments,2031718.27,SUP881344
+2025-05-21,UPI/SETTLE/881345/BharatPe Daily QR Counter Collections / Store Sales,19350.28,Sales Receipts,2051068.55,SALES881345
+2025-05-22,UPI/SETTLE/881347/BharatPe Daily QR Counter Collections / Store Sales,22975.45,Sales Receipts,2074044.0,SALES881347
+2025-05-23,UPI/SETTLE/881349/BharatPe Daily QR Counter Collections / Store Sales,27162.34,Sales Receipts,2101206.34,SALES881349
+2025-05-24,UPI/SETTLE/881351/BharatPe Daily QR Counter Collections / Store Sales,24901.08,Sales Receipts,2126107.42,SALES881351
+2025-05-25,UPI/881353/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,2081107.42,DRW881353
+2025-05-25,UPI/SETTLE/881354/BharatPe Daily QR Counter Collections / Store Sales,24712.19,Sales Receipts,2105819.61,SALES881354
+2025-05-26,UPI/SETTLE/881356/BharatPe Daily QR Counter Collections / Store Sales,18261.65,Sales Receipts,2124081.26,SALES881356
+2025-05-27,UPI/SETTLE/881358/BharatPe Daily QR Counter Collections / Store Sales,20022.63,Sales Receipts,2144103.89,SALES881358
+2025-05-28,IMPS/881360/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-62805.9,Supplier Payments,2081297.99,SUP881360
+2025-05-28,UPI/SETTLE/881361/BharatPe Daily QR Counter Collections / Store Sales,21242.61,Sales Receipts,2102540.6,SALES881361
+2025-05-29,UPI/SETTLE/881363/BharatPe Daily QR Counter Collections / Store Sales,14846.46,Sales Receipts,2117387.06,SALES881363
+2025-05-30,UPI/SETTLE/881365/BharatPe Daily QR Counter Collections / Store Sales,20857.7,Sales Receipts,2138244.76,SALES881365
+2025-05-31,UPI/SETTLE/881367/BharatPe Daily QR Counter Collections / Store Sales,19808.69,Sales Receipts,2158053.45,SALES881367
+2025-06-01,NEFT/SAL/881369/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,2136053.45,SAL881369
+2025-06-01,NEFT/SAL/881370/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,2118053.45,SAL881370
+2025-06-01,NEFT/SAL/881371/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,2103053.45,SAL881371
+2025-06-01,UPI/SETTLE/881372/BharatPe Daily QR Counter Collections / Store Sales,30633.66,Sales Receipts,2133687.11,SALES881372
+2025-06-02,IMPS/881374/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-9798.64,Supplier Payments,2123888.47,SUP881374
+2025-06-02,UPI/SETTLE/881375/BharatPe Daily QR Counter Collections / Store Sales,31048.67,Sales Receipts,2154937.14,SALES881375
+2025-06-03,UPI/SETTLE/881377/BharatPe Daily QR Counter Collections / Store Sales,33822.74,Sales Receipts,2188759.88,SALES881377
+2025-06-04,UPI/SETTLE/881379/BharatPe Daily QR Counter Collections / Store Sales,24078.46,Sales Receipts,2212838.34,SALES881379
+2025-06-05,RTGS/RENT/881381/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,2177838.34,RNT881381
+2025-06-05,UPI/SETTLE/881382/BharatPe Daily QR Counter Collections / Store Sales,34541.98,Sales Receipts,2212380.32,SALES881382
+2025-06-06,UPI/SETTLE/881384/BharatPe Daily QR Counter Collections / Store Sales,19804.11,Sales Receipts,2232184.43,SALES881384
+2025-06-07,UPI/SETTLE/881386/BharatPe Daily QR Counter Collections / Store Sales,35564.04,Sales Receipts,2267748.47,SALES881386
+2025-06-08,IMPS/881388/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-17403.03,Supplier Payments,2250345.44,SUP881388
+2025-06-08,UPI/SETTLE/881389/BharatPe Daily QR Counter Collections / Store Sales,17881.76,Sales Receipts,2268227.2,SALES881389
+2025-06-09,UPI/SETTLE/881391/BharatPe Daily QR Counter Collections / Store Sales,14462.98,Sales Receipts,2282690.18,SALES881391
+2025-06-10,ACH Dr/HDFC-MSME-LOAN-EMI/881393/A/C 5010049281,-24500.0,EMI/Loans,2258190.18,EMI881393
+2025-06-10,UPI/SETTLE/881394/BharatPe Daily QR Counter Collections / Store Sales,24612.97,Sales Receipts,2282803.15,SALES881394
+2025-06-11,UPI/SETTLE/881396/BharatPe Daily QR Counter Collections / Store Sales,35352.14,Sales Receipts,2318155.29,SALES881396
+2025-06-12,IMPS/881398/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-8608.63,Supplier Payments,2309546.66,SUP881398
+2025-06-12,UPI/SETTLE/881399/BharatPe Daily QR Counter Collections / Store Sales,19099.2,Sales Receipts,2328645.86,SALES881399
+2025-06-13,UPI/SETTLE/881401/BharatPe Daily QR Counter Collections / Store Sales,22357.52,Sales Receipts,2351003.38,SALES881401
+2025-06-14,UPI/SETTLE/881403/BharatPe Daily QR Counter Collections / Store Sales,24755.43,Sales Receipts,2375758.81,SALES881403
+2025-06-15,UPI/SETTLE/881405/BharatPe Daily QR Counter Collections / Store Sales,22612.3,Sales Receipts,2398371.11,SALES881405
+2025-06-15,RTGS/B2B-INVOICE/881406/Corporate Institutional Sales Order Clearance/A/C 50100,137402.03,Sales Receipts,2535773.14,B2B881406
+2025-06-16,IMPS/881408/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-17627.47,Supplier Payments,2518145.67,SUP881408
+2025-06-16,UPI/SETTLE/881409/BharatPe Daily QR Counter Collections / Store Sales,19932.33,Sales Receipts,2538078.0,SALES881409
+2025-06-17,UPI/SETTLE/881411/BharatPe Daily QR Counter Collections / Store Sales,35358.96,Sales Receipts,2573436.96,SALES881411
+2025-06-18,UPI/SETTLE/881413/BharatPe Daily QR Counter Collections / Store Sales,30022.68,Sales Receipts,2603459.64,SALES881413
+2025-06-19,UPI/SETTLE/881415/BharatPe Daily QR Counter Collections / Store Sales,29055.3,Sales Receipts,2632514.94,SALES881415
+2025-06-20,NEFT/GSTN-PORTAL/881417/CBIC GST TAX PAYMENT/CIN 2025091827,-21983.61,GST/TDS,2610531.33,GST881417
+2025-06-20,UPI/SETTLE/881418/BharatPe Daily QR Counter Collections / Store Sales,22741.42,Sales Receipts,2633272.75,SALES881418
+2025-06-21,UPI/SETTLE/881420/BharatPe Daily QR Counter Collections / Store Sales,30673.05,Sales Receipts,2663945.8,SALES881420
+2025-06-22,UPI/SETTLE/881422/BharatPe Daily QR Counter Collections / Store Sales,25359.36,Sales Receipts,2689305.16,SALES881422
+2025-06-23,IMPS/881424/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-12161.11,Supplier Payments,2677144.05,SUP881424
+2025-06-23,UPI/SETTLE/881425/BharatPe Daily QR Counter Collections / Store Sales,23250.49,Sales Receipts,2700394.54,SALES881425
+2025-06-24,UPI/SETTLE/881427/BharatPe Daily QR Counter Collections / Store Sales,32896.8,Sales Receipts,2733291.34,SALES881427
+2025-06-25,UPI/881429/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,2688291.34,DRW881429
+2025-06-25,UPI/SETTLE/881430/BharatPe Daily QR Counter Collections / Store Sales,15028.6,Sales Receipts,2703319.94,SALES881430
+2025-06-26,UPI/SETTLE/881432/BharatPe Daily QR Counter Collections / Store Sales,25669.98,Sales Receipts,2728989.92,SALES881432
+2025-06-27,UPI/SETTLE/881434/BharatPe Daily QR Counter Collections / Store Sales,29686.01,Sales Receipts,2758675.93,SALES881434
+2025-06-28,IMPS/881436/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-62608.75,Supplier Payments,2696067.18,SUP881436
+2025-06-28,UPI/SETTLE/881437/BharatPe Daily QR Counter Collections / Store Sales,20292.53,Sales Receipts,2716359.71,SALES881437
+2025-06-29,UPI/SETTLE/881439/BharatPe Daily QR Counter Collections / Store Sales,27764.56,Sales Receipts,2744124.27,SALES881439
+2025-06-30,UPI/SETTLE/881441/BharatPe Daily QR Counter Collections / Store Sales,27711.92,Sales Receipts,2771836.19,SALES881441
+2025-07-01,NEFT/SAL/881443/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,2749836.19,SAL881443
+2025-07-01,NEFT/SAL/881444/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,2731836.19,SAL881444
+2025-07-01,NEFT/SAL/881445/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,2716836.19,SAL881445
+2025-07-01,UPI/SETTLE/881446/BharatPe Daily QR Counter Collections / Store Sales,17001.41,Sales Receipts,2733837.6,SALES881446
+2025-07-02,UPI/SETTLE/881448/BharatPe Daily QR Counter Collections / Store Sales,34762.97,Sales Receipts,2768600.57,SALES881448
+2025-07-03,UPI/SETTLE/881450/BharatPe Daily QR Counter Collections / Store Sales,19337.09,Sales Receipts,2787937.66,SALES881450
+2025-07-04,UPI/SETTLE/881452/BharatPe Daily QR Counter Collections / Store Sales,17001.82,Sales Receipts,2804939.48,SALES881452
+2025-07-05,RTGS/RENT/881454/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,2769939.48,RNT881454
+2025-07-05,IMPS/881455/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-18398.6,Supplier Payments,2751540.88,SUP881455
+2025-07-05,UPI/SETTLE/881456/BharatPe Daily QR Counter Collections / Store Sales,16228.03,Sales Receipts,2767768.91,SALES881456
+2025-07-06,UPI/SETTLE/881458/BharatPe Daily QR Counter Collections / Store Sales,30753.55,Sales Receipts,2798522.46,SALES881458
+2025-07-07,UPI/SETTLE/881460/BharatPe Daily QR Counter Collections / Store Sales,16145.76,Sales Receipts,2814668.22,SALES881460
+2025-07-08,UPI/SETTLE/881462/BharatPe Daily QR Counter Collections / Store Sales,25908.54,Sales Receipts,2840576.76,SALES881462
+2025-07-09,UPI/SETTLE/881464/BharatPe Daily QR Counter Collections / Store Sales,33479.83,Sales Receipts,2874056.59,SALES881464
+2025-07-10,ACH Dr/HDFC-MSME-LOAN-EMI/881466/A/C 5010049281,-24500.0,EMI/Loans,2849556.59,EMI881466
+2025-07-10,UPI/SETTLE/881467/BharatPe Daily QR Counter Collections / Store Sales,23983.27,Sales Receipts,2873539.86,SALES881467
+2025-07-11,UPI/SETTLE/881469/BharatPe Daily QR Counter Collections / Store Sales,31918.05,Sales Receipts,2905457.91,SALES881469
+2025-07-12,IMPS/881471/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-10303.79,Supplier Payments,2895154.12,SUP881471
+2025-07-12,UPI/SETTLE/881472/BharatPe Daily QR Counter Collections / Store Sales,26204.39,Sales Receipts,2921358.51,SALES881472
+2025-07-13,UPI/SETTLE/881474/BharatPe Daily QR Counter Collections / Store Sales,19141.13,Sales Receipts,2940499.64,SALES881474
+2025-07-14,UPI/SETTLE/881476/BharatPe Daily QR Counter Collections / Store Sales,30625.13,Sales Receipts,2971124.77,SALES881476
+2025-07-15,UPI/SETTLE/881478/BharatPe Daily QR Counter Collections / Store Sales,35999.51,Sales Receipts,3007124.28,SALES881478
+2025-07-15,RTGS/B2B-INVOICE/881479/Corporate Institutional Sales Order Clearance/A/C 50100,140115.44,Sales Receipts,3147239.72,B2B881479
+2025-07-16,IMPS/881481/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-18358.17,Supplier Payments,3128881.55,SUP881481
+2025-07-16,UPI/SETTLE/881482/BharatPe Daily QR Counter Collections / Store Sales,34055.4,Sales Receipts,3162936.95,SALES881482
+2025-07-17,UPI/SETTLE/881484/BharatPe Daily QR Counter Collections / Store Sales,15199.01,Sales Receipts,3178135.96,SALES881484
+2025-07-18,UPI/SETTLE/881486/BharatPe Daily QR Counter Collections / Store Sales,30306.28,Sales Receipts,3208442.24,SALES881486
+2025-07-19,UPI/SETTLE/881488/BharatPe Daily QR Counter Collections / Store Sales,26853.42,Sales Receipts,3235295.66,SALES881488
+2025-07-20,NEFT/GSTN-PORTAL/881490/CBIC GST TAX PAYMENT/CIN 2025091827,-18177.82,GST/TDS,3217117.84,GST881490
+2025-07-20,UPI/SETTLE/881491/BharatPe Daily QR Counter Collections / Store Sales,19617.93,Sales Receipts,3236735.77,SALES881491
+2025-07-21,IMPS/881493/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-61746.61,Supplier Payments,3174989.16,SUP881493
+2025-07-21,UPI/SETTLE/881494/BharatPe Daily QR Counter Collections / Store Sales,25640.54,Sales Receipts,3200629.7,SALES881494
+2025-07-22,UPI/SETTLE/881496/BharatPe Daily QR Counter Collections / Store Sales,26801.34,Sales Receipts,3227431.04,SALES881496
+2025-07-23,UPI/SETTLE/881498/BharatPe Daily QR Counter Collections / Store Sales,28893.45,Sales Receipts,3256324.49,SALES881498
+2025-07-24,UPI/SETTLE/881500/BharatPe Daily QR Counter Collections / Store Sales,19424.23,Sales Receipts,3275748.72,SALES881500
+2025-07-25,UPI/881502/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,3230748.72,DRW881502
+2025-07-25,UPI/SETTLE/881503/BharatPe Daily QR Counter Collections / Store Sales,26390.18,Sales Receipts,3257138.9,SALES881503
+2025-07-26,UPI/SETTLE/881505/BharatPe Daily QR Counter Collections / Store Sales,29177.71,Sales Receipts,3286316.61,SALES881505
+2025-07-27,IMPS/881507/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-38421.71,Supplier Payments,3247894.9,SUP881507
+2025-07-27,UPI/SETTLE/881508/BharatPe Daily QR Counter Collections / Store Sales,32182.39,Sales Receipts,3280077.29,SALES881508
+2025-07-28,UPI/SETTLE/881510/BharatPe Daily QR Counter Collections / Store Sales,16625.94,Sales Receipts,3296703.23,SALES881510
+2025-07-29,UPI/SETTLE/881512/BharatPe Daily QR Counter Collections / Store Sales,17243.71,Sales Receipts,3313946.94,SALES881512
+2025-07-30,UPI/SETTLE/881514/BharatPe Daily QR Counter Collections / Store Sales,24996.74,Sales Receipts,3338943.68,SALES881514
+2025-07-31,UPI/SETTLE/881516/BharatPe Daily QR Counter Collections / Store Sales,20710.05,Sales Receipts,3359653.73,SALES881516
+2025-08-01,NEFT/SAL/881518/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,3337653.73,SAL881518
+2025-08-01,NEFT/SAL/881519/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,3319653.73,SAL881519
+2025-08-01,NEFT/SAL/881520/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,3304653.73,SAL881520
+2025-08-01,IMPS/881521/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-41139.48,Supplier Payments,3263514.25,SUP881521
+2025-08-01,UPI/SETTLE/881522/BharatPe Daily QR Counter Collections / Store Sales,23341.79,Sales Receipts,3286856.04,SALES881522
+2025-08-02,UPI/SETTLE/881524/BharatPe Daily QR Counter Collections / Store Sales,31438.92,Sales Receipts,3318294.96,SALES881524
+2025-08-03,UPI/SETTLE/881526/BharatPe Daily QR Counter Collections / Store Sales,17768.99,Sales Receipts,3336063.95,SALES881526
+2025-08-04,UPI/SETTLE/881528/BharatPe Daily QR Counter Collections / Store Sales,31729.78,Sales Receipts,3367793.73,SALES881528
+2025-08-05,RTGS/RENT/881530/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,3332793.73,RNT881530
+2025-08-05,UPI/SETTLE/881531/BharatPe Daily QR Counter Collections / Store Sales,15642.34,Sales Receipts,3348436.07,SALES881531
+2025-08-06,UPI/SETTLE/881533/BharatPe Daily QR Counter Collections / Store Sales,19517.86,Sales Receipts,3367953.93,SALES881533
+2025-08-07,UPI/SETTLE/881535/BharatPe Daily QR Counter Collections / Store Sales,28710.35,Sales Receipts,3396664.28,SALES881535
+2025-08-08,IMPS/881537/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-74226.56,Supplier Payments,3322437.72,SUP881537
+2025-08-08,UPI/SETTLE/881538/BharatPe Daily QR Counter Collections / Store Sales,17398.21,Sales Receipts,3339835.93,SALES881538
+2025-08-09,UPI/SETTLE/881540/BharatPe Daily QR Counter Collections / Store Sales,19067.96,Sales Receipts,3358903.89,SALES881540
+2025-08-10,ACH Dr/HDFC-MSME-LOAN-EMI/881542/A/C 5010049281,-24500.0,EMI/Loans,3334403.89,EMI881542
+2025-08-10,UPI/SETTLE/881543/BharatPe Daily QR Counter Collections / Store Sales,33508.36,Sales Receipts,3367912.25,SALES881543
+2025-08-11,UPI/SETTLE/881545/BharatPe Daily QR Counter Collections / Store Sales,17504.96,Sales Receipts,3385417.21,SALES881545
+2025-08-12,IMPS/881547/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-11444.96,Supplier Payments,3373972.25,SUP881547
+2025-08-12,UPI/SETTLE/881548/BharatPe Daily QR Counter Collections / Store Sales,21051.41,Sales Receipts,3395023.66,SALES881548
+2025-08-13,UPI/SETTLE/881550/BharatPe Daily QR Counter Collections / Store Sales,30999.28,Sales Receipts,3426022.94,SALES881550
+2025-08-14,UPI/SETTLE/881552/BharatPe Daily QR Counter Collections / Store Sales,26779.75,Sales Receipts,3452802.69,SALES881552
+2025-08-15,UPI/SETTLE/881554/BharatPe Daily QR Counter Collections / Store Sales,21710.03,Sales Receipts,3474512.72,SALES881554
+2025-08-16,UPI/SETTLE/881556/BharatPe Daily QR Counter Collections / Store Sales,33494.53,Sales Receipts,3508007.25,SALES881556
+2025-08-17,IMPS/881558/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-12468.76,Supplier Payments,3495538.49,SUP881558
+2025-08-17,UPI/SETTLE/881559/BharatPe Daily QR Counter Collections / Store Sales,20477.33,Sales Receipts,3516015.82,SALES881559
+2025-08-18,UPI/SETTLE/881561/BharatPe Daily QR Counter Collections / Store Sales,20286.9,Sales Receipts,3536302.72,SALES881561
+2025-08-19,UPI/SETTLE/881563/BharatPe Daily QR Counter Collections / Store Sales,34643.63,Sales Receipts,3570946.35,SALES881563
+2025-08-20,NEFT/GSTN-PORTAL/881565/CBIC GST TAX PAYMENT/CIN 2025091827,-31656.53,GST/TDS,3539289.82,GST881565
+2025-08-20,UPI/SETTLE/881566/BharatPe Daily QR Counter Collections / Store Sales,17473.76,Sales Receipts,3556763.58,SALES881566
+2025-08-21,UPI/SETTLE/881568/BharatPe Daily QR Counter Collections / Store Sales,34162.76,Sales Receipts,3590926.34,SALES881568
+2025-08-22,UPI/SETTLE/881570/BharatPe Daily QR Counter Collections / Store Sales,29704.46,Sales Receipts,3620630.8,SALES881570
+2025-08-23,IMPS/881572/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-43882.83,Supplier Payments,3576747.97,SUP881572
+2025-08-23,UPI/SETTLE/881573/BharatPe Daily QR Counter Collections / Store Sales,32124.01,Sales Receipts,3608871.98,SALES881573
+2025-08-24,UPI/SETTLE/881575/BharatPe Daily QR Counter Collections / Store Sales,31163.71,Sales Receipts,3640035.69,SALES881575
+2025-08-25,UPI/881577/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,3595035.69,DRW881577
+2025-08-25,UPI/SETTLE/881578/BharatPe Daily QR Counter Collections / Store Sales,17973.31,Sales Receipts,3613009.0,SALES881578
+2025-08-26,UPI/SETTLE/881580/BharatPe Daily QR Counter Collections / Store Sales,18658.54,Sales Receipts,3631667.54,SALES881580
+2025-08-27,UPI/SETTLE/881582/BharatPe Daily QR Counter Collections / Store Sales,24856.28,Sales Receipts,3656523.82,SALES881582
+2025-08-28,UPI/SETTLE/881584/BharatPe Daily QR Counter Collections / Store Sales,26709.51,Sales Receipts,3683233.33,SALES881584
+2025-08-29,UPI/SETTLE/881586/BharatPe Daily QR Counter Collections / Store Sales,16757.27,Sales Receipts,3699990.6,SALES881586
+2025-08-30,IMPS/881588/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-45745.96,Supplier Payments,3654244.64,SUP881588
+2025-08-30,UPI/SETTLE/881589/BharatPe Daily QR Counter Collections / Store Sales,33289.74,Sales Receipts,3687534.38,SALES881589
+2025-08-30,RTGS/B2B-DELAYED/881590/Delayed Corporate Bulk Order Clearance/A/C 50100,195000.0,Sales Receipts,3882534.38,B2B881590
+2025-08-31,UPI/SETTLE/881592/BharatPe Daily QR Counter Collections / Store Sales,14255.62,Sales Receipts,3896790.0,SALES881592
+2025-09-01,NEFT/SAL/881594/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,3874790.0,SAL881594
+2025-09-01,NEFT/SAL/881595/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,3856790.0,SAL881595
+2025-09-01,NEFT/SAL/881596/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,3841790.0,SAL881596
+2025-09-01,UPI/SETTLE/881597/BharatPe Daily QR Counter Collections / Store Sales,17860.39,Sales Receipts,3859650.39,SALES881597
+2025-09-02,UPI/SETTLE/881599/BharatPe Daily QR Counter Collections / Store Sales,16825.02,Sales Receipts,3876475.41,SALES881599
+2025-09-03,UPI/SETTLE/881601/BharatPe Daily QR Counter Collections / Store Sales,27107.69,Sales Receipts,3903583.1,SALES881601
+2025-09-04,UPI/SETTLE/881603/BharatPe Daily QR Counter Collections / Store Sales,22927.65,Sales Receipts,3926510.75,SALES881603
+2025-09-05,RTGS/RENT/881605/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,3891510.75,RNT881605
+2025-09-05,UPI/SETTLE/881606/BharatPe Daily QR Counter Collections / Store Sales,34292.88,Sales Receipts,3925803.63,SALES881606
+2025-09-06,IMPS/881608/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-47665.01,Supplier Payments,3878138.62,SUP881608
+2025-09-06,UPI/SETTLE/881609/BharatPe Daily QR Counter Collections / Store Sales,18507.48,Sales Receipts,3896646.1,SALES881609
+2025-09-07,UPI/SETTLE/881611/BharatPe Daily QR Counter Collections / Store Sales,33687.67,Sales Receipts,3930333.77,SALES881611
+2025-09-08,UPI/SETTLE/881613/BharatPe Daily QR Counter Collections / Store Sales,32945.37,Sales Receipts,3963279.14,SALES881613
+2025-09-09,UPI/SETTLE/881615/BharatPe Daily QR Counter Collections / Store Sales,32095.87,Sales Receipts,3995375.01,SALES881615
+2025-09-10,ACH Dr/HDFC-MSME-LOAN-EMI/881617/A/C 5010049281,-24500.0,EMI/Loans,3970875.01,EMI881617
+2025-09-10,UPI/SETTLE/881618/BharatPe Daily QR Counter Collections / Store Sales,31214.43,Sales Receipts,4002089.44,SALES881618
+2025-09-11,IMPS/881620/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-84640.72,Supplier Payments,3917448.72,SUP881620
+2025-09-11,UPI/SETTLE/881621/BharatPe Daily QR Counter Collections / Store Sales,22029.36,Sales Receipts,3939478.08,SALES881621
+2025-09-12,UPI/SETTLE/881623/BharatPe Daily QR Counter Collections / Store Sales,29772.18,Sales Receipts,3969250.26,SALES881623
+2025-09-13,UPI/SETTLE/881625/BharatPe Daily QR Counter Collections / Store Sales,18416.41,Sales Receipts,3987666.67,SALES881625
+2025-09-14,UPI/SETTLE/881627/BharatPe Daily QR Counter Collections / Store Sales,33116.22,Sales Receipts,4020782.89,SALES881627
+2025-09-15,UPI/SETTLE/881629/BharatPe Daily QR Counter Collections / Store Sales,32861.49,Sales Receipts,4053644.38,SALES881629
+2025-09-15,RTGS/B2B-INVOICE/881630/Corporate Institutional Sales Order Clearance/A/C 50100,116149.09,Sales Receipts,4169793.47,B2B881630
+2025-09-16,UPI/SETTLE/881632/BharatPe Daily QR Counter Collections / Store Sales,17309.91,Sales Receipts,4187103.38,SALES881632
+2025-09-17,UPI/SETTLE/881634/BharatPe Daily QR Counter Collections / Store Sales,31807.45,Sales Receipts,4218910.83,SALES881634
+2025-09-18,IMPS/881636/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-30736.79,Supplier Payments,4188174.04,SUP881636
+2025-09-18,UPI/SETTLE/881637/BharatPe Daily QR Counter Collections / Store Sales,30685.16,Sales Receipts,4218859.2,SALES881637
+2025-09-19,UPI/SETTLE/881639/BharatPe Daily QR Counter Collections / Store Sales,27981.47,Sales Receipts,4246840.67,SALES881639
+2025-09-20,NEFT/GSTN-PORTAL/881641/CBIC GST TAX PAYMENT/CIN 2025091827,-21302.9,GST/TDS,4225537.77,GST881641
+2025-09-20,UPI/SETTLE/881642/BharatPe Daily QR Counter Collections / Store Sales,33338.98,Sales Receipts,4258876.75,SALES881642
+2025-09-21,UPI/SETTLE/881644/BharatPe Daily QR Counter Collections / Store Sales,21053.16,Sales Receipts,4279929.91,SALES881644
+2025-09-22,UPI/SETTLE/881646/BharatPe Daily QR Counter Collections / Store Sales,23245.22,Sales Receipts,4303175.13,SALES881646
+2025-09-23,UPI/SETTLE/881648/BharatPe Daily QR Counter Collections / Store Sales,23646.24,Sales Receipts,4326821.37,SALES881648
+2025-09-24,UPI/SETTLE/881650/BharatPe Daily QR Counter Collections / Store Sales,29429.86,Sales Receipts,4356251.23,SALES881650
+2025-09-25,UPI/881652/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,4311251.23,DRW881652
+2025-09-25,IMPS/881653/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-59788.72,Supplier Payments,4251462.51,SUP881653
+2025-09-25,UPI/SETTLE/881654/BharatPe Daily QR Counter Collections / Store Sales,24729.13,Sales Receipts,4276191.64,SALES881654
+2025-09-26,UPI/SETTLE/881656/BharatPe Daily QR Counter Collections / Store Sales,31617.96,Sales Receipts,4307809.6,SALES881656
+2025-09-27,UPI/SETTLE/881658/BharatPe Daily QR Counter Collections / Store Sales,22048.7,Sales Receipts,4329858.3,SALES881658
+2025-09-28,UPI/SETTLE/881660/BharatPe Daily QR Counter Collections / Store Sales,26568.38,Sales Receipts,4356426.68,SALES881660
+2025-09-29,UPI/SETTLE/881662/BharatPe Daily QR Counter Collections / Store Sales,35287.19,Sales Receipts,4391713.87,SALES881662
+2025-09-30,UPI/SETTLE/881664/BharatPe Daily QR Counter Collections / Store Sales,15282.57,Sales Receipts,4406996.44,SALES881664
+2025-10-01,NEFT/SAL/881666/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,4384996.44,SAL881666
+2025-10-01,NEFT/SAL/881667/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,4366996.44,SAL881667
+2025-10-01,NEFT/SAL/881668/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,4351996.44,SAL881668
+2025-10-01,IMPS/881669/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-13287.27,Supplier Payments,4338709.17,SUP881669
+2025-10-01,UPI/SETTLE/881670/BharatPe Daily QR Counter Collections / Store Sales,20040.85,Sales Receipts,4358750.02,SALES881670
+2025-10-02,UPI/SETTLE/881672/BharatPe Daily QR Counter Collections / Store Sales,18786.41,Sales Receipts,4377536.43,SALES881672
+2025-10-03,UPI/SETTLE/881674/BharatPe Daily QR Counter Collections / Store Sales,32552.62,Sales Receipts,4410089.05,SALES881674
+2025-10-04,UPI/SETTLE/881676/BharatPe Daily QR Counter Collections / Store Sales,18457.06,Sales Receipts,4428546.11,SALES881676
+2025-10-05,RTGS/RENT/881678/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,4393546.11,RNT881678
+2025-10-05,UPI/SETTLE/881679/BharatPe Daily QR Counter Collections / Store Sales,35168.36,Sales Receipts,4428714.47,SALES881679
+2025-10-06,IMPS/881681/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-32054.48,Supplier Payments,4396659.99,SUP881681
+2025-10-06,UPI/SETTLE/881682/BharatPe Daily QR Counter Collections / Store Sales,33457.21,Sales Receipts,4430117.2,SALES881682
+2025-10-07,UPI/SETTLE/881684/BharatPe Daily QR Counter Collections / Store Sales,17171.11,Sales Receipts,4447288.31,SALES881684
+2025-10-08,UPI/SETTLE/881686/BharatPe Daily QR Counter Collections / Store Sales,29223.83,Sales Receipts,4476512.14,SALES881686
+2025-10-09,UPI/SETTLE/881688/BharatPe Daily QR Counter Collections / Store Sales,14612.56,Sales Receipts,4491124.7,SALES881688
+2025-10-10,ACH Dr/HDFC-MSME-LOAN-EMI/881690/A/C 5010049281,-24500.0,EMI/Loans,4466624.7,EMI881690
+2025-10-10,IMPS/881691/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-66655.02,Supplier Payments,4399969.68,SUP881691
+2025-10-10,UPI/SETTLE/881692/BharatPe Daily QR Counter Collections / Store Sales,27104.02,Sales Receipts,4427073.7,SALES881692
+2025-10-11,UPI/SETTLE/881694/BharatPe Daily QR Counter Collections / Store Sales,22207.07,Sales Receipts,4449280.77,SALES881694
+2025-10-12,UPI/SETTLE/881696/BharatPe Daily QR Counter Collections / Store Sales,21416.29,Sales Receipts,4470697.06,SALES881696
+2025-10-13,UPI/SETTLE/881698/BharatPe Daily QR Counter Collections / Store Sales,17202.02,Sales Receipts,4487899.08,SALES881698
+2025-10-14,UPI/SETTLE/881700/BharatPe Daily QR Counter Collections / Store Sales,28775.6,Sales Receipts,4516674.68,SALES881700
+2025-10-15,UPI/SETTLE/881702/BharatPe Daily QR Counter Collections / Store Sales,25394.67,Sales Receipts,4542069.35,SALES881702
+2025-10-16,IMPS/881704/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-21970.45,Supplier Payments,4520098.9,SUP881704
+2025-10-16,UPI/SETTLE/881705/BharatPe Daily QR Counter Collections / Store Sales,20788.09,Sales Receipts,4540886.99,SALES881705
+2025-10-17,UPI/SETTLE/881707/BharatPe Daily QR Counter Collections / Store Sales,35896.13,Sales Receipts,4576783.12,SALES881707
+2025-10-18,UPI/SETTLE/881709/BharatPe Daily QR Counter Collections / Store Sales,18302.29,Sales Receipts,4595085.41,SALES881709
+2025-10-19,UPI/SETTLE/881711/BharatPe Daily QR Counter Collections / Store Sales,30748.27,Sales Receipts,4625833.68,SALES881711
+2025-10-20,NEFT/GSTN-PORTAL/881713/CBIC GST TAX PAYMENT/CIN 2025091827,-28949.0,GST/TDS,4596884.68,GST881713
+2025-10-20,IMPS/881714/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-73714.75,Supplier Payments,4523169.93,SUP881714
+2025-10-20,UPI/SETTLE/881715/BharatPe Daily QR Counter Collections / Store Sales,15788.59,Sales Receipts,4538958.52,SALES881715
+2025-10-21,UPI/SETTLE/881717/BharatPe Daily QR Counter Collections / Store Sales,25850.51,Sales Receipts,4564809.03,SALES881717
+2025-10-22,UPI/SETTLE/881719/BharatPe Daily QR Counter Collections / Store Sales,17346.76,Sales Receipts,4582155.79,SALES881719
+2025-10-23,UPI/SETTLE/881721/BharatPe Daily QR Counter Collections / Store Sales,14397.71,Sales Receipts,4596553.5,SALES881721
+2025-10-24,UPI/SETTLE/881723/BharatPe Daily QR Counter Collections / Store Sales,18863.02,Sales Receipts,4615416.52,SALES881723
+2025-10-25,UPI/881725/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,4570416.52,DRW881725
+2025-10-25,UPI/SETTLE/881726/BharatPe Daily QR Counter Collections / Store Sales,29459.5,Sales Receipts,4599876.02,SALES881726
+2025-10-26,IMPS/881728/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-39369.03,Supplier Payments,4560506.99,SUP881728
+2025-10-26,UPI/SETTLE/881729/BharatPe Daily QR Counter Collections / Store Sales,15814.9,Sales Receipts,4576321.89,SALES881729
+2025-10-27,UPI/SETTLE/881731/BharatPe Daily QR Counter Collections / Store Sales,21532.74,Sales Receipts,4597854.63,SALES881731
+2025-10-28,UPI/SETTLE/881733/BharatPe Daily QR Counter Collections / Store Sales,16158.98,Sales Receipts,4614013.61,SALES881733
+2025-10-29,UPI/SETTLE/881735/BharatPe Daily QR Counter Collections / Store Sales,32133.92,Sales Receipts,4646147.53,SALES881735
+2025-10-30,UPI/SETTLE/881737/BharatPe Daily QR Counter Collections / Store Sales,22419.4,Sales Receipts,4668566.93,SALES881737
+2025-10-31,UPI/SETTLE/881739/BharatPe Daily QR Counter Collections / Store Sales,29741.93,Sales Receipts,4698308.86,SALES881739
+2025-11-01,NEFT/SAL/881741/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,4676308.86,SAL881741
+2025-11-01,NEFT/SAL/881742/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,4658308.86,SAL881742
+2025-11-01,NEFT/SAL/881743/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,4643308.86,SAL881743
+2025-11-01,UPI/SETTLE/881744/BharatPe Daily QR Counter Collections / Store Sales,21381.84,Sales Receipts,4664690.7,SALES881744
+2025-11-02,IMPS/881746/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-8976.13,Supplier Payments,4655714.57,SUP881746
+2025-11-02,UPI/SETTLE/881747/BharatPe Daily QR Counter Collections / Store Sales,19702.58,Sales Receipts,4675417.15,SALES881747
+2025-11-03,UPI/SETTLE/881749/BharatPe Daily QR Counter Collections / Store Sales,26038.86,Sales Receipts,4701456.01,SALES881749
+2025-11-04,UPI/SETTLE/881751/BharatPe Daily QR Counter Collections / Store Sales,30992.0,Sales Receipts,4732448.01,SALES881751
+2025-11-05,RTGS/RENT/881753/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,4697448.01,RNT881753
+2025-11-05,UPI/SETTLE/881754/BharatPe Daily QR Counter Collections / Store Sales,15628.06,Sales Receipts,4713076.07,SALES881754
+2025-11-06,IMPS/881756/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-39255.13,Supplier Payments,4673820.94,SUP881756
+2025-11-06,UPI/SETTLE/881757/BharatPe Daily QR Counter Collections / Store Sales,24749.83,Sales Receipts,4698570.77,SALES881757
+2025-11-07,UPI/SETTLE/881759/BharatPe Daily QR Counter Collections / Store Sales,16423.33,Sales Receipts,4714994.1,SALES881759
+2025-11-08,UPI/SETTLE/881761/BharatPe Daily QR Counter Collections / Store Sales,25456.2,Sales Receipts,4740450.3,SALES881761
+2025-11-09,UPI/SETTLE/881763/BharatPe Daily QR Counter Collections / Store Sales,17543.0,Sales Receipts,4757993.3,SALES881763
+2025-11-10,ACH Dr/HDFC-MSME-LOAN-EMI/881765/A/C 5010049281,-24500.0,EMI/Loans,4733493.3,EMI881765
+2025-11-10,UPI/SETTLE/881766/BharatPe Daily QR Counter Collections / Store Sales,25568.54,Sales Receipts,4759061.84,SALES881766
+2025-11-11,IMPS/881768/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-28518.46,Supplier Payments,4730543.38,SUP881768
+2025-11-11,UPI/SETTLE/881769/BharatPe Daily QR Counter Collections / Store Sales,31940.0,Sales Receipts,4762483.38,SALES881769
+2025-11-12,UPI/SETTLE/881771/BharatPe Daily QR Counter Collections / Store Sales,35107.5,Sales Receipts,4797590.88,SALES881771
+2025-11-13,UPI/SETTLE/881773/BharatPe Daily QR Counter Collections / Store Sales,24192.2,Sales Receipts,4821783.08,SALES881773
+2025-11-14,UPI/SETTLE/881775/BharatPe Daily QR Counter Collections / Store Sales,33569.29,Sales Receipts,4855352.37,SALES881775
+2025-11-15,UPI/SETTLE/881777/BharatPe Daily QR Counter Collections / Store Sales,32959.82,Sales Receipts,4888312.19,SALES881777
+2025-11-15,RTGS/B2B-INVOICE/881778/Corporate Institutional Sales Order Clearance/A/C 50100,158319.7,Sales Receipts,5046631.89,B2B881778
+2025-11-16,UPI/SETTLE/881780/BharatPe Daily QR Counter Collections / Store Sales,35079.84,Sales Receipts,5081711.73,SALES881780
+2025-11-17,UPI/SETTLE/881782/BharatPe Daily QR Counter Collections / Store Sales,17462.1,Sales Receipts,5099173.83,SALES881782
+2025-11-18,IMPS/881784/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-71243.96,Supplier Payments,5027929.87,SUP881784
+2025-11-18,UPI/SETTLE/881785/BharatPe Daily QR Counter Collections / Store Sales,14900.84,Sales Receipts,5042830.71,SALES881785
+2025-11-19,UPI/SETTLE/881787/BharatPe Daily QR Counter Collections / Store Sales,34590.5,Sales Receipts,5077421.21,SALES881787
+2025-11-20,NEFT/GSTN-PORTAL/881789/CBIC GST TAX PAYMENT/CIN 2025091827,-27852.02,GST/TDS,5049569.19,GST881789
+2025-11-20,UPI/SETTLE/881790/BharatPe Daily QR Counter Collections / Store Sales,21688.69,Sales Receipts,5071257.88,SALES881790
+2025-11-21,UPI/SETTLE/881792/BharatPe Daily QR Counter Collections / Store Sales,27359.04,Sales Receipts,5098616.92,SALES881792
+2025-11-22,UPI/SETTLE/881794/BharatPe Daily QR Counter Collections / Store Sales,28328.83,Sales Receipts,5126945.75,SALES881794
+2025-11-23,UPI/SETTLE/881796/BharatPe Daily QR Counter Collections / Store Sales,22919.34,Sales Receipts,5149865.09,SALES881796
+2025-11-24,IMPS/881798/Supplier Payment to HUL Consumer Distributor Bangalore/huldist@icici/INV-Wholesale,-55299.53,Supplier Payments,5094565.56,SUP881798
+2025-11-24,UPI/SETTLE/881799/BharatPe Daily QR Counter Collections / Store Sales,33433.78,Sales Receipts,5127999.34,SALES881799
+2025-11-25,UPI/881801/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,5082999.34,DRW881801
+2025-11-25,UPI/SETTLE/881802/BharatPe Daily QR Counter Collections / Store Sales,18496.91,Sales Receipts,5101496.25,SALES881802
+2025-11-26,UPI/SETTLE/881804/BharatPe Daily QR Counter Collections / Store Sales,18273.19,Sales Receipts,5119769.44,SALES881804
+2025-11-27,UPI/SETTLE/881806/BharatPe Daily QR Counter Collections / Store Sales,15867.52,Sales Receipts,5135636.96,SALES881806
+2025-11-28,IMPS/881808/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-10111.2,Supplier Payments,5125525.76,SUP881808
+2025-11-28,UPI/SETTLE/881809/BharatPe Daily QR Counter Collections / Store Sales,22365.74,Sales Receipts,5147891.5,SALES881809
+2025-11-29,UPI/SETTLE/881811/BharatPe Daily QR Counter Collections / Store Sales,32061.54,Sales Receipts,5179953.04,SALES881811
+2025-11-30,UPI/SETTLE/881813/BharatPe Daily QR Counter Collections / Store Sales,27485.62,Sales Receipts,5207438.66,SALES881813
+2025-12-01,NEFT/SAL/881815/Salaries / Staff Ramesh Store Mgr/A/C 3928172910,-22000.0,Salaries,5185438.66,SAL881815
+2025-12-01,NEFT/SAL/881816/Salaries / Staff Priya Cashier/A/C 3928172910,-18000.0,Salaries,5167438.66,SAL881816
+2025-12-01,NEFT/SAL/881817/Salaries / Staff Sunil Helper/A/C 3928172910,-15000.0,Salaries,5152438.66,SAL881817
+2025-12-01,UPI/SETTLE/881818/BharatPe Daily QR Counter Collections / Store Sales,31683.92,Sales Receipts,5184122.58,SALES881818
+2025-12-02,UPI/SETTLE/881820/BharatPe Daily QR Counter Collections / Store Sales,32973.15,Sales Receipts,5217095.73,SALES881820
+2025-12-03,IMPS/881822/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-50689.21,Supplier Payments,5166406.52,SUP881822
+2025-12-03,UPI/SETTLE/881823/BharatPe Daily QR Counter Collections / Store Sales,17281.4,Sales Receipts,5183687.92,SALES881823
+2025-12-04,UPI/SETTLE/881825/BharatPe Daily QR Counter Collections / Store Sales,28333.87,Sales Receipts,5212021.79,SALES881825
+2025-12-05,RTGS/RENT/881827/Shop Landlord Commercial Estate Bangalore,-35000.0,Rent,5177021.79,RNT881827
+2025-12-05,UPI/SETTLE/881828/BharatPe Daily QR Counter Collections / Store Sales,28624.76,Sales Receipts,5205646.55,SALES881828
+2025-12-06,UPI/SETTLE/881830/BharatPe Daily QR Counter Collections / Store Sales,28522.32,Sales Receipts,5234168.87,SALES881830
+2025-12-07,UPI/SETTLE/881832/BharatPe Daily QR Counter Collections / Store Sales,17473.77,Sales Receipts,5251642.64,SALES881832
+2025-12-08,UPI/SETTLE/881834/BharatPe Daily QR Counter Collections / Store Sales,30432.65,Sales Receipts,5282075.29,SALES881834
+2025-12-09,UPI/SETTLE/881836/BharatPe Daily QR Counter Collections / Store Sales,25574.68,Sales Receipts,5307649.97,SALES881836
+2025-12-10,ACH Dr/HDFC-MSME-LOAN-EMI/881838/A/C 5010049281,-24500.0,EMI/Loans,5283149.97,EMI881838
+2025-12-10,IMPS/881839/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-17919.6,Supplier Payments,5265230.37,SUP881839
+2025-12-10,UPI/SETTLE/881840/BharatPe Daily QR Counter Collections / Store Sales,16321.75,Sales Receipts,5281552.12,SALES881840
+2025-12-11,UPI/SETTLE/881842/BharatPe Daily QR Counter Collections / Store Sales,23919.35,Sales Receipts,5305471.47,SALES881842
+2025-12-12,UPI/SETTLE/881844/BharatPe Daily QR Counter Collections / Store Sales,34699.75,Sales Receipts,5340171.22,SALES881844
+2025-12-13,UPI/SETTLE/881846/BharatPe Daily QR Counter Collections / Store Sales,29465.43,Sales Receipts,5369636.65,SALES881846
+2025-12-14,UPI/SETTLE/881848/BharatPe Daily QR Counter Collections / Store Sales,15229.37,Sales Receipts,5384866.02,SALES881848
+2025-12-15,IMPS/881850/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-31478.39,Supplier Payments,5353387.63,SUP881850
+2025-12-15,UPI/SETTLE/881851/BharatPe Daily QR Counter Collections / Store Sales,21339.6,Sales Receipts,5374727.23,SALES881851
+2025-12-15,RTGS/B2B-INVOICE/881852/Corporate Institutional Sales Order Clearance/A/C 50100,85432.33,Sales Receipts,5460159.56,B2B881852
+2025-12-16,UPI/SETTLE/881854/BharatPe Daily QR Counter Collections / Store Sales,27854.53,Sales Receipts,5488014.09,SALES881854
+2025-12-17,UPI/SETTLE/881856/BharatPe Daily QR Counter Collections / Store Sales,27458.55,Sales Receipts,5515472.64,SALES881856
+2025-12-18,UPI/SETTLE/881858/BharatPe Daily QR Counter Collections / Store Sales,28093.31,Sales Receipts,5543565.95,SALES881858
+2025-12-19,UPI/SETTLE/881860/BharatPe Daily QR Counter Collections / Store Sales,24875.82,Sales Receipts,5568441.77,SALES881860
+2025-12-20,NEFT/GSTN-PORTAL/881862/CBIC GST TAX PAYMENT/CIN 2025091827,-25804.6,GST/TDS,5542637.17,GST881862
+2025-12-20,IMPS/881863/Supplier Payment to Metro Cash & Carry Wholesale/metro.cash@hdfcbank/INV-Wholesale,-72186.32,Supplier Payments,5470450.85,SUP881863
+2025-12-20,UPI/SETTLE/881864/BharatPe Daily QR Counter Collections / Store Sales,30881.68,Sales Receipts,5501332.53,SALES881864
+2025-12-21,UPI/SETTLE/881866/BharatPe Daily QR Counter Collections / Store Sales,19329.46,Sales Receipts,5520661.99,SALES881866
+2025-12-22,UPI/SETTLE/881868/BharatPe Daily QR Counter Collections / Store Sales,20466.35,Sales Receipts,5541128.34,SALES881868
+2025-12-23,UPI/SETTLE/881870/BharatPe Daily QR Counter Collections / Store Sales,15121.67,Sales Receipts,5556250.01,SALES881870
+2025-12-24,UPI/SETTLE/881872/BharatPe Daily QR Counter Collections / Store Sales,31279.54,Sales Receipts,5587529.55,SALES881872
+2025-12-25,UPI/881874/Owner Personal Drawing / Transfer to Savings Account/owner@okaxis,-45000.0,Owner Drawings,5542529.55,DRW881874
+2025-12-25,UPI/SETTLE/881875/BharatPe Daily QR Counter Collections / Store Sales,32914.52,Sales Receipts,5575444.07,SALES881875
+2025-12-26,IMPS/881877/Supplier Payment to ITC Wholesale Distribution/itcwholesale@sbi/INV-Wholesale,-47024.33,Supplier Payments,5528419.74,SUP881877
+2025-12-26,UPI/SETTLE/881878/BharatPe Daily QR Counter Collections / Store Sales,32602.18,Sales Receipts,5561021.92,SALES881878
+2025-12-27,UPI/SETTLE/881880/BharatPe Daily QR Counter Collections / Store Sales,16655.97,Sales Receipts,5577677.89,SALES881880
+2025-12-28,UPI/SETTLE/881882/BharatPe Daily QR Counter Collections / Store Sales,15503.86,Sales Receipts,5593181.75,SALES881882
+2025-12-29,UPI/SETTLE/881884/BharatPe Daily QR Counter Collections / Store Sales,33282.52,Sales Receipts,5626464.27,SALES881884
+2025-12-30,IMPS/881886/Supplier Payment to Packaging & Paper Boxes Ltd/packaging@axis/INV-Wholesale,-20742.55,Supplier Payments,5605721.72,SUP881886
+2025-12-30,UPI/SETTLE/881887/BharatPe Daily QR Counter Collections / Store Sales,27960.23,Sales Receipts,5633681.95,SALES881887
+2025-12-31,UPI/SETTLE/881889/BharatPe Daily QR Counter Collections / Store Sales,27791.82,Sales Receipts,5661473.77,SALES881889

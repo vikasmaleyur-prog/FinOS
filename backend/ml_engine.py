@@ -161,13 +161,30 @@ class AutoCategorizer:
 
         # Subscriptions: SaaS, Cloud, Streaming
         (re.compile(r'(?i)(netflix|spotify|figma|github|aws|prime|hotstar|google storage|youtube premium|cloud|notion|openai|anthropic|adobe|apple\.com/bill)'), 'Subscriptions'),
+
+        # Business Categories:
+        # Sales Receipts: QR counter collections, card POS, client invoices
+        (re.compile(r'(?i)(sales|receipts|settle|bharatpe|paytm qr|counter collection|pos settlement|store sales|merchant settlement|daily sales|b2b-invoice|b2b-delayed)'), 'Sales Receipts'),
+
+        # Supplier Payments: wholesale distributors, inventory, vendor procurement
+        (re.compile(r'(?i)(supplier|distributor|wholesale|packaging|procurement|inventory|vendor|metro cash|hul consumer|itc wholesale|distrib)'), 'Supplier Payments'),
+
+        # Salaries: staff wages, store managers, cashiers
+        (re.compile(r'(?i)(salaries|staff payroll|staff salary|worker wages|store mgr|cashier|helper wages|staff ramesh|staff priya|staff sunil)'), 'Salaries'),
+
+        # GST/TDS: tax portal, CBIC, advance tax
+        (re.compile(r'(?i)(gstn|gst portal|cbic|gst tax|tds payable|income tax|challan|advance tax|gstin)'), 'GST/TDS'),
+
+        # Owner Drawings: owner withdrawals, partner drawings
+        (re.compile(r'(?i)(owner personal drawing|owner drawing|personal drawing|transfer to savings account|drawings|partner withdrawal)'), 'Owner Drawings'),
     ]
 
-    INCOME_REGEX = re.compile(r'(?i)(salary|freelance|client|upwork|razorpay|escrow|retainer|refund|cashback|interest|dividend|inward|payout|neft|imps|received from|stipend|consulting)')
+    INCOME_REGEX = re.compile(r'(?i)(salary|freelance|client|upwork|razorpay|escrow|retainer|refund|cashback|interest|dividend|inward|payout|neft|imps|received from|stipend|consulting|sales|settle)')
 
     CANONICAL_CATEGORIES = [
         "Food", "Travel", "Investments", "Bills & Utilities", "Shopping",
-        "Health", "EMI/Loans", "Rent", "Subscriptions", "Income", "Other/Transfer"
+        "Health", "EMI/Loans", "Rent", "Subscriptions", "Income", "Other/Transfer",
+        "Sales Receipts", "Supplier Payments", "Salaries", "GST/TDS", "Owner Drawings"
     ]
 
     def __init__(self):
@@ -579,7 +596,8 @@ class CashFlowForecaster:
         income_boost_pct: float = 0.0,
         daily_spend_cap: Optional[float] = None,
         start_date: Optional[datetime.date] = None,
-        seed: int = 42
+        seed: int = 42,
+        account_type: str = "savings"
     ) -> Dict[str, Any]:
         np.random.seed(seed)
 
@@ -716,6 +734,13 @@ class CashFlowForecaster:
                     scheduled_one_time_by_day[offset] += amt
 
         # 6. Run Monte Carlo Simulation Paths
+        is_current_account = (account_type.lower() == "current") or ("Category" in df.columns and "Sales Receipts" in df["Category"].values)
+        daily_sales_pool = []
+        if is_current_account and "Category" in df.columns:
+            sales_rows = df[df["Category"] == "Sales Receipts"]["Amount"]
+            if len(sales_rows) > 0:
+                daily_sales_pool = sales_rows[sales_rows > 0].values
+
         trajectories = np.zeros((num_simulations, forecast_days))
         breach_count = 0
         first_breach_days = []
@@ -729,12 +754,28 @@ class CashFlowForecaster:
                 daily_net = 0.0
 
                 # Inflow
-                if days_to_next_income <= 0:
-                    sim_income = max(15000.0, float(np.random.normal(mean_income_amount, std_income_amount)))
-                    daily_net += sim_income
-                    days_to_next_income = int(max(15, np.random.normal(mean_income_interval, std_income_interval)))
+                if is_current_account:
+                    # 1. Daily sales counter receipts
+                    if len(daily_sales_pool) > 0:
+                        daily_net += float(np.random.choice(daily_sales_pool))
+                    else:
+                        daily_net += max(0.0, float(np.random.normal(22000.0, 6000.0)))
+
+                    # 2. B2B Receivables with right-skewed delay distribution (widens forecast band)
+                    if days_to_next_income <= 0:
+                        b2b_inflow = max(40000.0, float(np.random.normal(mean_income_amount, std_income_amount)))
+                        daily_net += b2b_inflow
+                        mu_del = np.log(max(4.0, 18.0 + income_delay_days))
+                        days_to_next_income = int(np.random.lognormal(mean=mu_del, sigma=0.50))
+                    else:
+                        days_to_next_income -= 1
                 else:
-                    days_to_next_income -= 1
+                    if days_to_next_income <= 0:
+                        sim_income = max(15000.0, float(np.random.normal(mean_income_amount, std_income_amount)))
+                        daily_net += sim_income
+                        days_to_next_income = int(max(15, np.random.normal(mean_income_interval, std_income_interval)))
+                    else:
+                        days_to_next_income -= 1
 
                 # Fixed Outflows
                 daily_net -= scheduled_fixed_by_day[day_idx]
@@ -875,6 +916,7 @@ class CashFlowForecaster:
 
         return {
             "forecast_days": int(forecast_days),
+            "account_type": "current" if is_current_account else "savings",
             "start_date": start_date.strftime("%Y-%m-%d"),
             "current_balance": round(float(current_balance), 2),
             "minimum_safe_balance": float(minimum_safe_balance),
@@ -1744,4 +1786,220 @@ Earliest Breach Date: {sim_result['new_breach_date'] or 'None'}
             "reply": reply,
             "simulated_result": sim_result,
             "is_llm_generated": False
+        }
+
+
+# ==========================================
+# 10. MULTI-ACCOUNT CONSOLIDATION & INTERNAL TRANSFERS
+# ==========================================
+
+class MultiAccountEngine:
+    """
+    Analyzes multiple statements (e.g. Current Account + Savings Reserve):
+    - Identifies internal transfers between accounts (opposite sign, equal amount within 0.05, within 2 days).
+    - Excludes internal transfers from operating income and expense.
+    - Generates independent forecasts and consolidated combined cash flow view.
+    - Recommends optimal inter-account transfer to eliminate buffer breach risks (< 10%).
+    """
+
+    @classmethod
+    def detect_internal_transfers(
+        cls,
+        df_a: pd.DataFrame,
+        df_b: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, List[Dict[str, Any]]]:
+        """
+        Detects internal transfers between two accounts:
+        - Opposite sign: amount_a * amount_b < 0 and abs(abs(amount_a) - abs(amount_b)) < 0.05
+        - Timing: abs((date_a - date_b).days) <= 2
+        Returns (clean_df_a, clean_df_b, internal_transfers_list).
+        """
+        out_a = df_a.copy()
+        out_b = df_b.copy()
+
+        out_a["Date_DT"] = pd.to_datetime(out_a["Date"])
+        out_b["Date_DT"] = pd.to_datetime(out_b["Date"])
+
+        out_a["is_internal_transfer"] = False
+        out_b["is_internal_transfer"] = False
+
+        transfers = []
+        matched_b_indices = set()
+        matched_a_indices = set()
+
+        # Build candidate lookup map for Account B grouped by rounded amount for O(1) matching
+        b_by_amt = {}
+        desc_b_col = out_b["Description"] if "Description" in out_b.columns else [""] * len(out_b)
+        for idx_b, date_b, amt_b, desc_b in zip(out_b.index, out_b["Date_DT"], out_b["Amount"], desc_b_col):
+            amt_f = float(amt_b)
+            if abs(amt_f) > 10.0:
+                k = round(abs(amt_f), 2)
+                if k not in b_by_amt:
+                    b_by_amt[k] = []
+                b_by_amt[k].append((idx_b, date_b, amt_f, str(desc_b)))
+
+        desc_a_col = out_a["Description"] if "Description" in out_a.columns else [""] * len(out_a)
+        for idx_a, date_a, amt_a, desc_a in zip(out_a.index, out_a["Date_DT"], out_a["Amount"], desc_a_col):
+            amt_a_f = float(amt_a)
+            if abs(amt_a_f) <= 10.0:
+                continue
+            k = round(abs(amt_a_f), 2)
+            if k not in b_by_amt:
+                continue
+
+            for idx_b, date_b, amt_b_f, desc_b in b_by_amt[k]:
+                if idx_b in matched_b_indices:
+                    continue
+                # Opposite sign & timing check (within 2 days)
+                if (amt_a_f * amt_b_f < 0):
+                    day_diff = abs((date_a - date_b).days)
+                    if day_diff <= 2:
+                        matched_a_indices.add(idx_a)
+                        matched_b_indices.add(idx_b)
+                        transfers.append({
+                            "amount": round(abs(amt_a_f), 2),
+                            "from_account": "Account A" if amt_a_f < 0 else "Account B",
+                            "to_account": "Account B" if amt_a_f < 0 else "Account A",
+                            "date_a": str(date_a.strftime("%Y-%m-%d")),
+                            "date_b": str(date_b.strftime("%Y-%m-%d")),
+                            "day_difference": int(day_diff),
+                            "description_a": str(desc_a),
+                            "description_b": str(desc_b)
+                        })
+                        break
+
+        # Mark matching transfers
+        if matched_a_indices:
+            out_a.loc[list(matched_a_indices), "is_internal_transfer"] = True
+        if matched_b_indices:
+            out_b.loc[list(matched_b_indices), "is_internal_transfer"] = True
+
+        # Override category for internal transfers
+        out_a.loc[out_a["is_internal_transfer"], "Category"] = "Internal Transfer"
+        out_b.loc[out_b["is_internal_transfer"], "Category"] = "Internal Transfer"
+
+        return out_a, out_b, transfers
+
+    @classmethod
+    def analyze_multi_account(
+        cls,
+        df_a: pd.DataFrame,
+        df_b: pd.DataFrame,
+        bal_a: float,
+        bal_b: float,
+        min_safe_a: float = 25000.0,
+        min_safe_b: float = 5000.0,
+        name_a: str = "Primary Account",
+        name_b: str = "Reserve Account"
+    ) -> Dict[str, Any]:
+        """
+        Full dual-account analytics:
+        1. Identifies and isolates internal transfers.
+        2. Computes independent 60-day Monte Carlo forecasts.
+        3. Computes consolidated combined forecast.
+        4. Calculates suggested transfer to bring at-risk account below 10% breach probability.
+        """
+        clean_a, clean_b, transfers = cls.detect_internal_transfers(df_a, df_b)
+
+        # Operational dataframes (excluding internal transfer double-counting)
+        op_a = clean_a[~clean_a["is_internal_transfer"]].copy()
+        op_b = clean_b[~clean_b["is_internal_transfer"]].copy()
+        if len(op_a) == 0:
+            op_a = clean_a.copy()
+        if len(op_b) == 0:
+            op_b = clean_b.copy()
+
+        sim_a = CashFlowForecaster.run_monte_carlo(op_a, current_balance=bal_a, minimum_safe_balance=min_safe_a)
+        sim_b = CashFlowForecaster.run_monte_carlo(op_b, current_balance=bal_b, minimum_safe_balance=min_safe_b)
+
+        # Combined consolidated timeline
+        combined_timeline = []
+        for p_a, p_b in zip(sim_a["forecast"], sim_b["forecast"]):
+            combined_timeline.append({
+                "date": p_a["date"],
+                "displayDate": p_a["displayDate"],
+                "p10": round(p_a["p10"] + p_b["p10"], 2),
+                "p50": round(p_a["p50"] + p_b["p50"], 2),
+                "p90": round(p_a["p90"] + p_b["p90"], 2),
+                "safeThreshold": min_safe_a + min_safe_b
+            })
+
+        # Suggested transfer optimization
+        prob_a = float(sim_a["prob_below_safe_balance"])
+        prob_b = float(sim_b["prob_below_safe_balance"])
+        suggested_transfer = None
+
+        if prob_a > 10.0 and bal_b > (min_safe_b + 5000.0):
+            # Account A is at risk, Account B has surplus
+            breach_day_offset = sim_a.get("days_to_breach") or 10
+            transfer_day = max(1, breach_day_offset - 2)
+
+            # Binary search smallest transfer in steps of ₹5,000 that brings risk <= 10%
+            max_available = max(5000.0, bal_b - min_safe_b)
+            low = 1
+            high = max(1, int(max_available // 5000))
+            opt_amt = max_available
+            lowest_prob = prob_a
+
+            while low <= high:
+                mid = (low + high) // 2
+                candidate_amt = mid * 5000.0
+                test_sim = CashFlowForecaster.run_monte_carlo(
+                    op_a,
+                    current_balance=bal_a,
+                    minimum_safe_balance=min_safe_a,
+                    one_time_expenses=[{"name": "Internal Reserve Inflow", "amount": -candidate_amt, "day_offset": transfer_day}],
+                    num_simulations=150
+                )
+                t_prob = float(test_sim["prob_below_safe_balance"])
+                if t_prob <= 10.0:
+                    opt_amt = float(candidate_amt)
+                    lowest_prob = t_prob
+                    high = mid - 1  # Seek even smaller transfer satisfying the condition
+                else:
+                    if t_prob < lowest_prob:
+                        opt_amt = float(candidate_amt)
+                        lowest_prob = t_prob
+                    low = mid + 1
+
+            transfer_date_str = (datetime.date.today() + datetime.timedelta(days=transfer_day)).strftime("%d %b %Y")
+            suggested_transfer = {
+                "from_account": name_b,
+                "to_account": name_a,
+                "recommended_amount": round(opt_amt, 2),
+                "recommended_date": transfer_date_str,
+                "days_offset": transfer_day,
+                "before_risk_pct": prob_a,
+                "after_risk_pct": round(lowest_prob, 1),
+                "reason": f"Transferring ₹{round(opt_amt):,} from {name_b} on {transfer_date_str} reduces {name_a}'s buffer breach probability from {prob_a:.1f}% to {lowest_prob:.1f}% (< 10%)."
+            }
+
+        return {
+            "status": "success",
+            "internal_transfers_count": len(transfers),
+            "internal_transfers": transfers,
+            "account_a": {
+                "name": name_a,
+                "current_balance": round(bal_a, 2),
+                "minimum_safe_balance": float(min_safe_a),
+                "breach_prob": prob_a,
+                "risk_level": sim_a["risk_level"],
+                "first_breach_date": sim_a["first_breach_date"],
+                "timeline": sim_a["forecast"]
+            },
+            "account_b": {
+                "name": name_b,
+                "current_balance": round(bal_b, 2),
+                "minimum_safe_balance": float(min_safe_b),
+                "breach_prob": prob_b,
+                "risk_level": sim_b["risk_level"],
+                "first_breach_date": sim_b["first_breach_date"],
+                "timeline": sim_b["forecast"]
+            },
+            "combined": {
+                "current_balance": round(bal_a + bal_b, 2),
+                "safeThreshold": min_safe_a + min_safe_b,
+                "timeline": combined_timeline
+            },
+            "suggested_transfer": suggested_transfer
         }

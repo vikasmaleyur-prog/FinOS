@@ -15,19 +15,22 @@ import { PersonalizedLimitsCard } from '@/components/PersonalizedLimitsCard';
 import { UploadModal } from '@/components/UploadModal';
 import { EmptyState } from '@/components/EmptyState';
 import { AskFinOSChat } from '@/components/AskFinOSChat';
+import { MultiAccountView } from '@/components/MultiAccountView';
 import { 
   UploadCloud, 
   CircleAlert, 
   LogOut, 
   X,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator' | 'accuracy'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator' | 'accuracy' | 'multi-account'>('overview');
+  const [accountType, setAccountType] = useState<'savings' | 'current'>('savings');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [minSafeBalance, setMinSafeBalance] = useState<number>(5000);
@@ -71,6 +74,9 @@ export default function DashboardPage() {
     if (data.minimum_safe_balance) {
       setMinSafeBalance(Number(data.minimum_safe_balance));
     }
+    if (data.account_type) {
+      setAccountType(data.account_type);
+    }
   };
 
   // Robust error notification handler
@@ -82,23 +88,33 @@ export default function DashboardPage() {
   };
 
   // One-click sample dataset loader
-  const handleLoadSample = async () => {
+  const handleLoadSample = async (datasetName: string = 'freelancer') => {
     handleUploadStart();
     setIsLoadingSample(true);
     setUploadError(null);
+
+    const isCurrent = datasetName === 'shop_owner';
+    const startBal = isCurrent ? 150000.0 : (datasetName === 'phonepe_90d' ? 45000.0 : 75000.0);
+    const safeBuffer = isCurrent ? 25000.0 : 5000.0;
+    const accType = isCurrent ? 'current' : 'savings';
+
+    setAccountType(accType);
+    setMinSafeBalance(safeBuffer);
 
     try {
       const res = await fetch(`${API_BASE}/sample/load`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          starting_balance: 75000.0,
-          minimum_safe_balance: minSafeBalance
+          dataset_name: datasetName,
+          starting_balance: startBal,
+          minimum_safe_balance: safeBuffer,
+          account_type: accType
         })
       });
 
       if (!res.ok) {
-        throw new Error(`Failed to load sample dataset (HTTP ${res.status})`);
+        throw new Error(`Failed to load ${datasetName} dataset (HTTP ${res.status})`);
       }
 
       const data = await res.json();
@@ -107,6 +123,35 @@ export default function DashboardPage() {
       setUploadError(e.message || "Failed to load reference dataset.");
     } finally {
       setIsLoadingSample(false);
+    }
+  };
+
+  // Dynamic account type toggle & re-forecast
+  const handleSwitchAccountType = async (newType: 'savings' | 'current') => {
+    setAccountType(newType);
+    const newMinSafe = newType === 'current' ? 25000 : 5000;
+    setMinSafeBalance(newMinSafe);
+
+    if (transactions && transactions.length > 0) {
+      try {
+        const res = await fetch(`${API_BASE}/forecast`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transactions: transactions,
+            current_balance: Number(overview?.current_balance ?? 75000),
+            minimum_safe_balance: newMinSafe,
+            account_type: newType
+          })
+        });
+
+        if (res.ok) {
+          const updated = await res.json();
+          handleUploadSuccess(updated);
+        }
+      } catch (err) {
+        console.error('Failed to recalculate forecast:', err);
+      }
     }
   };
 
@@ -160,10 +205,37 @@ export default function DashboardPage() {
               {activeTab === 'transactions' && 'Ledger & Categorized Transactions'}
               {activeTab === 'simulator' && 'What-If Cash Flow Stress Testing'}
               {activeTab === 'accuracy' && 'Predictive Accuracy & Backtesting'}
+              {activeTab === 'multi-account' && 'Multi-Account Consolidation & Balancing'}
             </h1>
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Account Type Toggle */}
+            <div className="flex items-center rounded-xl bg-white/[0.04] border border-white/[0.08] p-0.5">
+              <button
+                onClick={() => handleSwitchAccountType('savings')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
+                  accountType === 'savings'
+                    ? 'bg-[#d9f154] text-black font-bold shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Switch to Personal/Freelance Savings Account"
+              >
+                Savings
+              </button>
+              <button
+                onClick={() => handleSwitchAccountType('current')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
+                  accountType === 'current'
+                    ? 'bg-[#d9f154] text-black font-bold shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                }`}
+                title="Switch to Small Business Current Account (Overdraft / Receivables delay)"
+              >
+                Current (SMB)
+              </button>
+            </div>
+
             {/* Ask FinOS Chat Copilot Button */}
             <button
               onClick={() => setIsChatOpen(true)}
@@ -217,7 +289,7 @@ export default function DashboardPage() {
         )}
 
         {/* Empty State when no statement is loaded */}
-        {!hasData ? (
+        {!hasData && activeTab !== 'multi-account' ? (
           <EmptyState
             onOpenUpload={() => {
               setUploadError(null);
@@ -314,6 +386,7 @@ export default function DashboardPage() {
                 currentBalance={Number(overview?.current_balance ?? 0)}
                 minimumSafeBalance={minSafeBalance}
                 transactions={transactions || []}
+                accountType={accountType}
               />
             )}
 
@@ -325,6 +398,15 @@ export default function DashboardPage() {
                 apiBase={API_BASE}
                 transactions={transactions || []}
                 startingBalance={Number(overview?.starting_balance ?? 75000)}
+              />
+            )}
+
+            {/* ======================================================== */}
+            {/* VIEW 5: MULTI-ACCOUNT CONSOLIDATION */}
+            {/* ======================================================== */}
+            {activeTab === 'multi-account' && (
+              <MultiAccountView
+                apiBase={API_BASE}
               />
             )}
           </>
