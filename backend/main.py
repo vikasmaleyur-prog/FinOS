@@ -137,12 +137,18 @@ class SampleLoadRequest(BaseModel):
 class MultiAccountRequest(BaseModel):
     account_a_transactions: Optional[List[Dict[str, Any]]] = None
     account_b_transactions: Optional[List[Dict[str, Any]]] = None
-    account_a_balance: Optional[float] = 45000.0
-    account_b_balance: Optional[float] = 120000.0
-    account_a_min_safe: Optional[float] = 25000.0
-    account_b_min_safe: Optional[float] = 5000.0
+    account_a_balance: Optional[float] = None
+    starting_balance_a: Optional[float] = None
+    account_b_balance: Optional[float] = None
+    starting_balance_b: Optional[float] = None
+    account_a_min_safe: Optional[float] = None
+    safe_buffer_a: Optional[float] = None
+    account_b_min_safe: Optional[float] = None
+    safe_buffer_b: Optional[float] = None
     account_a_name: Optional[str] = "Current Business Account"
     account_b_name: Optional[str] = "Savings Reserve Account"
+    account_type_a: Optional[str] = "current"
+    account_type_b: Optional[str] = "savings"
 
 
 # ==========================================
@@ -251,6 +257,19 @@ def run_pipeline_for_dataframe(
             "categorization_method": str(row.get("categorization_method", "heuristic"))
         })
 
+    pipeline_meta = {
+        "account_type": account_type,
+        "minimum_safe_balance": float(min_safe),
+        "starting_balance": round(start_bal, 2),
+        "current_balance": round(ending_balance, 2),
+        "prob_below_safe_balance": float(forecast_res["prob_below_safe_balance"]),
+        "prob_below_zero": float(forecast_res.get("prob_below_zero", 0.0)),
+        "expected_future_balance": float(forecast_res.get("expected_future_balance", ending_balance)),
+        "lowest_median_balance": float(forecast_res["lowest_median_balance"]),
+        "risk_level": forecast_res["risk_level"],
+        "first_breach_date": forecast_res["first_breach_date"]
+    }
+
     return {
         "status": "success",
         "has_data": True,
@@ -262,6 +281,7 @@ def run_pipeline_for_dataframe(
         "account_type": account_type,
         "starting_balance": round(start_bal, 2),
         "minimum_safe_balance": float(min_safe),
+        "metadata": pipeline_meta,
         "data_sufficiency": forecast_res.get("data_sufficiency", {}),
         "limits": limits,
         "metrics_30d": {
@@ -289,6 +309,7 @@ def run_pipeline_for_dataframe(
             "expected_inflow_date": forecast_res.get("expected_inflow_date")
         },
         "forecast": {
+            "metadata": pipeline_meta,
             "forecast_meta": {
                 "forecast_days": int(forecast_res["forecast_days"]),
                 "start_date": forecast_res["start_date"],
@@ -417,6 +438,9 @@ def simulate_scenario(payload: SimulateRequest):
             else:
                 raise HTTPException(status_code=400, detail="No transactions provided for simulation.")
 
+        # 0. Detect recurring obligations once upfront
+        recurring_bills = RecurringPaymentDetector.detect_recurring(df)
+
         # 1. Baseline Forecast
         baseline = CashFlowForecaster.run_monte_carlo(
             df=df,
@@ -424,7 +448,8 @@ def simulate_scenario(payload: SimulateRequest):
             forecast_days=60,
             num_simulations=1000,
             minimum_safe_balance=float(min_safe),
-            account_type=payload.account_type or "savings"
+            account_type=payload.account_type or "savings",
+            recurring_bills=recurring_bills
         )
 
         # 2. Simulated Forecast with Modifiers
@@ -449,10 +474,10 @@ def simulate_scenario(payload: SimulateRequest):
             income_delay_days=payload.income_delay_days,
             income_boost_pct=payload.income_boost_pct,
             daily_spend_cap=daily_cap_mod,
-            account_type=payload.account_type or "savings"
+            account_type=payload.account_type or "savings",
+            recurring_bills=recurring_bills
         )
 
-        recurring_bills = RecurringPaymentDetector.detect_recurring(df)
         explanation = FinancialExplainer.generate_explanation(
             simulated,
             recurring_bills,
@@ -494,8 +519,11 @@ def simulate_scenario(payload: SimulateRequest):
             "status": "success",
             "delta_metrics": {
                 "baseline_risk": float(baseline["prob_below_safe_balance"]),
+                "baseline_breach_probability": float(baseline["prob_below_safe_balance"]),
                 "simulated_risk": float(simulated["prob_below_safe_balance"]),
+                "simulated_breach_probability": float(simulated["prob_below_safe_balance"]),
                 "risk_increase_pct": delta_risk,
+                "breach_probability_change": delta_risk,
                 "baseline_min_balance": float(baseline["lowest_median_balance"]),
                 "simulated_min_balance": float(simulated["lowest_median_balance"]),
                 "baseline_ending_balance": round(float(baseline["forecast"][-1]["p50"]), 2),
@@ -504,7 +532,8 @@ def simulate_scenario(payload: SimulateRequest):
                 "simulated_safe_limit": float(sim_limits.get("recommended_daily_cap", 850.0)),
                 "balance_impact": delta_min_balance,
                 "new_breach_date": simulated["first_breach_date"],
-                "simulated_risk_level": simulated["risk_level"]
+                "simulated_risk_level": simulated["risk_level"],
+                "recommendation": explanation.get("headline", "Safe decision based on current buffer.")
             },
             "explanation": explanation,
             "timeline": combined_timeline
@@ -800,6 +829,11 @@ def post_multi_account_analyze(payload: Optional[MultiAccountRequest] = None):
     """
     try:
         p = payload or MultiAccountRequest()
+        bal_a_req = p.account_a_balance if p.account_a_balance is not None else p.starting_balance_a
+        bal_b_req = p.account_b_balance if p.account_b_balance is not None else p.starting_balance_b
+        min_safe_a_req = p.account_a_min_safe if p.account_a_min_safe is not None else (p.safe_buffer_a or 25000.0)
+        min_safe_b_req = p.account_b_min_safe if p.account_b_min_safe is not None else (p.safe_buffer_b or 5000.0)
+
         if p.account_a_transactions and len(p.account_a_transactions) > 0:
             df_a = pd.DataFrame(p.account_a_transactions)
             for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
@@ -807,7 +841,7 @@ def post_multi_account_analyze(payload: Optional[MultiAccountRequest] = None):
                     df_a[col] = df_a[alt]
         else:
             with open(SHOP_PATH, "rb") as f:
-                df_a, _ = StatementParser.parse_csv(f.read(), starting_balance=float(p.account_a_balance or 45000.0))
+                df_a, _ = StatementParser.parse_csv(f.read(), starting_balance=float(bal_a_req or 45000.0))
 
         if p.account_b_transactions and len(p.account_b_transactions) > 0:
             df_b = pd.DataFrame(p.account_b_transactions)
@@ -816,21 +850,21 @@ def post_multi_account_analyze(payload: Optional[MultiAccountRequest] = None):
                     df_b[col] = df_b[alt]
         else:
             with open(DATA_PATH, "rb") as f:
-                df_b, _ = StatementParser.parse_csv(f.read(), starting_balance=float(p.account_b_balance or 120000.0))
+                df_b, _ = StatementParser.parse_csv(f.read(), starting_balance=float(bal_b_req or 120000.0))
 
         df_a = categorizer.categorize_dataframe(df_a)
         df_b = categorizer.categorize_dataframe(df_b)
 
-        bal_a = p.account_a_balance if p.account_a_balance is not None else float(df_a["Balance"].iloc[-1])
-        bal_b = p.account_b_balance if p.account_b_balance is not None else float(df_b["Balance"].iloc[-1])
+        bal_a = bal_a_req if bal_a_req is not None else float(df_a["Balance"].iloc[-1])
+        bal_b = bal_b_req if bal_b_req is not None else float(df_b["Balance"].iloc[-1])
 
         return MultiAccountEngine.analyze_multi_account(
             df_a=df_a,
             df_b=df_b,
             bal_a=float(bal_a),
             bal_b=float(bal_b),
-            min_safe_a=float(p.account_a_min_safe or 25000.0),
-            min_safe_b=float(p.account_b_min_safe or 5000.0),
+            min_safe_a=float(min_safe_a_req),
+            min_safe_b=float(min_safe_b_req),
             name_a=p.account_a_name or "Current Business Account",
             name_b=p.account_b_name or "Savings Reserve Account"
         )

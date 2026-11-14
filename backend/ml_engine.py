@@ -608,6 +608,7 @@ class RecurringPaymentDetector:
                     "category": str(cat),
                     "day_of_month": int(last_paid.day),
                     "confidence": conf,
+                    "confidence_score": int(conf * 100),
                     "confidence_pct": int(conf * 100)
                 })
 
@@ -640,7 +641,8 @@ class CashFlowForecaster:
         daily_spend_cap: Optional[float] = None,
         start_date: Optional[datetime.date] = None,
         seed: int = 42,
-        account_type: str = "savings"
+        account_type: str = "savings",
+        recurring_bills: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         np.random.seed(seed)
 
@@ -653,8 +655,9 @@ class CashFlowForecaster:
                 start_date = datetime.date.today()
 
         # 2. Extract recurring bills
-        recurring_detector = RecurringPaymentDetector()
-        recurring_bills = recurring_detector.detect_recurring(df)
+        if recurring_bills is None:
+            recurring_detector = RecurringPaymentDetector()
+            recurring_bills = recurring_detector.detect_recurring(df)
 
         # 3. Data sufficiency assessment
         if "Date" in df.columns and len(df) > 0:
@@ -875,11 +878,13 @@ class CashFlowForecaster:
             horizon_metrics[f"{h}d"] = {
                 "horizon_days": h,
                 "expected_balance": round(float(np.mean(trajectories[:, h_idx])), 2),
+                "expected_future_balance": round(float(np.mean(trajectories[:, h_idx])), 2),
                 "p10": round(float(np.percentile(trajectories[:, h_idx], 10)), 2),
                 "p50": round(float(np.percentile(trajectories[:, h_idx], 50)), 2),
                 "p90": round(float(np.percentile(trajectories[:, h_idx], 90)), 2),
                 "min_expected_balance": round(float(np.min(np.percentile(h_sub, 50, axis=0))), 2),
                 "prob_below_safe_balance": round(float(np.mean(h_breached_safe) * 100), 1),
+                "prob_breach_buffer": round(float(np.mean(h_breached_safe) * 100), 1),
                 "prob_below_zero": round(float(np.mean(h_breached_zero) * 100), 1)
             }
 
@@ -1286,13 +1291,17 @@ class SpendingLimitOptimizer:
         else:
             mean_burn = 850.0
 
+        # Pre-extract recurring bills once to avoid redundant recalculation during binary search
+        rec_bills = RecurringPaymentDetector.detect_recurring(df)
+
         # Baseline without cap
         base_res = CashFlowForecaster.run_monte_carlo(
             df=df,
             current_balance=current_balance,
             forecast_days=60,
-            num_simulations=400,
-            minimum_safe_balance=minimum_safe_balance
+            num_simulations=300,
+            minimum_safe_balance=minimum_safe_balance,
+            recurring_bills=rec_bills
         )
         base_prob = float(base_res["prob_below_safe_balance"])
 
@@ -1304,15 +1313,16 @@ class SpendingLimitOptimizer:
             high = mean_burn
 
         optimal_cap = low
-        for _ in range(10):
+        for _ in range(7):
             mid = (low + high) / 2.0
             sim_test = CashFlowForecaster.run_monte_carlo(
                 df=df,
                 current_balance=current_balance,
                 forecast_days=60,
-                num_simulations=300,
+                num_simulations=200,
                 minimum_safe_balance=minimum_safe_balance,
-                daily_spend_cap=mid
+                daily_spend_cap=mid,
+                recurring_bills=rec_bills
             )
             prob = float(sim_test["prob_below_safe_balance"])
             if prob <= target_max_breach_prob:
@@ -1328,7 +1338,8 @@ class SpendingLimitOptimizer:
             forecast_days=60,
             num_simulations=1000,
             minimum_safe_balance=minimum_safe_balance,
-            daily_spend_cap=optimal_cap
+            daily_spend_cap=optimal_cap,
+            recurring_bills=rec_bills
         )
         final_prob = float(final_sim["prob_below_safe_balance"])
 
@@ -1555,8 +1566,10 @@ class BacktestEngine:
                 "model_mape": round(mape_model, 2),
                 "naive_mape": round(mape_naive, 2),
                 "calibration_80_pct": round(calibration_80, 1),
+                "calibration_coverage_pct": round(calibration_80, 1),
                 "target_calibration_pct": 80.0,
-                "calibration_status": "Well-Calibrated" if (70.0 <= calibration_80 <= 90.0) else "Uncalibrated"
+                "calibration_status": "Well-Calibrated" if (70.0 <= calibration_80 <= 90.0) else "Uncalibrated",
+                "calibration_assessment": "Well-Calibrated" if (70.0 <= calibration_80 <= 90.0) else "Uncalibrated"
             },
             "calibration_bands": [
                 {
@@ -1664,6 +1677,8 @@ class FinOSLLMService:
         top_drivers = forecast_data.get("top_drivers", [])
         driver_strings = [f"{d.get('driver')}: ₹{d.get('amount', 0):,.0f} ({d.get('impact_detail', '')})" for d in top_drivers]
 
+        b_range_exp = forecast_data.get('breach_date_range') if isinstance(forecast_data.get('breach_date_range'), dict) else {}
+        b_win_exp = b_range_exp.get('label') or forecast_data.get('first_breach_date') or 'None'
         prompt = f"""You are FinOS, an empathetic, highly analytical AI Financial Operating System for Indian freelancers and irregular earners.
 Summarize the cash flow diagnosis using ONLY the exact verified simulation data below. NEVER hallucinate or change numbers or dates. Currency is ₹ (INR).
 
@@ -1674,7 +1689,7 @@ Simulation Data:
 - Current Balance: ₹{forecast_data.get('current_balance', 0):,.0f}
 - Lowest Expected Median Balance: ₹{forecast_data.get('lowest_median_balance', 0):,.0f}
 - Expected Inflow Gap: ~{forecast_data.get('expected_inflow_gap_days', 28)} days (Expected around {forecast_data.get('expected_inflow_date', 'mid-month')})
-- First Breach Window: {forecast_data.get('breach_date_range', {}).get('label') or forecast_data.get('first_breach_date') or 'None'}
+- First Breach Window: {b_win_exp}
 - Top 3 Cash Flow Drivers: {'; '.join(driver_strings)}
 - Bills Due Before Inflow: {'; '.join(masked_bills) if masked_bills else 'None'}
 - Safe Daily Spending Limit: ₹{round(limits.get('recommended_daily_cap', 850)) if limits else 850}/day
@@ -1814,6 +1829,11 @@ Return ONLY raw JSON, without markdown formatting or backticks."""
             }
 
         # 2. Build ground-truth financial prompt context
+        burn_m = forecast.get('burn_metrics') if isinstance(forecast.get('burn_metrics'), dict) else {}
+        inflow_gap = burn_m.get('mean_income_interval_days', 28)
+        b_range_ctx = f_meta.get('breach_date_range') if isinstance(f_meta.get('breach_date_range'), dict) else {}
+        b_win_ctx = b_range_ctx.get('label') or f_meta.get('first_breach_date') or 'None'
+
         masked_ctx_str = f"""
 Current Balance: ₹{curr_bal:,.2f}
 Minimum Safe Buffer: ₹{min_safe:,.2f}
@@ -1823,7 +1843,7 @@ First Projected Breach Date: {f_meta.get('first_breach_date', 'None')}
 Lowest Expected Median Balance: ₹{f_meta.get('lowest_median_balance', 0):,.0f}
 Recommended Daily Spend Cap: ₹{round(limits.get('recommended_daily_cap', 0)):,}/day
 Recommended Monthly Cap: ₹{round(limits.get('recommended_monthly_cap', 0)):,}/month
-Expected Next Inflow Gap: ~{forecast.get('burn_metrics', {}).get('mean_income_interval_days', 28)} days
+Expected Next Inflow Gap: ~{inflow_gap} days
 Fixed Monthly Commitments: ₹{round(sum(b.get('average_amount', 0) for b in recurring if b.get('cadence') == 'Monthly')):,}
 Flagged Anomalies Count: {len(anomalies)}
 Top Anomalies: {'; '.join([f"{a.get('description')}: {a.get('reason')}" for a in anomalies[:3]]) if anomalies else 'None'}
@@ -1881,15 +1901,20 @@ Earliest Breach Date: {sim_result['new_breach_date'] or 'None'}
                 f"**Actionable Recommendation**: {advice}"
             )
         elif any(k in msg_lower for k in ["why", "low balance", "balance low", "breach", "dip", "drop"]):
-            bills_before = forecast.get("explanation", {}).get("bills_before_inflow", [])
-            gap = forecast.get("explanation", {}).get("expected_inflow_gap_days", 28)
-            b_desc = ", ".join([f"{b['merchant']} (₹{b['amount']:,.0f})" for b in bills_before[:3]]) if bills_before else "standard variable burn"
+            expl = forecast.get("explanation") if isinstance(forecast.get("explanation"), dict) else {}
+            bills_before = expl.get("bills_before_inflow") if isinstance(expl.get("bills_before_inflow"), list) else []
+            gap = expl.get("expected_inflow_gap_days", 28)
+            b_desc = ", ".join([f"{b.get('merchant', 'Bill')} (₹{b.get('amount', 0):,.0f})" for b in bills_before[:3]]) if bills_before else "standard variable burn"
+            burn_m_loc = forecast.get("burn_metrics") if isinstance(forecast.get("burn_metrics"), dict) else {}
+            daily_burn_val = burn_m_loc.get("mean_daily_burn", 850)
+            b_range_loc = f_meta.get("breach_date_range") if isinstance(f_meta.get("breach_date_range"), dict) else {}
+            breach_lbl = b_range_loc.get("label") or f_meta.get("first_breach_date") or "the upcoming month-end"
             reply = (
                 f"**Root Cause of Liquidity Dip:**\n\n"
                 f"Your balance experiences downward pressure due to a **timing asymmetry** between scheduled outflows and irregular client receipts:\n\n"
                 f"1. **Fixed Commitments Due**: Obligations like {b_desc} fall due before your next projected client clearance in ~{gap} days.\n"
-                f"2. **Daily Variable Burn**: Daily living expenses (~₹{round(forecast.get('burn_metrics', {}).get('mean_daily_burn', 850)):,}/day) steadily reduce your buffer.\n"
-                f"3. **Breach Window**: Your highest risk window is between **{f_meta.get('breach_date_range', {}).get('label') or f_meta.get('first_breach_date') or 'the upcoming month-end'}**."
+                f"2. **Daily Variable Burn**: Daily living expenses (~₹{round(daily_burn_val):,}/day) steadily reduce your buffer.\n"
+                f"3. **Breach Window**: Your highest risk window is between **{breach_lbl}**."
             )
         elif any(k in msg_lower for k in ["limit", "cap", "spend", "safe to spend", "daily"]):
             daily_cap = limits.get("recommended_daily_cap", 850)
@@ -2123,16 +2148,34 @@ class MultiAccountEngine:
                 "to_account": name_a,
                 "recommended_amount": round(opt_amt, 2),
                 "recommended_date": transfer_date_str,
+                "transfer_date": transfer_date_str,
                 "days_offset": transfer_day,
                 "before_risk_pct": prob_a,
+                "current_breach_prob": prob_a,
                 "after_risk_pct": round(lowest_prob, 1),
+                "post_transfer_breach_prob": round(lowest_prob, 1),
                 "reason": f"Transferring ₹{round(opt_amt):,} from {name_b} on {transfer_date_str} reduces {name_a}'s buffer breach probability from {prob_a:.1f}% to {lowest_prob:.1f}% (< 10%)."
             }
+
+        rec_transfer = suggested_transfer or {
+            "from_account": name_b,
+            "to_account": name_a,
+            "recommended_amount": 0.0,
+            "recommended_date": "N/A",
+            "transfer_date": "N/A",
+            "days_offset": 0,
+            "before_risk_pct": prob_a,
+            "current_breach_prob": prob_a,
+            "after_risk_pct": prob_a,
+            "post_transfer_breach_prob": prob_a,
+            "reason": "Both accounts maintain comfortable liquidity buffers above safe thresholds."
+        }
 
         return {
             "status": "success",
             "internal_transfers_count": len(transfers),
             "internal_transfers": transfers,
+            "neutralized_transfers": transfers,
             "account_a": {
                 "name": name_a,
                 "current_balance": round(bal_a, 2),
@@ -2156,5 +2199,6 @@ class MultiAccountEngine:
                 "safeThreshold": min_safe_a + min_safe_b,
                 "timeline": combined_timeline
             },
-            "suggested_transfer": suggested_transfer
+            "suggested_transfer": suggested_transfer,
+            "recommended_transfer": rec_transfer
         }
