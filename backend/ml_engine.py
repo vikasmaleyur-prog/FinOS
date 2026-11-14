@@ -1747,12 +1747,88 @@ Return ONLY raw JSON, without markdown formatting or backticks."""
         curr_bal = float(ctx.get("current_balance", f_meta.get("current_balance", 75000.0)))
         min_safe = float(ctx.get("minimum_safe_balance", f_meta.get("minimum_safe_balance", 5000.0)))
 
-        # 1. Detect What-If queries
+        # 1. Purchase Affordability Intelligence & Conversational Memory
+        from backend.services.purchase_advisor import PurchaseAdvisorService
+
+        intent = PurchaseAdvisorService.extract_intent_and_entities(message, history)
+
+        if intent["is_purchase_query"]:
+            # Case A: Missing purchase price
+            if intent["missing_price"]:
+                return {
+                    "reply": f"Absolutely, I can help you check that! What is your approximate {intent['item'].lower()} budget?",
+                    "simulated_result": None,
+                    "is_llm_generated": False,
+                    "is_llm_active": bool(os.environ.get("GEMINI_API_KEY")),
+                    "llm_provider": "FinOS Purchase Affordability Advisor",
+                    "offline_fallback_active": True
+                }
+
+            # Case B: Budget inquiry (e.g. "How much can I safely spend on a phone?")
+            if intent["is_budget_inquiry"] and intent["amount"] is None:
+                fixed_monthly = sum(float(b.get("average_amount", 0.0)) for b in recurring if b.get("cadence") == "Monthly")
+                safe_discretionary = max(0.0, curr_bal - (fixed_monthly * 0.75) - min_safe)
+                safe_spend = round(min(50000.0, max(5000.0, safe_discretionary)), -2)
+                reply = (
+                    f"Based on your current cash flow and upcoming commitments of ₹{round(fixed_monthly):,}/month, "
+                    f"you can safely spend up to **₹{round(safe_spend):,}** on a {intent['item'].lower()} without creating "
+                    f"a liquidity shortage or breaching your ₹{round(min_safe):,} safety buffer.\n\n"
+                    f"- **Current Balance**: ₹{round(curr_bal):,}\n"
+                    f"- **Upcoming Fixed Commitments**: ₹{round(fixed_monthly):,}/month\n"
+                    f"- **Recommended Safe Budget**: ≤ ₹{round(safe_spend):,}\n"
+                    f"- **Safety Buffer Target**: ₹{round(min_safe):,}"
+                )
+                return {
+                    "reply": reply,
+                    "simulated_result": {
+                        "item": intent["item"],
+                        "item_name": intent["item"],
+                        "amount": safe_spend,
+                        "suggested_safe_budget": safe_spend,
+                        "current_balance": curr_bal,
+                        "minimum_safe_balance": min_safe,
+                        "fixed_monthly_obligations": fixed_monthly
+                    },
+                    "is_llm_generated": False,
+                    "is_llm_active": bool(os.environ.get("GEMINI_API_KEY")),
+                    "llm_provider": "FinOS Purchase Affordability Advisor",
+                    "offline_fallback_active": True
+                }
+
+            # Case C: Check if financial data is loaded
+            has_data = (raw_df is not None and len(raw_df) > 0) or curr_bal > 0
+            if not has_data:
+                return {
+                    "reply": "No active financial records or statements are currently loaded. Please upload a bank statement (CSV or PDF) or select one of the demo datasets (Freelancer, Shop Owner, or 90D UPI) from the dashboard so I can evaluate your cash flow and affordability accurately.",
+                    "simulated_result": None,
+                    "is_llm_generated": False,
+                    "is_llm_active": bool(os.environ.get("GEMINI_API_KEY")),
+                    "llm_provider": "FinOS Purchase Affordability Advisor",
+                    "offline_fallback_active": True
+                }
+
+            # Case D: Run full comparative Monte Carlo affordability simulation
+            if intent["amount"] is not None:
+                eval_res = PurchaseAdvisorService.evaluate_affordability(
+                    df=raw_df,
+                    current_balance=curr_bal,
+                    minimum_safe_balance=min_safe,
+                    item=intent["item"],
+                    amount=intent["amount"],
+                    day_offset=intent["day_offset"],
+                    is_emi=intent["is_emi"],
+                    emi_amount=intent["emi_amount"],
+                    emi_months=intent["emi_months"],
+                    account_type=ctx.get("account_type", "savings"),
+                    recurring_bills=recurring
+                )
+                return PurchaseAdvisorService.generate_conversational_advice(eval_res, message)
+
+        # 2. Detect Client / Income Delay What-If queries
         msg_lower = message.lower()
         what_if_detected = False
         sim_result = None
 
-        # Check for purchase / expense scenario (e.g. "What if I buy a ₹35,000 laptop in 10 days?")
         amt = None
         item = "Planned Expense"
         delay_days = 0

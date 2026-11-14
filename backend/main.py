@@ -128,6 +128,21 @@ class ChatRequest(BaseModel):
     history: Optional[List[ChatMessage]] = None
     transactions: Optional[List[Dict[str, Any]]] = None
 
+class PurchaseAdviceRequest(BaseModel):
+    message: Optional[str] = None
+    item: Optional[str] = None
+    amount: Optional[float] = None
+    day_offset: Optional[int] = 7
+    is_emi: Optional[bool] = False
+    emi_amount: Optional[float] = None
+    emi_months: Optional[int] = 6
+    current_balance: Optional[float] = None
+    minimum_safe_balance: Optional[float] = None
+    account_type: Optional[str] = "savings"
+    context: Optional[Dict[str, Any]] = None
+    history: Optional[List[ChatMessage]] = None
+    transactions: Optional[List[Dict[str, Any]]] = None
+
 class SampleLoadRequest(BaseModel):
     dataset_name: Optional[str] = "freelancer"
     starting_balance: Optional[float] = None
@@ -797,11 +812,14 @@ def post_chat(payload: ChatRequest):
     """
     try:
         raw_df = None
-        if payload.transactions and len(payload.transactions) > 0:
-            raw_df = pd.DataFrame(payload.transactions)
-            for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
-                if col not in raw_df.columns and alt in raw_df.columns:
-                    raw_df[col] = raw_df[alt]
+        if payload.transactions is not None:
+            if len(payload.transactions) > 0:
+                raw_df = pd.DataFrame(payload.transactions)
+                for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
+                    if col not in raw_df.columns and alt in raw_df.columns:
+                        raw_df[col] = raw_df[alt]
+            else:
+                raw_df = pd.DataFrame()
         elif os.path.exists(DATA_PATH):
             with open(DATA_PATH, "rb") as f:
                 raw_df, _ = StatementParser.parse_csv(f.read())
@@ -816,6 +834,99 @@ def post_chat(payload: ChatRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat copilot error: {str(e)}")
+
+@app.post("/api/ai/purchase-advice")
+def post_purchase_advice(payload: PurchaseAdviceRequest):
+    """
+    Dedicated Purchase Affordability Intelligence Endpoint:
+    - Analyzes purchase description, amount, timing, and EMI options.
+    - If price is missing, returns prompt asking for user's budget.
+    - If financial data is missing, prompts user to upload a statement or load demo data.
+    - Runs baseline and simulated 90-day Monte Carlo projections.
+    - Determines decision: AFFORDABLE, AFFORDABLE WITH CAUTION, or NOT RECOMMENDED RIGHT NOW.
+    - Generates conversational advice via Gemini (or deterministic offline fallback).
+    """
+    try:
+        from backend.services.purchase_advisor import PurchaseAdvisorService
+
+        raw_df = None
+        if payload.transactions is not None:
+            if len(payload.transactions) > 0:
+                raw_df = pd.DataFrame(payload.transactions)
+                for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
+                    if col not in raw_df.columns and alt in raw_df.columns:
+                        raw_df[col] = raw_df[alt]
+            else:
+                raw_df = pd.DataFrame()
+        elif os.path.exists(DATA_PATH):
+            with open(DATA_PATH, "rb") as f:
+                raw_df, _ = StatementParser.parse_csv(f.read())
+            raw_df = categorizer.categorize_dataframe(raw_df)
+
+        history_dicts = [h.model_dump() for h in payload.history] if payload.history else []
+        message_to_use = payload.message or (f"Can I buy a {payload.item or 'product'} for ₹{payload.amount or 0:,.0f}?" if payload.amount else f"Can I buy a {payload.item or 'product'}?")
+        
+        ctx = payload.context or {}
+        curr_bal = payload.current_balance if payload.current_balance is not None else float(ctx.get("current_balance", raw_df["Balance"].iloc[-1] if raw_df is not None and len(raw_df) > 0 else 0.0))
+        min_safe = payload.minimum_safe_balance or float(ctx.get("minimum_safe_balance", 5000.0))
+        account_type = payload.account_type or ctx.get("account_type", "savings")
+        recurring = ctx.get("recurring_bills") or (RecurringPaymentDetector.detect_recurring(raw_df) if raw_df is not None and len(raw_df) > 0 else [])
+
+        intent = PurchaseAdvisorService.extract_intent_and_entities(message_to_use, history_dicts)
+        if payload.item:
+            intent["item"] = payload.item
+        if payload.amount is not None:
+            intent["amount"] = float(payload.amount)
+            intent["missing_price"] = False
+        if payload.day_offset is not None:
+            intent["day_offset"] = int(payload.day_offset)
+        if payload.is_emi:
+            intent["is_emi"] = True
+        if payload.emi_amount is not None:
+            intent["emi_amount"] = float(payload.emi_amount)
+        if payload.emi_months is not None:
+            intent["emi_months"] = int(payload.emi_months)
+
+        # Missing price check
+        if intent["missing_price"] and intent["amount"] is None:
+            return {
+                "reply": f"Absolutely, I can help you check that! What is your approximate {intent['item'].lower()} budget?",
+                "simulated_result": None,
+                "is_llm_generated": False,
+                "is_llm_active": bool(os.environ.get("GEMINI_API_KEY")),
+                "llm_provider": "FinOS Purchase Affordability Advisor",
+                "offline_fallback_active": True
+            }
+
+        # No financial data check
+        has_data = (raw_df is not None and len(raw_df) > 0) or curr_bal > 0
+        if not has_data:
+            return {
+                "reply": "No active financial records or statements are currently loaded. Please upload a bank statement (CSV or PDF) or select one of the demo datasets (Freelancer, Shop Owner, or 90D UPI) from the dashboard so I can evaluate your cash flow and affordability accurately.",
+                "simulated_result": None,
+                "is_llm_generated": False,
+                "is_llm_active": bool(os.environ.get("GEMINI_API_KEY")),
+                "llm_provider": "FinOS Purchase Affordability Advisor",
+                "offline_fallback_active": True
+            }
+
+        eval_res = PurchaseAdvisorService.evaluate_affordability(
+            df=raw_df,
+            current_balance=curr_bal,
+            minimum_safe_balance=min_safe,
+            item=intent["item"],
+            amount=intent["amount"] if intent["amount"] is not None else 0.0,
+            day_offset=intent["day_offset"],
+            is_emi=intent["is_emi"],
+            emi_amount=intent["emi_amount"],
+            emi_months=intent["emi_months"],
+            account_type=account_type,
+            recurring_bills=recurring
+        )
+
+        return PurchaseAdvisorService.generate_conversational_advice(eval_res, message_to_use)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Purchase advice error: {str(e)}")
 
 @app.post("/multi-account/analyze")
 def post_multi_account_analyze(payload: Optional[MultiAccountRequest] = None):

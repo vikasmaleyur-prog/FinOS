@@ -12,7 +12,8 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   HelpCircle,
-  RefreshCw
+  RefreshCw,
+  Info
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -59,10 +60,12 @@ export const AskFinOSChat: React.FC<AskFinOSChatProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestedQuestions = [
-    "Why is my balance projected to dip mid-month?",
-    "What if I buy a ₹35,000 laptop in 7 days?",
-    "What is my safe daily living limit?",
-    "Are there any unusual or anomalous expenses?"
+    "I want to buy a new phone. Can I afford it?",
+    "Can I buy an iPhone for ₹70,000?",
+    "Can I purchase a laptop for ₹35,000?",
+    "What if I buy it next month?",
+    "Can I take a ₹15,000 EMI?",
+    "How much can I safely spend on a phone?"
   ];
 
   useEffect(() => {
@@ -206,33 +209,96 @@ export const AskFinOSChat: React.FC<AskFinOSChatProps> = ({
 
                 {/* Simulated Result Card (if any) */}
                 {m.simulatedResult && (
-                  <div className="mt-3 p-3.5 rounded-2xl bg-white border border-[#EAE6F0] space-y-2 text-[#17152D] shadow-xs">
-                    <div className="flex items-center justify-between text-xs font-bold text-[#77758A]">
-                      <span>Decision Simulation Outcome</span>
-                      <span className="text-[#7650A8]">1,000 Monte Carlo Paths</span>
+                  <div className="mt-3 p-3.5 rounded-2xl bg-white border border-[#EAE6F0] space-y-2.5 text-[#17152D] shadow-xs">
+                    {/* Header with Title and Category Badge */}
+                    <div className="flex items-center justify-between gap-2 pb-1 border-b border-[#EAE6F0]">
+                      <div className="flex items-center gap-1.5 font-bold text-xs text-[#17152D]">
+                        <Sparkles size={14} className="text-[#7650A8]" />
+                        <span>
+                          {m.simulatedResult.item || m.simulatedResult.item_name || 'Purchase Evaluation'}
+                          {(m.simulatedResult.purchase_amount || m.simulatedResult.amount) ? ` • ₹${Math.round(m.simulatedResult.purchase_amount || m.simulatedResult.amount).toLocaleString('en-IN')}` : ''}
+                        </span>
+                      </div>
+                      {m.simulatedResult.category && (
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                            m.simulatedResult.category === 'AFFORDABLE'
+                              ? 'bg-[#E8F8F2] text-[#159B72] border-[#B4E8D6]'
+                              : m.simulatedResult.category === 'AFFORDABLE WITH CAUTION'
+                              ? 'bg-[#FEF7EC] text-[#8F5805] border-[#FBD9A3]'
+                              : 'bg-[#FDF1F2] text-[#E64B55] border-[#F9B8BC]'
+                          }`}
+                        >
+                          {m.simulatedResult.category === 'AFFORDABLE' ? (
+                            <CheckCircle2 size={11} />
+                          ) : (
+                            <AlertTriangle size={11} />
+                          )}
+                          <span>{m.simulatedResult.category}</span>
+                        </span>
+                      )}
                     </div>
 
+                    {/* Metric Cards Grid */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2.5 rounded-xl bg-[#F7F5FA] border border-[#EAE6F0]">
-                        <span className="text-[#77758A] block font-medium">Breach Probability</span>
-                        <span className="text-[#17152D] font-bold text-sm tabular-nums">
-                          {m.simulatedResult.baseline_risk}% ➔ {m.simulatedResult.simulated_risk}%
-                        </span>
-                        <span className={`text-[11px] block mt-0.5 font-semibold ${m.simulatedResult.risk_delta > 0 ? 'text-[#E64B55]' : 'text-[#159B72]'}`}>
-                          ({m.simulatedResult.risk_delta > 0 ? '+' : ''}{m.simulatedResult.risk_delta}%)
-                        </span>
-                      </div>
+                      {m.simulatedResult.baseline_risk !== undefined && (
+                        <div className="p-2.5 rounded-xl bg-[#F7F5FA] border border-[#EAE6F0]">
+                          <span className="text-[#77758A] block font-medium text-[11px]">Breach Probability</span>
+                          <span className="text-[#17152D] font-bold text-sm tabular-nums">
+                            {m.simulatedResult.baseline_risk}% ➔ {m.simulatedResult.simulated_risk}%
+                          </span>
+                          <span
+                            className={`text-[11px] block mt-0.5 font-semibold ${
+                              m.simulatedResult.risk_delta > 0 ? 'text-[#E64B55]' : 'text-[#159B72]'
+                            }`}
+                          >
+                            ({m.simulatedResult.risk_delta > 0 ? '+' : ''}{m.simulatedResult.risk_delta}%)
+                          </span>
+                        </div>
+                      )}
 
-                      <div className="p-2.5 rounded-xl bg-[#F7F5FA] border border-[#EAE6F0]">
-                        <span className="text-[#77758A] block font-medium">Lowest Projected Balance</span>
-                        <span className="text-[#17152D] font-bold text-sm tabular-nums">
-                          ₹{Math.round(m.simulatedResult.simulated_lowest_balance).toLocaleString('en-IN')}
-                        </span>
-                        <span className="text-[11px] text-[#77758A] block mt-0.5">
-                          Safe limit: ≤ ₹{Math.round(m.simulatedResult.simulated_safe_limit || 0).toLocaleString('en-IN')}/day
+                      {m.simulatedResult.horizons?.['30d'] ? (
+                        <div className="p-2.5 rounded-xl bg-[#F7F5FA] border border-[#EAE6F0]">
+                          <span className="text-[#77758A] block font-medium text-[11px]">30-Day Median Balance</span>
+                          <span className="text-[#17152D] font-bold text-sm tabular-nums">
+                            ₹{Math.round(m.simulatedResult.horizons['30d'].baseline_p50).toLocaleString('en-IN')} ➔ ₹{Math.round(m.simulatedResult.horizons['30d'].simulated_p50).toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[11px] text-[#77758A] block mt-0.5">
+                            Buffer: ₹{Math.round(m.simulatedResult.minimum_safe_balance || 5000).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      ) : m.simulatedResult.simulated_lowest_balance !== undefined ? (
+                        <div className="p-2.5 rounded-xl bg-[#F7F5FA] border border-[#EAE6F0]">
+                          <span className="text-[#77758A] block font-medium text-[11px]">Lowest Projected Balance</span>
+                          <span className="text-[#17152D] font-bold text-sm tabular-nums">
+                            ₹{Math.round(m.simulatedResult.simulated_lowest_balance).toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[11px] text-[#77758A] block mt-0.5">
+                            Safe limit: ≤ ₹{Math.round(m.simulatedResult.simulated_safe_limit || 0).toLocaleString('en-IN')}/day
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Timing Recommendation Callout */}
+                    {m.simulatedResult.timing_recommendation && (
+                      <div className="p-2.5 rounded-xl bg-[#F3EDFA] text-[#17152D] text-[11px] border border-[#EAE6F0] flex items-start gap-1.5 font-medium">
+                        <Sparkles size={13} className="text-[#7650A8] shrink-0 mt-0.5" />
+                        <span>
+                          <strong>Alternative Timing:</strong> Deferring {m.simulatedResult.timing_recommendation.suggested_date_desc} reduces breach risk to <strong>{m.simulatedResult.timing_recommendation.delayed_risk}%</strong> (saves {m.simulatedResult.timing_recommendation.risk_reduction}% risk).
                         </span>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Safe Budget Target Callout */}
+                    {m.simulatedResult.suggested_safe_budget && m.simulatedResult.category !== 'AFFORDABLE' && (
+                      <div className="p-2.5 rounded-xl bg-[#F7F5FA] text-[#17152D] text-[11px] border border-[#EAE6F0] flex items-start gap-1.5 font-medium">
+                        <Info size={13} className="text-[#7650A8] shrink-0 mt-0.5" />
+                        <span>
+                          <strong>Recommended Safe Budget:</strong> Spending within <strong>₹{Math.round(m.simulatedResult.suggested_safe_budget).toLocaleString('en-IN')}</strong> preserves your safety runway.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
 
