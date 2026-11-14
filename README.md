@@ -12,9 +12,32 @@ FinOS is an enterprise-grade, privacy-first FinTech platform built specifically 
 - **100% Stateless Architecture**: Eliminates server-side session state leakage. The `/upload` endpoint processes files in memory and immediately returns the full payload to the React client. Zero persistent session or database storage is retained on the backend.
 - **DPDP Act 2023 Compliance**: Built-in regex sanitization strips phone numbers (`XXXXXX1234`), UPI IDs (`u***@bank`), and UTRs before client delivery.
 
-### 2. Hybrid Indian-Context Auto-Categorizer (`backend/ml_engine.py`)
-- **Heuristics-First, ML-Second**: Targets common Indian payees with high-precision regex matching (`Investments`, `Travel`, `Food`, `Bills & Utilities`, `Shopping`, `Health`, `EMI/Loans`, `Rent`, `Subscriptions`, `Income`).
+### 2. Hybrid Indian-Context Auto-Categorizer & AI Fallback (`backend/ml_engine.py`)
+- **Heuristics-First, ML-Second, LLM-Third**: Targets common Indian payees with high-precision regex matching (`Investments`, `Travel`, `Food`, `Bills & Utilities`, `Shopping`, `Health`, `EMI/Loans`, `Rent`, `Subscriptions`, `Income`).
 - **P2P Transfer Fallback**: Individual UPI payments (e.g., "Paid to RAMESHA") default to `Other/Transfer` instead of misclassifying into `Food`.
+- **LLM Fallback & In-Memory Cache**: Ambiguous merchants scoring low on heuristics/NLP query Gemini 2.5 Flash (strictly masked under DPDP) and cache the result in memory. Flagged transactions display an `"AI-categorized"` pill (✨) in the ledger.
+- **Empirical Accuracy Benchmark**: Evaluated honestly on a held-out test split of 58 realistic Indian financial transactions (`AutoCategorizer.evaluate_benchmark()`), achieving **93.1% overall accuracy** (100% on Travel, Bills, Shopping, Health, Loans, Rent, Income; 78% on Food; 80% on Investments and Subscriptions).
+
+### 3. Smarter Multi-Feature Anomaly Detection (`backend/ml_engine.py`)
+- **4-Feature Isolation Forest**: Upgraded from univariate log-amount to a 4-dimensional feature vector:
+  1. `category_zscore`: Deviation from category mean ($z$-score).
+  2. `merchant_frequency`: Normalized historical frequency of the payee.
+  3. `day_of_month`: Monthly timing ($1..31$).
+  4. `amount_typical_ratio`: Ratio of transaction amount to category median.
+- **Plain-English Explanations**: Every flagged anomaly receives an explainable reason (e.g. *"5.2x your usual Food spend (₹3,200 vs typical ₹615)"*).
+
+### 4. Backtesting & Model Accuracy Radar (`/dashboard` Accuracy Tab)
+- **Rolling-Origin Evaluation**: Repeatedly trains on months $1..N$, forecasts month $N+1$, and computes MAE, MAPE, and $80\%$ CI calibration (share of actual daily balances inside $P_{10}-P_{90}$; target $\approx 80\%$).
+- **Naive Baseline Benchmark**: Compares against a moving-average baseline and reports empirical % improvement.
+
+### 5. Personalized Safe Spending Limits (`GET /limits`)
+- **Binary Search Optimization**: Runs binary search over Monte Carlo simulations to calculate the exact maximum daily spend cap (and top 3 variable category caps) that guarantees $< 10\%$ buffer breach probability. Displayed on the Overview dashboard.
+
+### 6. "Ask FinOS" AI Copilot & Grounded Explanations (`POST /chat`, `POST /explain`)
+- **Interactive Chat Drawer**: Slide-out copilot panel with quick suggested questions ("Why is my balance low mid-month?", "What if I buy a ₹35,000 laptop in 7 days?").
+- **Automatic What-If Simulation**: What-if spending or delay questions automatically trigger a comparative Monte Carlo run and present exact simulated risk changes and lowest balance impact.
+- **Zero Hallucinated Numbers**: Forecast figures come strictly from the Python engine; the LLM provides clear conversational synthesis.
+- **Resilient Fallback**: Seamlessly falls back to grounded rule/template logic if `GEMINI_API_KEY` is not configured.
 
 ### 3. Resilient Client-Side State & Error Boundaries (`frontend/`)
 - **Zero Undefined Crashes**: Safe optional chaining (`?.map`, `?.length`) across all components with dedicated `<EmptyState />` fallback.

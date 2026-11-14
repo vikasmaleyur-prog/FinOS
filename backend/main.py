@@ -26,7 +26,8 @@ from backend.ml_engine import (
     AnomalyDetector,
     FinancialExplainer,
     SpendingLimitOptimizer,
-    BacktestEngine
+    BacktestEngine,
+    FinOSLLMService
 )
 
 app = FastAPI(
@@ -89,6 +90,24 @@ class BacktestRequest(BaseModel):
     starting_balance: Optional[float] = 75000.0
     test_window_days: Optional[int] = 30
 
+class ExplainRequest(BaseModel):
+    forecast: Optional[Dict[str, Any]] = None
+    limits: Optional[Dict[str, Any]] = None
+    anomalies: Optional[List[Dict[str, Any]]] = None
+    recurring_bills: Optional[List[Dict[str, Any]]] = None
+    current_balance: Optional[float] = None
+    minimum_safe_balance: Optional[float] = 5000.0
+
+class ChatMessage(BaseModel):
+    role: str = "user"
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    context: Optional[Dict[str, Any]] = None
+    history: Optional[List[ChatMessage]] = None
+    transactions: Optional[List[Dict[str, Any]]] = None
+
 
 # ==========================================
 # HELPER: RUN COMPLETE STATELESS PIPELINE
@@ -140,23 +159,23 @@ def run_pipeline_for_dataframe(
         minimum_safe_balance=min_safe
     )
 
-    # 6. Plain-Language Explainability
-    explanation = FinancialExplainer.generate_explanation(forecast_res, recurring_bills)
-
-    # 7. Category Spending Breakdown
-    expenses_only = categorized_df[categorized_df["Amount"] < 0]
-    if len(expenses_only) > 0:
-        cat_breakdown = expenses_only.groupby("Category")["Amount"].sum().apply(abs).to_dict()
-    else:
-        cat_breakdown = {}
-
-    # 8. Personalized Spending Limits via Binary Search (<10% breach probability)
+    # 6. Personalized Spending Limits via Binary Search (<10% breach probability)
     limits = SpendingLimitOptimizer.calculate_optimal_limits(
         df=categorized_df,
         current_balance=ending_balance,
         minimum_safe_balance=min_safe,
         target_max_breach_prob=10.0
     )
+
+    # 7. Plain-Language Explainability (Gemini AI + Resilient Fallback)
+    explanation = FinOSLLMService.generate_ai_explanation(forecast_res, recurring_bills, limits)
+
+    # 8. Category Spending Breakdown
+    expenses_only = categorized_df[categorized_df["Amount"] < 0]
+    if len(expenses_only) > 0:
+        cat_breakdown = expenses_only.groupby("Category")["Amount"].sum().apply(abs).to_dict()
+    else:
+        cat_breakdown = {}
 
     # 9. Clean Transaction Records (strict float type casting)
     transaction_records = []
@@ -181,7 +200,9 @@ def run_pipeline_for_dataframe(
             "balance": bal_f,
             "Category": cat_str,
             "category": cat_str,
-            "Reference_No": ref_str
+            "Reference_No": ref_str,
+            "is_ai_categorized": bool(row.get("is_ai_categorized", False)),
+            "categorization_method": str(row.get("categorization_method", "heuristic"))
         })
 
     return {
@@ -521,6 +542,71 @@ def post_backtest(payload: BacktestRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Backtest error: {str(e)}")
+
+@app.post("/explain")
+def post_explain(payload: ExplainRequest):
+    """
+    Synthesizes executive plain-language explanation of risk drivers and recommendations.
+    Uses Gemini if GEMINI_API_KEY is configured, else falls back cleanly to deterministic engine.
+    """
+    try:
+        if payload.forecast:
+            forecast_data = payload.forecast
+            recurring_bills = payload.recurring_bills or []
+            limits = payload.limits or {}
+        else:
+            with open(DATA_PATH, "rb") as f:
+                df, _ = StatementParser.parse_csv(f.read())
+            categorized_df = categorizer.categorize_dataframe(df)
+            bal = payload.current_balance if payload.current_balance is not None else float(categorized_df["Balance"].iloc[-1])
+            min_safe = payload.minimum_safe_balance or 5000.0
+            recurring_bills = RecurringPaymentDetector.detect_recurring(categorized_df)
+            forecast_data = CashFlowForecaster.run_monte_carlo(
+                df=categorized_df,
+                current_balance=bal,
+                forecast_days=60,
+                num_simulations=1000,
+                minimum_safe_balance=min_safe
+            )
+            limits = SpendingLimitOptimizer.calculate_optimal_limits(
+                df=categorized_df,
+                current_balance=bal,
+                minimum_safe_balance=min_safe
+            )
+
+        return FinOSLLMService.generate_ai_explanation(forecast_data, recurring_bills, limits)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Explanation generation error: {str(e)}")
+
+@app.post("/chat")
+def post_chat(payload: ChatRequest):
+    """
+    'Ask FinOS' Chat Copilot:
+    - Answers financial questions strictly grounded in the provided simulation context.
+    - If user asks a what-if decision (e.g. 'What if I buy a ₹30k laptop in 7 days?'), simulates it automatically.
+    - DPDP Act compliant: PII is masked before any LLM inference.
+    """
+    try:
+        raw_df = None
+        if payload.transactions and len(payload.transactions) > 0:
+            raw_df = pd.DataFrame(payload.transactions)
+            for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
+                if col not in raw_df.columns and alt in raw_df.columns:
+                    raw_df[col] = raw_df[alt]
+        elif os.path.exists(DATA_PATH):
+            with open(DATA_PATH, "rb") as f:
+                raw_df, _ = StatementParser.parse_csv(f.read())
+            raw_df = categorizer.categorize_dataframe(raw_df)
+
+        history_dicts = [h.model_dump() for h in payload.history] if payload.history else []
+        return FinOSLLMService.chat_copilot(
+            message=payload.message,
+            context=payload.context or {},
+            history=history_dicts,
+            raw_df=raw_df
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat copilot error: {str(e)}")
 
 @app.post("/privacy/delete")
 def delete_all_data():

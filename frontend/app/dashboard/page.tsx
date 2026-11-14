@@ -14,12 +14,14 @@ import { AccuracyView } from '@/components/AccuracyView';
 import { PersonalizedLimitsCard } from '@/components/PersonalizedLimitsCard';
 import { UploadModal } from '@/components/UploadModal';
 import { EmptyState } from '@/components/EmptyState';
+import { AskFinOSChat } from '@/components/AskFinOSChat';
 import { 
   UploadCloud, 
   CircleAlert, 
   LogOut, 
   X,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
@@ -27,6 +29,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator' | 'accuracy'>('overview');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [minSafeBalance, setMinSafeBalance] = useState<number>(5000);
   
   // Stateless Client-Side Data States
@@ -161,6 +164,16 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Ask FinOS Chat Copilot Button */}
+            <button
+              onClick={() => setIsChatOpen(true)}
+              className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-xs font-semibold tracking-tight transition-all shadow-[0_0_12px_rgba(168,85,247,0.15)] cursor-pointer"
+              title="Open Ask FinOS AI Chat Copilot"
+            >
+              <Sparkles size={14} className="text-purple-300" />
+              <span>Ask FinOS</span>
+            </button>
+
             {/* Quick Upload Button */}
             <button
               onClick={() => {
@@ -326,6 +339,22 @@ export default function DashboardPage() {
         onUploadStart={handleUploadStart}
         onUploadSuccess={handleUploadSuccess}
         onError={handleUploadError}
+      />
+
+      {/* Ask FinOS Chat Copilot Drawer */}
+      <AskFinOSChat
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        apiBase={API_BASE}
+        context={{
+          current_balance: Number(overview?.current_balance ?? 75000),
+          minimum_safe_balance: minSafeBalance,
+          forecast: forecast,
+          limits: overview?.limits,
+          anomalies: anomalies,
+          recurring_bills: recurringBills
+        }}
+        transactions={transactions || []}
       />
     </div>
   );

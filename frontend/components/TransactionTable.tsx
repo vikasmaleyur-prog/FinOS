@@ -8,7 +8,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   ArrowDownLeft, 
-  ArrowUpRight
+  ArrowUpRight,
+  Sparkles
 } from 'lucide-react';
 
 interface Transaction {
@@ -19,6 +20,8 @@ interface Transaction {
   Reference_No?: string;
   Balance?: number;
   'Running Balance'?: number;
+  is_ai_categorized?: boolean;
+  categorization_method?: string;
 }
 
 interface Anomaly {
@@ -236,9 +239,20 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
                       {/* Category */}
                       <td className="py-3 px-4 whitespace-nowrap">
-                        <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${getCategoryBadge(txn?.Category || 'Other')}`}>
-                          {txn?.Category || 'Other'}
-                        </span>
+                        <div className="flex items-center space-x-1.5">
+                          <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border ${getCategoryBadge(txn?.Category || 'Other')}`}>
+                            {txn?.Category || 'Other'}
+                          </span>
+                          {txn?.is_ai_categorized && (
+                            <span 
+                              className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30"
+                              title="Categorized via AI LLM Fallback (DPDP Masked)"
+                            >
+                              <Sparkles size={9} />
+                              <span>AI-categorized</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Amount */}
@@ -256,13 +270,20 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       {/* Status / Anomaly */}
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         {anomaly ? (
-                          <span
-                            className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help"
-                            title={anomalyData?.reason || "Statistical anomaly detected by Isolation Forest"}
-                          >
-                            <AlertTriangle size={11} />
-                            <span>ANOMALY</span>
-                          </span>
+                          <div className="flex flex-col items-center gap-1">
+                            <span
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help"
+                              title={anomalyData?.reason || "Statistical anomaly detected by Isolation Forest"}
+                            >
+                              <AlertTriangle size={11} />
+                              <span>ANOMALY</span>
+                            </span>
+                            {anomalyData?.reason && (
+                              <span className="text-[10px] text-amber-400/90 font-mono max-w-[200px] truncate" title={anomalyData.reason}>
+                                {anomalyData.reason}
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-[10px] font-mono text-white/30">
                             VERIFIED
