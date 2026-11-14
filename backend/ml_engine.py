@@ -788,68 +788,74 @@ class CashFlowForecaster:
                 daily_sales_pool = sales_rows[sales_rows > 0].values
 
         trajectories = np.zeros((num_simulations, forecast_days))
-        breach_count = 0
+        path_balance = np.full(num_simulations, float(current_balance))
+        days_to_next_income = np.maximum(
+            3,
+            np.random.normal(mean_income_interval, std_income_interval, num_simulations)
+        ).astype(int) + int(income_delay_days)
+        sim_breached = np.zeros(num_simulations, dtype=bool)
         first_breach_days = []
 
-        for sim_idx in range(num_simulations):
-            path_balance = float(current_balance)
-            days_to_next_income = int(max(3, np.random.normal(mean_income_interval, std_income_interval))) + int(income_delay_days)
-            sim_breached = False
+        for day_idx in range(forecast_days):
+            daily_net = np.zeros(num_simulations)
 
-            for day_idx in range(forecast_days):
-                daily_net = 0.0
-
-                # Inflow
-                if is_current_account:
-                    # 1. Daily sales counter receipts
-                    if len(daily_sales_pool) > 0:
-                        daily_net += float(np.random.choice(daily_sales_pool))
-                    else:
-                        daily_net += max(0.0, float(np.random.normal(22000.0, 6000.0)))
-
-                    # 2. B2B Receivables with right-skewed delay distribution (widens forecast band)
-                    if days_to_next_income <= 0:
-                        b2b_inflow = max(40000.0, float(np.random.normal(mean_income_amount, std_income_amount)))
-                        daily_net += b2b_inflow
-                        mu_del = np.log(max(4.0, 18.0 + income_delay_days))
-                        days_to_next_income = int(np.random.lognormal(mean=mu_del, sigma=0.50))
-                    else:
-                        days_to_next_income -= 1
+            # Inflow
+            if is_current_account:
+                if len(daily_sales_pool) > 0:
+                    daily_net += np.random.choice(daily_sales_pool, size=num_simulations)
                 else:
-                    if days_to_next_income <= 0:
-                        sim_income = max(15000.0, float(np.random.normal(mean_income_amount, std_income_amount)))
-                        daily_net += sim_income
-                        days_to_next_income = int(max(15, np.random.normal(mean_income_interval, std_income_interval)))
-                    else:
-                        days_to_next_income -= 1
+                    daily_net += np.maximum(0.0, np.random.normal(22000.0, 6000.0, num_simulations))
 
-                # Fixed Outflows
-                daily_net -= scheduled_fixed_by_day[day_idx]
+                income_due = days_to_next_income <= 0
+                if np.any(income_due):
+                    due_count = int(np.count_nonzero(income_due))
+                    daily_net[income_due] += np.maximum(
+                        40000.0,
+                        np.random.normal(mean_income_amount, std_income_amount, due_count)
+                    )
+                    mu_del = np.log(max(4.0, 18.0 + income_delay_days))
+                    days_to_next_income[income_due] = np.random.lognormal(
+                        mean=mu_del,
+                        sigma=0.50,
+                        size=due_count
+                    ).astype(int)
+                days_to_next_income[~income_due] -= 1
+            else:
+                income_due = days_to_next_income <= 0
+                if np.any(income_due):
+                    due_count = int(np.count_nonzero(income_due))
+                    daily_net[income_due] += np.maximum(
+                        15000.0,
+                        np.random.normal(mean_income_amount, std_income_amount, due_count)
+                    )
+                    days_to_next_income[income_due] = np.maximum(
+                        15,
+                        np.random.normal(mean_income_interval, std_income_interval, due_count)
+                    ).astype(int)
+                days_to_next_income[~income_due] -= 1
 
-                # One-Time Outflows
-                daily_net -= scheduled_one_time_by_day[day_idx]
+            daily_net -= scheduled_fixed_by_day[day_idx]
+            daily_net -= scheduled_one_time_by_day[day_idx]
 
-                # Variable Outflow (bootstrapped historical days or log-normal clipped >= 0)
-                if use_bootstrap:
-                    raw_spend = float(np.random.choice(burn_pool))
-                else:
-                    raw_spend = float(np.random.lognormal(log_mu, log_std))
+            if use_bootstrap:
+                raw_spend = np.random.choice(burn_pool, size=num_simulations)
+            else:
+                raw_spend = np.random.lognormal(log_mu, log_std, num_simulations)
 
-                sim_variable_spend = max(0.0, raw_spend)
-                if daily_spend_cap is not None:
-                    sim_variable_spend = min(sim_variable_spend, daily_spend_cap)
+            sim_variable_spend = np.maximum(0.0, raw_spend)
+            if daily_spend_cap is not None:
+                sim_variable_spend = np.minimum(sim_variable_spend, daily_spend_cap)
 
-                daily_net -= sim_variable_spend
+            path_balance += daily_net - sim_variable_spend
+            trajectories[:, day_idx] = path_balance
 
-                path_balance += daily_net
-                trajectories[sim_idx, day_idx] = path_balance
+            breached = path_balance < minimum_safe_balance
+            newly_breached = breached & ~sim_breached
+            if np.any(newly_breached):
+                first_breach_days.extend([day_idx] * int(np.count_nonzero(newly_breached)))
+            sim_breached |= breached
 
-                if path_balance < minimum_safe_balance and not sim_breached:
-                    sim_breached = True
-                    first_breach_days.append(day_idx)
-
-            if sim_breached:
-                breach_count += 1
+        breach_count = int(np.count_nonzero(sim_breached))
 
         p10 = np.percentile(trajectories, 10, axis=0)
         p25 = np.percentile(trajectories, 25, axis=0)

@@ -93,6 +93,7 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
   const [activeScenario, setActiveScenario] = useState<string | null>('laptop_30k');
   const [simulationData, setSimulationData] = useState<SimulationResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
 
   const applyPreset = (preset: 'laptop_30k' | 'take_loan' | 'add_emi' | 'delay_salary' | 'delay_client' | 'increase_expenses' | 'cut_discretionary') => {
     setActiveScenario(preset);
@@ -152,6 +153,7 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
 
   const runSimulation = async () => {
     setLoading(true);
+    setSimulationError(null);
     try {
       const payload: any = {
         transactions: transactions || [],
@@ -176,12 +178,17 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
         body: JSON.stringify(payload)
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setSimulationData(data);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || `Simulation failed (HTTP ${res.status})`);
       }
+      if (!Array.isArray(data.timeline) || data.timeline.length === 0) {
+        throw new Error('The simulation returned no forecast points.');
+      }
+      setSimulationData(data);
     } catch (e) {
       console.error('Failed to run simulation:', e);
+      setSimulationError(e instanceof Error ? e.message : 'The simulation could not be completed.');
     } finally {
       setLoading(false);
     }
@@ -231,6 +238,7 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
   };
 
   const delta = simulationData?.delta_metrics;
+  const hasTimeline = Array.isArray(simulationData?.timeline) && simulationData.timeline.length > 0;
 
   return (
     <div className="space-y-6 w-full min-w-0">
@@ -610,9 +618,25 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
           </div>
         </div>
 
-        <div className="h-[360px] w-full min-w-0">
+        {simulationError && (
+          <div
+            role="alert"
+            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#F7C5C5] bg-[#FDECEC] px-4 py-3 text-sm text-[#B42318]"
+          >
+            <span>Simulation update failed: {simulationError}</span>
+            <button
+              type="button"
+              onClick={runSimulation}
+              className="min-h-11 rounded-full border border-[#B42318] bg-white px-4 font-semibold text-[#B42318] hover:bg-[#FFF7F7] focus-visible:outline"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        <div className="relative h-[360px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={simulationData?.timeline || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ComposedChart data={hasTimeline ? simulationData.timeline : []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#EAE6F0" vertical={false} />
               <XAxis dataKey="displayDate" stroke="#77758A" fontSize={11} tickLine={false} axisLine={{ stroke: '#EAE6F0' }} />
               <YAxis stroke="#77758A" fontSize={11} tickLine={false} axisLine={{ stroke: '#EAE6F0' }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
@@ -640,6 +664,31 @@ export const SimulatorView: React.FC<SimulatorViewProps> = ({
               />
             </ComposedChart>
           </ResponsiveContainer>
+          {!hasTimeline && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/95" aria-live="polite">
+              {loading ? (
+                <div className="w-full max-w-sm space-y-4 px-6 text-center">
+                  <p className="text-sm font-semibold text-[#3B3552]">Calculating your forecast paths…</p>
+                  <div className="h-2 overflow-hidden rounded-full bg-[#F4EEFA]">
+                    <div className="h-full w-1/2 animate-pulse rounded-full bg-[#7650A8]" />
+                  </div>
+                  <p className="text-xs text-[#6B6584]">This can take a little while for detailed transaction histories.</p>
+                </div>
+              ) : (
+                <div className="px-6 text-center">
+                  <p className="text-sm font-semibold text-[#3B3552]">Your simulation chart will appear here.</p>
+                  <p className="mt-1 text-xs text-[#6B6584]">Adjust a setting or retry the simulation to calculate a forecast.</p>
+                  <button
+                    type="button"
+                    onClick={runSimulation}
+                    className="mt-4 min-h-11 rounded-full bg-[#663399] px-5 text-sm font-semibold text-white hover:bg-[#55297F] focus-visible:outline"
+                  >
+                    Run simulation
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
