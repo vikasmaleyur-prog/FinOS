@@ -35,12 +35,14 @@ interface Anomaly {
 }
 
 interface TransactionTableProps {
+  apiBase: string;
   transactions?: Transaction[] | null;
   anomalies?: Anomaly[] | null;
   piiStats?: Record<string, number> | null;
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
+  apiBase,
   transactions,
   anomalies,
   piiStats
@@ -60,7 +62,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   const handleCategoryChange = async (desc: string, newCat: string) => {
     setCategoryOverrides(prev => ({ ...prev, [desc]: newCat }));
     try {
-      await fetch('http://127.0.0.1:8000/categorize/correct', {
+      await fetch(`${apiBase}/categorize/correct`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: desc, category: newCat })

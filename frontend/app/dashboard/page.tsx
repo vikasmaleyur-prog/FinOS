@@ -30,7 +30,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_BASE = '/api/backend';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator' | 'accuracy' | 'multi-account'>('overview');
@@ -446,6 +446,7 @@ export default function DashboardPage() {
             {/* ======================================================== */}
             {activeTab === 'transactions' && (
               <TransactionTable
+                apiBase={API_BASE}
                 transactions={transactions || []}
                 anomalies={anomalies || []}
                 piiStats={overview?.pii_stats || null}

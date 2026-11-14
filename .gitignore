@@ -70,3 +70,4 @@ PhonePe_Statement_*.csv
 !data/shop_owner_current_account.csv
 test_*.csv
 *.log
+.vercel
