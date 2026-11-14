@@ -168,21 +168,19 @@ npm run dev
 python -m pytest tests/ -v
 ```
 
-### 4. Deploy the full stack to Vercel
+### 4. Deploy to Vercel
 
-The root `vercel.json` configures the Next.js frontend and FastAPI backend as
-Vercel Services in one project. The frontend calls the private backend through
-a same-origin API bridge; Vercel supplies `BACKEND_URL` through a service
-binding. Sample CSVs are bundled with the backend function.
+FinOS is configured with `vercel.json` and `@vercel/python` to deploy the Next.js frontend and the FastAPI serverless functions simultaneously:
 
 ```bash
-# From the repository root, authenticate and link the Vercel project
-npx vercel login
-npx vercel link
+# 1. Install Vercel CLI (or use npx)
+npm i -g vercel
 
-# Test a preview deployment, then deploy production
-npx vercel deploy
-npx vercel deploy --prod
+# 2. Login to your Vercel account
+vercel login
+
+# 3. Deploy to production
+vercel --prod
 ```
 
 `GEMINI_API_KEY` is optional; without it, Ask FinOS uses its local fallback.

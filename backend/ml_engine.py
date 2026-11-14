@@ -15,7 +15,10 @@ import re
 import json
 import datetime
 from typing import Dict, List, Any, Optional, Tuple
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer

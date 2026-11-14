@@ -30,7 +30,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-const API_BASE = '/api/backend';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator' | 'accuracy' | 'multi-account'>('overview');

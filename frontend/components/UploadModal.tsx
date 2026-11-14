@@ -15,7 +15,7 @@ interface UploadModalProps {
 export const UploadModal: React.FC<UploadModalProps> = ({
   isOpen,
   onClose,
-  apiBase,
+  apiBase = '/api',
   onUploadStart,
   onUploadSuccess,
   onError

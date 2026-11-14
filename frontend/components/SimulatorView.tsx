@@ -67,7 +67,7 @@ interface SimulatorViewProps {
 }
 
 export const SimulatorView: React.FC<SimulatorViewProps> = ({
-  apiBase,
+  apiBase = '/api',
   currentBalance,
   minimumSafeBalance,
   transactions,
