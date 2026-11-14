@@ -10,6 +10,8 @@ import { RecurringBillsCard } from '@/components/RecurringBillsCard';
 import { CategoryDonutCard } from '@/components/CategoryDonutCard';
 import { TransactionTable } from '@/components/TransactionTable';
 import { SimulatorView } from '@/components/SimulatorView';
+import { AccuracyView } from '@/components/AccuracyView';
+import { PersonalizedLimitsCard } from '@/components/PersonalizedLimitsCard';
 import { UploadModal } from '@/components/UploadModal';
 import { EmptyState } from '@/components/EmptyState';
 import { 
@@ -23,7 +25,7 @@ import {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'simulator' | 'accuracy'>('overview');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [minSafeBalance, setMinSafeBalance] = useState<number>(5000);
   
@@ -154,6 +156,7 @@ export default function DashboardPage() {
               {activeTab === 'overview' && 'Cash Flow Overview & Risk Radar'}
               {activeTab === 'transactions' && 'Ledger & Categorized Transactions'}
               {activeTab === 'simulator' && 'What-If Cash Flow Stress Testing'}
+              {activeTab === 'accuracy' && 'Predictive Accuracy & Backtesting'}
             </h1>
           </div>
 
@@ -222,12 +225,21 @@ export default function DashboardPage() {
                   probBelowSafe={Number(forecast?.forecast_meta?.prob_below_safe_balance ?? overview?.risk_summary?.prob_below_safe_balance ?? 0)}
                   riskLevel={forecast?.forecast_meta?.risk_level ?? overview?.risk_summary?.risk_level ?? 'HEALTHY'}
                   firstBreachDate={forecast?.forecast_meta?.first_breach_date ?? overview?.risk_summary?.first_breach_date}
+                  breachDateRange={overview?.risk_summary?.breach_date_range ?? forecast?.forecast_meta?.breach_date_range}
                   minSafeBalance={minSafeBalance}
                   headline={forecast?.explanation?.headline ?? overview?.risk_summary?.headline}
                   rootCause={forecast?.explanation?.root_cause ?? overview?.risk_summary?.root_cause}
                   recommendations={forecast?.explanation?.actionable_recommendations ?? overview?.risk_summary?.recommendations}
                   lowestExpectedBalance={Number(forecast?.forecast_meta?.lowest_median_balance ?? overview?.risk_summary?.lowest_median_balance ?? 0)}
+                  topDrivers={overview?.risk_summary?.top_drivers ?? forecast?.explanation?.top_drivers}
+                  billsBeforeInflow={overview?.risk_summary?.bills_before_inflow ?? forecast?.explanation?.bills_before_inflow}
+                  expectedInflowGapDays={overview?.risk_summary?.expected_inflow_gap_days ?? forecast?.explanation?.expected_inflow_gap_days}
                 />
+
+                {/* Personalized Safe Spending Limits Card */}
+                {overview?.limits && (
+                  <PersonalizedLimitsCard limits={overview.limits} />
+                )}
 
                 {/* Metrics Row */}
                 <MetricsRow
@@ -248,6 +260,7 @@ export default function DashboardPage() {
                     minimumSafeBalance={minSafeBalance}
                     probBelowSafe={Number(forecast?.forecast_meta?.prob_below_safe_balance ?? 0)}
                     breachDate={forecast?.forecast_meta?.first_breach_date}
+                    dataSufficiency={overview?.data_sufficiency ?? forecast?.forecast_meta?.data_sufficiency}
                   />
                 ) : (
                   <div className="p-12 text-center rounded-xl border border-white/[0.08] bg-[#121418] text-white/40 font-mono text-xs">
@@ -288,6 +301,17 @@ export default function DashboardPage() {
                 currentBalance={Number(overview?.current_balance ?? 0)}
                 minimumSafeBalance={minSafeBalance}
                 transactions={transactions || []}
+              />
+            )}
+
+            {/* ======================================================== */}
+            {/* VIEW 4: ACCURACY & BACKTESTING */}
+            {/* ======================================================== */}
+            {activeTab === 'accuracy' && (
+              <AccuracyView
+                apiBase={API_BASE}
+                transactions={transactions || []}
+                startingBalance={Number(overview?.starting_balance ?? 75000)}
               />
             )}
           </>

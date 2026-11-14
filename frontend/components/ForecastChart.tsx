@@ -32,6 +32,7 @@ interface ForecastChartProps {
   minimumSafeBalance?: number;
   probBelowSafe?: number;
   breachDate?: string | null;
+  dataSufficiency?: { level: string; badge: string; history_days?: number };
 }
 
 export const ForecastChart: React.FC<ForecastChartProps> = ({
@@ -39,7 +40,8 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
   currentBalance = 0,
   minimumSafeBalance = 5000,
   probBelowSafe = 0,
-  breachDate
+  breachDate,
+  dataSufficiency
 }) => {
   const [showConfidenceBand, setShowConfidenceBand] = useState(true);
   const [dayRange, setDayRange] = useState<30 | 45 | 60>(60);
@@ -100,13 +102,22 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-semibold text-white tracking-tight">
               60-Day Stochastic Cash Flow Trajectory
             </h2>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#d9f154]/10 text-[#d9f154] border border-[#d9f154]/20 font-semibold">
               1,000 MONTE CARLO RUNS
             </span>
+            {dataSufficiency && (
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-medium ${
+                dataSufficiency.level === 'LOW'
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              }`}>
+                {dataSufficiency.badge}
+              </span>
+            )}
           </div>
           <p className="text-xs text-white/50 mt-1">
             Simulates irregular client invoices, known recurring bills, and daily living burn rate.

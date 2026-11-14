@@ -351,6 +351,13 @@ class RecurringPaymentDetector:
 
                 cat = sorted_group["Category"].mode().iloc[0] if "Category" in sorted_group.columns else "Subscriptions"
 
+                # Calculate confidence score (0.50 to 0.99)
+                interval_std = float(np.std(date_diffs)) if len(date_diffs) > 1 else 3.0
+                interval_regularity = max(0.0, 1.0 - (interval_std / 15.0))
+                amount_stability = max(0.0, 1.0 - amount_cv)
+                occ_factor = min(1.0, len(group) / 6.0)
+                conf = round(float(min(0.99, max(0.50, 0.35 * occ_factor + 0.40 * amount_stability + 0.25 * interval_regularity))), 2)
+
                 recurring_items.append({
                     "merchant": merchant,
                     "cadence": cadence,
@@ -359,7 +366,9 @@ class RecurringPaymentDetector:
                     "last_paid_date": last_paid.strftime("%Y-%m-%d"),
                     "next_due_date": next_due.strftime("%Y-%m-%d"),
                     "category": str(cat),
-                    "day_of_month": int(last_paid.day)
+                    "day_of_month": int(last_paid.day),
+                    "confidence": conf,
+                    "confidence_pct": int(conf * 100)
                 })
 
         recurring_items.sort(key=lambda x: x["average_amount"], reverse=True)
@@ -388,6 +397,7 @@ class CashFlowForecaster:
         new_recurring_emis: Optional[List[Dict[str, Any]]] = None,
         income_delay_days: int = 0,
         income_boost_pct: float = 0.0,
+        daily_spend_cap: Optional[float] = None,
         start_date: Optional[datetime.date] = None,
         seed: int = 42
     ) -> Dict[str, Any]:
@@ -405,37 +415,98 @@ class CashFlowForecaster:
         recurring_detector = RecurringPaymentDetector()
         recurring_bills = recurring_detector.detect_recurring(df)
 
-        # 3. Analyze historical freelance income distributions
+        # 3. Data sufficiency assessment
+        if "Date" in df.columns and len(df) > 0:
+            dates_dt = pd.to_datetime(df["Date"])
+            history_days = int((dates_dt.max() - dates_dt.min()).days)
+        else:
+            history_days = 0
+
         incomes = df[df["Amount"] > 0].copy()
-        if len(incomes) >= 2:
+        n_incomes = len(incomes)
+
+        if history_days < 90 or n_incomes < 3:
+            sufficiency_level = "LOW"
+            data_sufficiency_badge = f"Low history: {history_days} days, wide uncertainty"
+            ci_multiplier = 1.20
+        elif history_days < 180 or n_incomes < 6:
+            sufficiency_level = "MODERATE"
+            data_sufficiency_badge = f"Moderate history: {history_days} days"
+            ci_multiplier = 1.08
+        else:
+            sufficiency_level = "HIGH"
+            data_sufficiency_badge = f"High history: {history_days} days ({max(1, history_days // 30)} months)"
+            ci_multiplier = 1.0
+
+        # 4. Income distribution with sensible Bayesian fallback prior for < 4 incomes
+        PRIOR_INTERVAL_MEAN = 30.0
+        PRIOR_INTERVAL_STD = 10.0
+        PRIOR_AMOUNT_MEAN = 65000.0
+        PRIOR_AMOUNT_STD = 25000.0
+
+        if n_incomes >= 2:
             incomes["Date_DT"] = pd.to_datetime(incomes["Date"])
             incomes = incomes.sort_values("Date_DT")
             income_intervals = incomes["Date_DT"].diff().dt.days.dropna().values
-            mean_income_interval = float(np.mean(income_intervals)) if len(income_intervals) > 0 else 28.0
-            std_income_interval = float(np.std(income_intervals)) if len(income_intervals) > 1 else 8.0
-            income_amounts = incomes["Amount"].values
-            mean_income_amount = float(np.mean(income_amounts))
-            std_income_amount = float(np.std(income_amounts)) if len(income_amounts) > 1 else 20000.0
+            emp_int_mean = float(np.mean(income_intervals)) if len(income_intervals) > 0 else PRIOR_INTERVAL_MEAN
+            emp_int_std = float(np.std(income_intervals)) if len(income_intervals) > 1 else PRIOR_INTERVAL_STD
+            emp_amt_mean = float(np.mean(incomes["Amount"].values))
+            emp_amt_std = float(np.std(incomes["Amount"].values)) if len(incomes) > 1 else PRIOR_AMOUNT_STD
+
+            if n_incomes < 4:
+                w_prior = (4.0 - n_incomes) / 4.0
+                w_emp = 1.0 - w_prior
+                mean_income_interval = w_emp * emp_int_mean + w_prior * PRIOR_INTERVAL_MEAN
+                std_income_interval = w_emp * emp_int_std + w_prior * PRIOR_INTERVAL_STD
+                mean_income_amount = w_emp * emp_amt_mean + w_prior * PRIOR_AMOUNT_MEAN
+                std_income_amount = w_emp * emp_amt_std + w_prior * PRIOR_AMOUNT_STD
+            else:
+                mean_income_interval = emp_int_mean
+                std_income_interval = emp_int_std
+                mean_income_amount = emp_amt_mean
+                std_income_amount = emp_amt_std
+        elif n_incomes == 1:
+            mean_income_amount = 0.5 * float(incomes["Amount"].iloc[0]) + 0.5 * PRIOR_AMOUNT_MEAN
+            mean_income_interval = PRIOR_INTERVAL_MEAN
+            std_income_interval = PRIOR_INTERVAL_STD
+            std_income_amount = PRIOR_AMOUNT_STD
         else:
-            mean_income_interval = 28.0
-            std_income_interval = 8.0
-            mean_income_amount = 75000.0
-            std_income_amount = 25000.0
+            mean_income_amount = PRIOR_AMOUNT_MEAN
+            mean_income_interval = PRIOR_INTERVAL_MEAN
+            std_income_interval = PRIOR_INTERVAL_STD
+            std_income_amount = PRIOR_AMOUNT_STD
 
         if income_boost_pct != 0.0:
             mean_income_amount *= (1.0 + float(income_boost_pct) / 100.0)
 
-        # 4. Analyze daily variable expenses
+        # 5. Analyze daily variable expenses (bootstrapped historical days / log-normal clipped >= 0)
         expenses = df[df["Amount"] < 0].copy()
-        expenses["Date_Only"] = pd.to_datetime(expenses["Date"]).dt.date
-        daily_expense_totals = expenses.groupby("Date_Only")["Amount"].sum().abs()
-        
-        p95 = np.percentile(daily_expense_totals, 95) if len(daily_expense_totals) > 0 else 3000.0
-        trimmed_daily = daily_expense_totals[daily_expense_totals <= p95]
-        mean_daily_burn = float(trimmed_daily.mean()) if len(trimmed_daily) > 0 else 850.0
-        std_daily_burn = float(trimmed_daily.std()) if len(trimmed_daily) > 1 else 450.0
+        if len(expenses) > 0:
+            expenses["Date_Only"] = pd.to_datetime(expenses["Date"]).dt.date
+            daily_expense_totals = expenses.groupby("Date_Only")["Amount"].sum().abs()
+            p95 = np.percentile(daily_expense_totals, 95)
+            trimmed_daily = daily_expense_totals[daily_expense_totals <= p95]
+            if len(trimmed_daily) == 0:
+                trimmed_daily = daily_expense_totals
+            burn_pool = trimmed_daily.values
+            mean_daily_burn = float(np.mean(burn_pool))
+            std_daily_burn = float(np.std(burn_pool)) if len(burn_pool) > 1 else 450.0
+        else:
+            burn_pool = np.array([850.0])
+            mean_daily_burn = 850.0
+            std_daily_burn = 450.0
 
-        # Build schedule for fixed recurring expenses in the 60-day window
+        use_bootstrap = (len(burn_pool) >= 14)
+        if not use_bootstrap:
+            pos_burn = burn_pool[burn_pool > 0]
+            if len(pos_burn) > 0:
+                log_mu = float(np.mean(np.log(pos_burn)))
+                log_std = float(np.std(np.log(pos_burn))) if len(pos_burn) > 1 else 0.5
+            else:
+                log_mu = np.log(850.0)
+                log_std = 0.5
+
+        # Build schedule for fixed recurring expenses in the window
         scheduled_fixed_by_day = [0.0] * forecast_days
         for bill in recurring_bills:
             b_day = bill["day_of_month"]
@@ -464,7 +535,7 @@ class CashFlowForecaster:
                 if 0 <= offset < forecast_days:
                     scheduled_one_time_by_day[offset] += amt
 
-        # 5. Run 1,000 Monte Carlo Paths
+        # 6. Run Monte Carlo Simulation Paths
         trajectories = np.zeros((num_simulations, forecast_days))
         breach_count = 0
         first_breach_days = []
@@ -491,8 +562,16 @@ class CashFlowForecaster:
                 # One-Time Outflows
                 daily_net -= scheduled_one_time_by_day[day_idx]
 
-                # Variable Outflow
-                sim_variable_spend = max(0.0, float(np.random.normal(mean_daily_burn, std_daily_burn)))
+                # Variable Outflow (bootstrapped historical days or log-normal clipped >= 0)
+                if use_bootstrap:
+                    raw_spend = float(np.random.choice(burn_pool))
+                else:
+                    raw_spend = float(np.random.lognormal(log_mu, log_std))
+
+                sim_variable_spend = max(0.0, raw_spend)
+                if daily_spend_cap is not None:
+                    sim_variable_spend = min(sim_variable_spend, daily_spend_cap)
+
                 daily_net -= sim_variable_spend
 
                 path_balance += daily_net
@@ -510,6 +589,11 @@ class CashFlowForecaster:
         p50 = np.percentile(trajectories, 50, axis=0)
         p75 = np.percentile(trajectories, 75, axis=0)
         p90 = np.percentile(trajectories, 90, axis=0)
+
+        # Apply data sufficiency uncertainty multiplier
+        if ci_multiplier != 1.0:
+            p10 = p50 - (p50 - p10) * ci_multiplier
+            p90 = p50 + (p90 - p50) * ci_multiplier
 
         prob_breach = round(float((breach_count / num_simulations) * 100), 1)
 
@@ -545,6 +629,70 @@ class CashFlowForecaster:
         else:
             risk_level = "HEALTHY"
 
+        # 7. Extract Exact Simulation Drivers for Explainability
+        expected_inflow_gap = int(round(mean_income_interval)) + int(income_delay_days)
+        expected_inflow_date = start_date + datetime.timedelta(days=expected_inflow_gap)
+
+        bills_before_inflow = []
+        total_fixed_before_inflow = 0.0
+        for bill in recurring_bills:
+            b_day = bill["day_of_month"]
+            b_amt = float(bill["average_amount"])
+            for d in range(min(forecast_days, expected_inflow_gap)):
+                cal_date = start_date + datetime.timedelta(days=d)
+                if cal_date.day == b_day:
+                    bills_before_inflow.append({
+                        "merchant": bill["merchant"],
+                        "amount": round(b_amt, 2),
+                        "due_date": cal_date.strftime("%d %b"),
+                        "category": bill.get("category", "Fixed")
+                    })
+                    total_fixed_before_inflow += b_amt
+
+        # Breach date range
+        breach_date_range = None
+        if len(first_breach_days) > 0:
+            p10_day = int(np.percentile(first_breach_days, 10))
+            p90_day = int(np.percentile(first_breach_days, 90))
+            d_start = (start_date + datetime.timedelta(days=p10_day)).strftime("%d %b %Y")
+            d_end = (start_date + datetime.timedelta(days=p90_day)).strftime("%d %b %Y")
+            breach_date_range = {
+                "start": d_start,
+                "end": d_end,
+                "median_day": int(np.median(first_breach_days)),
+                "label": f"{d_start} to {d_end}"
+            }
+
+        # Top 3 drivers with ₹ impact
+        driver_candidates = []
+        for b in bills_before_inflow:
+            driver_candidates.append({
+                "driver": f"{b['merchant']} ({b['category']})",
+                "amount": b["amount"],
+                "category": b["category"],
+                "impact_type": "Fixed Recurring Bill",
+                "impact_detail": f"Due on {b['due_date']} before expected payout"
+            })
+        var_spend_before_inflow = round(expected_inflow_gap * mean_daily_burn, 2)
+        driver_candidates.append({
+            "driver": f"Variable Spend ({expected_inflow_gap} days @ ₹{mean_daily_burn:,.0f}/day)",
+            "amount": var_spend_before_inflow,
+            "category": "Variable",
+            "impact_type": "Daily Variable Burn",
+            "impact_detail": f"Cumulative living spend across {expected_inflow_gap}-day arrival gap"
+        })
+        if one_time_expenses:
+            for ote in one_time_expenses:
+                driver_candidates.append({
+                    "driver": ote.get("name", "One-time Purchase"),
+                    "amount": float(ote.get("amount", 0.0)),
+                    "category": "Simulation Modifier",
+                    "impact_type": "One-Time Expense",
+                    "impact_detail": f"Scheduled in {ote.get('day_offset', 0)} days"
+                })
+        driver_candidates.sort(key=lambda x: x["amount"], reverse=True)
+        top_drivers = driver_candidates[:3]
+
         return {
             "forecast_days": int(forecast_days),
             "start_date": start_date.strftime("%Y-%m-%d"),
@@ -553,6 +701,7 @@ class CashFlowForecaster:
             "prob_below_safe_balance": float(prob_breach),
             "risk_level": risk_level,
             "first_breach_date": first_breach_date_str,
+            "breach_date_range": breach_date_range,
             "days_to_breach": days_to_breach,
             "lowest_median_balance": round(float(min_median_balance), 2),
             "lowest_p10_balance": round(float(min_p10_balance), 2),
@@ -560,6 +709,18 @@ class CashFlowForecaster:
             "mean_income_amount": round(float(mean_income_amount), 2),
             "mean_daily_burn": round(float(mean_daily_burn), 2),
             "recurring_commitments_count": int(len(recurring_bills)),
+            "data_sufficiency": {
+                "level": sufficiency_level,
+                "badge": data_sufficiency_badge,
+                "history_days": history_days,
+                "income_events_count": n_incomes,
+                "uncertainty_multiplier": ci_multiplier
+            },
+            "bills_before_inflow": bills_before_inflow,
+            "total_fixed_before_inflow": round(total_fixed_before_inflow, 2),
+            "expected_inflow_gap_days": expected_inflow_gap,
+            "expected_inflow_date": expected_inflow_date.strftime("%d %b %Y"),
+            "top_drivers": top_drivers,
             "forecast": forecast_points
         }
 
@@ -622,7 +783,7 @@ class AnomalyDetector:
 # ==========================================
 
 class FinancialExplainer:
-    """Generates plain-language diagnoses of cash crunches and actionable remedies."""
+    """Generates plain-language diagnoses of cash crunches and actionable remedies directly from simulation drivers."""
 
     @classmethod
     def generate_explanation(
@@ -635,43 +796,53 @@ class FinancialExplainer:
         breach_date = forecast_result.get("first_breach_date")
         min_balance = float(forecast_result.get("minimum_safe_balance", 5000.0))
         current_bal = float(forecast_result.get("current_balance", 0.0))
+        gap_days = int(forecast_result.get("expected_inflow_gap_days", 28))
+        inflow_date = forecast_result.get("expected_inflow_date", "mid-cycle")
+        bills_before = forecast_result.get("bills_before_inflow", [])
+        top_drivers = forecast_result.get("top_drivers", [])
+        breach_range = forecast_result.get("breach_date_range")
 
-        high_commitments = [b for b in recurring_bills if b.get("category") in ["Rent", "EMI", "EMI/Loans"]]
-        sum_high = sum(float(b.get("average_amount", 0.0)) for b in high_commitments)
+        # Format bills falling before inflow
+        if bills_before:
+            bills_desc = ", ".join([f"{b['merchant']} (₹{b['amount']:,.0f} on {b['due_date']})" for b in bills_before[:3]])
+            total_fixed_before = sum(b['amount'] for b in bills_before)
+        else:
+            bills_desc = "No fixed obligations"
+            total_fixed_before = 0.0
+
+        breach_window_str = breach_range["label"] if breach_range else (breach_date or "upcoming cycle")
 
         if prob >= 50:
-            headline = f"{int(prob)}% probability of balance dropping below ₹{min_balance:,.0f} around {breach_date or 'Day 20'}"
+            headline = f"{int(prob)}% probability of balance dropping below ₹{min_balance:,.0f} between {breach_window_str}"
             root_cause = (
-                f"Cash timing asymmetry detected. You have ₹{sum_high:,.0f} in fixed obligations "
-                f"(Rent & Loans) due early in the month, while your irregular freelance income "
-                f"(averaging ₹{forecast_result.get('mean_income_amount', 0):,.0f}) has an arrival "
-                f"interval of ~{forecast_result.get('mean_income_interval_days', 28)} days. "
-                f"Daily variable burn (~₹{forecast_result.get('mean_daily_burn', 850):,.0f}/day) further erodes your liquidity buffer."
+                f"Cash timing asymmetry detected. You have ₹{total_fixed_before:,.0f} in fixed obligations "
+                f"({bills_desc}) due before your next client payout in ~{gap_days} days (around {inflow_date}). "
+                f"Daily variable burn (~₹{forecast_result.get('mean_daily_burn', 850):,.0f}/day) compounds this liquidity squeeze."
             )
             actions = [
-                f"Invoice current active client deliverables immediately with a 2-3% prompt-payment discount to pull forward cash before {breach_date or 'due date'}.",
-                f"Contact lender to shift your loan EMI debit date from the 5th to the 12th, synchronizing with your payout clearance window.",
-                f"Temporarily pause discretionary lifestyle spends to preserve ₹{forecast_result.get('mean_daily_burn', 850) * 14:,.0f} over the next two weeks."
+                f"Invoice current active deliverables immediately with a 2-3% prompt-payment discount to pull forward cash before {breach_date or 'due date'}.",
+                f"Request shifting upcoming major bill debit dates to after {inflow_date} to match your client clearance cycle.",
+                f"Cap discretionary living spend to stay within the ₹{min_balance:,.0f} safety threshold over the next {gap_days} days."
             ]
         elif prob >= 20:
-            headline = f"Moderate liquidity friction ({int(prob)}% risk) identified in upcoming 60-day cycle"
+            headline = f"Moderate liquidity friction ({int(prob)}% risk) identified in upcoming {gap_days}-day window"
             root_cause = (
-                f"Your cash cushion of ₹{current_bal:,.0f} provides partial protection, but a minor delay "
-                f"in client project clearance will challenge the ₹{min_balance:,.0f} safety barrier."
+                f"Your cash buffer of ₹{current_bal:,.0f} provides partial protection against upcoming bills ({bills_desc}), "
+                f"but a minor delay in client clearance beyond {gap_days} days will test the ₹{min_balance:,.0f} threshold."
             )
             actions = [
-                "Maintain a rolling buffer of at least ₹25,000 for unexpected healthcare or hardware renewals.",
-                "Review active SaaS and cloud subscriptions to reduce passive burn."
+                f"Maintain a rolling buffer of at least ₹{total_fixed_before + 15000:,.0f} for upcoming fixed commitments.",
+                "Review discretionary spending and pause non-essential purchases until the next milestone clears."
             ]
         else:
-            headline = f"Healthy Cash Flow: Under 20% risk of buffer breach across 60 days"
+            headline = f"Healthy Cash Flow: Under 20% risk of buffer breach across {forecast_result.get('forecast_days', 60)} days"
             root_cause = (
-                f"Inflow timing comfortably outpaces upcoming fixed commitments (₹{sum_high:,.0f}). "
-                f"Liquidity is projected to remain well above the ₹{min_balance:,.0f} safe threshold."
+                f"Projected inflows comfortably outpace scheduled obligations (₹{total_fixed_before:,.0f} due before next payout in {gap_days} days). "
+                f"Liquidity is projected to remain well above the ₹{min_balance:,.0f} safety threshold."
             )
             actions = [
                 "Opportunity to allocate surplus freelance retainers into high-yield emergency liquid funds.",
-                "Safe window to undertake planned equipment upgrades or software licenses."
+                "Safe window to undertake planned hardware upgrades or software subscriptions."
             ]
 
         if sim_params and sim_params.get("simulated"):
@@ -681,5 +852,318 @@ class FinancialExplainer:
             "headline": headline,
             "root_cause": root_cause,
             "actionable_recommendations": actions,
-            "risk_level": forecast_result.get("risk_level", "HEALTHY")
+            "risk_level": forecast_result.get("risk_level", "HEALTHY"),
+            "bills_before_inflow": bills_before,
+            "expected_inflow_gap_days": gap_days,
+            "breach_date_range": breach_range,
+            "top_drivers": top_drivers
+        }
+
+
+# ==========================================
+# 7. PERSONALIZED SPENDING LIMIT OPTIMIZER
+# ==========================================
+
+class SpendingLimitOptimizer:
+    """
+    Finds the highest daily spend cap (and top 3 category caps)
+    via binary search over Monte Carlo simulations that keeps breach probability under 10%.
+    """
+
+    @classmethod
+    def calculate_optimal_limits(
+        cls,
+        df: pd.DataFrame,
+        current_balance: float,
+        minimum_safe_balance: float = 5000.0,
+        target_max_breach_prob: float = 10.0
+    ) -> Dict[str, Any]:
+        # Ensure Category column exists
+        if "Category" not in df.columns:
+            categorizer = AutoCategorizer()
+            df = categorizer.categorize_dataframe(df)
+
+        expenses = df[df["Amount"] < 0].copy()
+        if len(expenses) > 0:
+            expenses["Date_Only"] = pd.to_datetime(expenses["Date"]).dt.date
+            daily_totals = expenses.groupby("Date_Only")["Amount"].sum().abs()
+            mean_burn = float(daily_totals.mean())
+        else:
+            mean_burn = 850.0
+
+        # Baseline without cap
+        base_res = CashFlowForecaster.run_monte_carlo(
+            df=df,
+            current_balance=current_balance,
+            forecast_days=60,
+            num_simulations=400,
+            minimum_safe_balance=minimum_safe_balance
+        )
+        base_prob = float(base_res["prob_below_safe_balance"])
+
+        if base_prob <= target_max_breach_prob:
+            low = mean_burn
+            high = max(mean_burn * 3.5, 12000.0)
+        else:
+            low = 0.0
+            high = mean_burn
+
+        optimal_cap = low
+        for _ in range(10):
+            mid = (low + high) / 2.0
+            sim_test = CashFlowForecaster.run_monte_carlo(
+                df=df,
+                current_balance=current_balance,
+                forecast_days=60,
+                num_simulations=300,
+                minimum_safe_balance=minimum_safe_balance,
+                daily_spend_cap=mid
+            )
+            prob = float(sim_test["prob_below_safe_balance"])
+            if prob <= target_max_breach_prob:
+                optimal_cap = mid
+                low = mid
+            else:
+                high = mid
+
+        # Final 1,000 run on optimal cap
+        final_sim = CashFlowForecaster.run_monte_carlo(
+            df=df,
+            current_balance=current_balance,
+            forecast_days=60,
+            num_simulations=1000,
+            minimum_safe_balance=minimum_safe_balance,
+            daily_spend_cap=optimal_cap
+        )
+        final_prob = float(final_sim["prob_below_safe_balance"])
+
+        # Category caps for top 3 variable categories
+        var_expenses = expenses[~expenses["Category"].isin(["Rent", "EMI", "EMI/Loans", "Income"])].copy()
+        category_caps = []
+        if len(var_expenses) > 0:
+            cat_totals = var_expenses.groupby("Category")["Amount"].sum().abs().to_dict()
+            total_var_spend = sum(cat_totals.values())
+            sorted_cats = sorted(cat_totals.items(), key=lambda x: x[1], reverse=True)[:3]
+
+            for cat_name, cat_amt in sorted_cats:
+                share = (cat_amt / total_var_spend) if total_var_spend > 0 else 0.33
+                cat_daily = round(optimal_cap * share, 2)
+                category_caps.append({
+                    "category": cat_name,
+                    "daily_cap": cat_daily,
+                    "monthly_cap": round(cat_daily * 30, 2),
+                    "share_pct": round(share * 100, 1)
+                })
+
+        burn_reduction_needed = max(0.0, round(mean_burn - optimal_cap, 2))
+        is_sufficient = (optimal_cap >= mean_burn * 0.70)
+
+        headline = f"Spend ≤ ₹{round(optimal_cap):,}/day to stay safe"
+        if base_prob > target_max_breach_prob and optimal_cap <= 10.0 and final_prob > target_max_breach_prob:
+            action_text = "Upcoming fixed obligations (Rent & Loans) alone cause buffer breach. Freeze discretionary spend and accelerate invoice clearance."
+            headline = "Spend ≤ ₹0/day (Fixed Bills Exceed Buffer)"
+        else:
+            action_text = f"Capping daily variable burn at ₹{round(optimal_cap):,}/day keeps buffer breach probability at {final_prob:.1f}% (< 10%)."
+
+        return {
+            "recommended_daily_cap": round(optimal_cap, 2),
+            "recommended_monthly_cap": round(optimal_cap * 30, 2),
+            "current_daily_burn": round(mean_burn, 2),
+            "current_monthly_burn": round(mean_burn * 30, 2),
+            "breach_prob_at_cap": final_prob,
+            "baseline_breach_prob": base_prob,
+            "burn_reduction_needed": burn_reduction_needed,
+            "is_budget_sufficient": is_sufficient,
+            "top_category_caps": category_caps,
+            "headline": headline,
+            "action_text": action_text
+        }
+
+
+# ==========================================
+# 8. ROLLING-ORIGIN BACKTESTING ENGINE
+# ==========================================
+
+class BacktestEngine:
+    """
+    Rolling-origin evaluation engine for cash flow forecasting:
+    - Trains on historical months 1..N, forecasts month N+1, repeats across splits.
+    - Computes MAE, MAPE, and Calibration (share of actual daily balances inside 80% CI; target ~80%).
+    - Evaluates naive baseline (moving-average forecast) and reports % improvement over it.
+    - If statement history is < 6 months, runs shorter backtest with explicit disclosure.
+    """
+
+    @classmethod
+    def run_rolling_backtest(
+        cls,
+        df: pd.DataFrame,
+        initial_balance: Optional[float] = None,
+        test_window_days: int = 30
+    ) -> Dict[str, Any]:
+        if len(df) == 0:
+            raise ValueError("Cannot backtest empty dataset.")
+
+        df_sorted = df.copy()
+        if "Category" not in df_sorted.columns:
+            categorizer = AutoCategorizer()
+            df_sorted = categorizer.categorize_dataframe(df_sorted)
+        df_sorted["Date_DT"] = pd.to_datetime(df_sorted["Date"])
+        df_sorted = df_sorted.sort_values("Date_DT").reset_index(drop=True)
+
+        min_date = df_sorted["Date_DT"].min().date()
+        max_date = df_sorted["Date_DT"].max().date()
+        total_days = (max_date - min_date).days + 1
+        total_months = total_days / 30.0
+
+        start_bal = initial_balance if initial_balance is not None else float(df_sorted.get("Starting Balance", 75000.0))
+        daily_net_map = df_sorted.groupby(df_sorted["Date_DT"].dt.date)["Amount"].sum().to_dict()
+
+        calendar_days = [min_date + datetime.timedelta(days=i) for i in range(total_days)]
+        actual_balances = {}
+        running_b = start_bal
+        for d in calendar_days:
+            running_b += daily_net_map.get(d, 0.0)
+            actual_balances[d] = running_b
+
+        is_shorter = (total_months < 6.0)
+        min_train_days = min(60, max(20, total_days // 3))
+        available_eval_days = total_days - min_train_days
+
+        if available_eval_days < test_window_days:
+            test_window_days = max(7, available_eval_days)
+
+        split_origins = []
+        step = max(test_window_days, (total_days - min_train_days) // 4)
+        curr_origin = min_train_days
+        while (curr_origin + test_window_days) <= total_days:
+            split_origins.append(curr_origin)
+            curr_origin += step
+            if len(split_origins) >= 4:
+                break
+
+        if not split_origins:
+            split_origins = [total_days - test_window_days]
+
+        all_actuals = []
+        all_preds_p50 = []
+        all_preds_p10 = []
+        all_preds_p90 = []
+        all_naive = []
+        latest_chart_points = []
+
+        for split_idx, train_end_idx in enumerate(split_origins):
+            train_end_date = calendar_days[train_end_idx - 1]
+            test_start_date = calendar_days[train_end_idx]
+            test_end_date = calendar_days[min(total_days - 1, train_end_idx + test_window_days - 1)]
+            actual_window_len = (test_end_date - test_start_date).days + 1
+
+            train_df = df_sorted[df_sorted["Date_DT"].dt.date <= train_end_date]
+            train_bal = actual_balances[train_end_date]
+
+            forecast_res = CashFlowForecaster.run_monte_carlo(
+                df=train_df,
+                current_balance=train_bal,
+                forecast_days=actual_window_len,
+                num_simulations=300,
+                start_date=test_start_date,
+                seed=42 + split_idx
+            )
+            model_points = forecast_res["forecast"]
+
+            # Naive moving-average drift baseline
+            prior_30_start = train_end_date - datetime.timedelta(days=30)
+            prior_txns = train_df[train_df["Date_DT"].dt.date >= prior_30_start]
+            prior_net = float(prior_txns["Amount"].sum()) if len(prior_txns) > 0 else 0.0
+            daily_drift = prior_net / 30.0
+
+            split_chart_pts = []
+            for d_idx in range(actual_window_len):
+                cur_date = test_start_date + datetime.timedelta(days=d_idx)
+                act_val = actual_balances.get(cur_date, train_bal)
+                m_pt = model_points[d_idx] if d_idx < len(model_points) else model_points[-1]
+                naive_val = train_bal + (d_idx + 1) * daily_drift
+
+                all_actuals.append(act_val)
+                all_preds_p50.append(m_pt["p50"])
+                all_preds_p10.append(m_pt["p10"])
+                all_preds_p90.append(m_pt["p90"])
+                all_naive.append(naive_val)
+
+                split_chart_pts.append({
+                    "date": cur_date.strftime("%Y-%m-%d"),
+                    "displayDate": cur_date.strftime("%d %b"),
+                    "actual": round(act_val, 2),
+                    "forecast_p50": round(m_pt["p50"], 2),
+                    "p10": round(m_pt["p10"], 2),
+                    "p90": round(m_pt["p90"], 2),
+                    "naive_forecast": round(naive_val, 2),
+                    "in_80_ci": bool(m_pt["p10"] <= act_val <= m_pt["p90"])
+                })
+
+            if split_idx == len(split_origins) - 1:
+                latest_chart_points = split_chart_pts
+
+        all_act_arr = np.array(all_actuals)
+        all_p50_arr = np.array(all_preds_p50)
+        all_p10_arr = np.array(all_preds_p10)
+        all_p90_arr = np.array(all_preds_p90)
+        all_naive_arr = np.array(all_naive)
+
+        # MAE
+        mae_model = float(np.mean(np.abs(all_act_arr - all_p50_arr)))
+        mae_naive = float(np.mean(np.abs(all_act_arr - all_naive_arr)))
+
+        # MAPE
+        denom = np.maximum(np.abs(all_act_arr), 1000.0)
+        mape_model = float(np.mean(np.abs(all_act_arr - all_p50_arr) / denom) * 100)
+        mape_naive = float(np.mean(np.abs(all_act_arr - all_naive_arr) / denom) * 100)
+
+        # Calibration in 80% CI
+        inside_80 = (all_act_arr >= all_p10_arr) & (all_act_arr <= all_p90_arr)
+        calibration_80 = float(np.mean(inside_80) * 100)
+
+        pct_improvement = float(((mae_naive - mae_model) / mae_naive) * 100) if mae_naive > 0 else 0.0
+
+        history_note = (
+            f"History is {round(total_months, 1)} months (< 6 months). Ran {len(split_origins)}-split rolling-origin backtest on available data."
+            if is_shorter else
+            f"Full 6+ month backtest: evaluated across {len(split_origins)} rolling-origin test splits ({len(all_actuals)} evaluated days)."
+        )
+
+        return {
+            "status": "success",
+            "shorter_backtest": is_shorter,
+            "history_months": round(total_months, 1),
+            "history_days": total_days,
+            "evaluated_splits": len(split_origins),
+            "evaluated_days_count": len(all_actuals),
+            "note": history_note,
+            "metrics": {
+                "model_mae": round(mae_model, 2),
+                "naive_mae": round(mae_naive, 2),
+                "pct_improvement_mae": round(pct_improvement, 1),
+                "model_mape": round(mape_model, 2),
+                "naive_mape": round(mape_naive, 2),
+                "calibration_80_pct": round(calibration_80, 1),
+                "target_calibration_pct": 80.0,
+                "calibration_status": "Well-Calibrated" if (70.0 <= calibration_80 <= 90.0) else "Uncalibrated"
+            },
+            "calibration_bands": [
+                {
+                    "nominal_band": "50% CI",
+                    "target_pct": 50.0,
+                    "empirical_pct": round(float(np.mean((all_act_arr >= (all_p50_arr - 0.67 * (all_p50_arr - all_p10_arr))) & (all_act_arr <= (all_p50_arr + 0.67 * (all_p90_arr - all_p50_arr)))) * 100), 1)
+                },
+                {
+                    "nominal_band": "80% CI (P10-P90)",
+                    "target_pct": 80.0,
+                    "empirical_pct": round(calibration_80, 1)
+                },
+                {
+                    "nominal_band": "95% CI",
+                    "target_pct": 95.0,
+                    "empirical_pct": round(float(np.mean((all_act_arr >= (all_p50_arr - 1.25 * (all_p50_arr - all_p10_arr))) & (all_act_arr <= (all_p50_arr + 1.25 * (all_p90_arr - all_p50_arr)))) * 100), 1)
+                }
+            ],
+            "timeline": latest_chart_points
         }

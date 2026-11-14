@@ -7,22 +7,30 @@ interface RiskBannerProps {
   probBelowSafe: number;
   riskLevel: 'CRITICAL' | 'WARNING' | 'HEALTHY' | string;
   firstBreachDate?: string | null;
+  breachDateRange?: { start: string; end: string; label: string } | null;
   minSafeBalance: number;
   headline?: string;
   rootCause?: string;
   recommendations?: string[];
   lowestExpectedBalance?: number;
+  topDrivers?: Array<{ driver: string; amount: number; impact_type: string; impact_detail: string }>;
+  billsBeforeInflow?: Array<{ merchant: string; amount: number; due_date: string; category: string }>;
+  expectedInflowGapDays?: number;
 }
 
 export const RiskBanner: React.FC<RiskBannerProps> = ({
   probBelowSafe,
   riskLevel,
   firstBreachDate,
+  breachDateRange,
   minSafeBalance,
   headline,
   rootCause,
   recommendations,
-  lowestExpectedBalance
+  lowestExpectedBalance,
+  topDrivers,
+  billsBeforeInflow,
+  expectedInflowGapDays
 }) => {
   const isCritical = riskLevel === 'CRITICAL' || probBelowSafe >= 50;
   const isWarning = (riskLevel === 'WARNING' || probBelowSafe >= 20) && !isCritical;
@@ -89,6 +97,36 @@ export const RiskBanner: React.FC<RiskBannerProps> = ({
             <span>Root-Cause Asymmetry Analysis:</span>
           </span>
           <p className="text-white/70">{rootCause}</p>
+        </div>
+      )}
+
+      {/* Top Simulation Drivers */}
+      {topDrivers && topDrivers.length > 0 && (
+        <div className="mt-3 pt-2 border-t border-white/[0.06]">
+          <div className="text-[11px] font-mono text-white/50 mb-2 flex items-center justify-between">
+            <span>Primary Outflow Drivers Impacting Liquidity Dip:</span>
+            {expectedInflowGapDays && <span>Next payout clearance in ~{expectedInflowGapDays} days</span>}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {topDrivers.map((driver, idx) => (
+              <div
+                key={idx}
+                className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs font-mono"
+              >
+                <div>
+                  <span className="text-white/85 font-semibold block truncate max-w-[170px]" title={driver.driver}>
+                    {driver.driver}
+                  </span>
+                  <span className="text-[10px] text-white/40 block truncate max-w-[170px]">
+                    {driver.impact_detail}
+                  </span>
+                </div>
+                <span className="text-rose-400 font-bold ml-2 shrink-0">
+                  -₹{Math.round(driver.amount).toLocaleString('en-IN')}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

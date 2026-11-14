@@ -13,12 +13,13 @@ import {
   ShieldCheck,
   Sparkles,
   RefreshCw,
-  Wallet
+  Wallet,
+  Target
 } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: 'overview' | 'transactions' | 'simulator';
-  setActiveTab: (tab: 'overview' | 'transactions' | 'simulator') => void;
+  activeTab: 'overview' | 'transactions' | 'simulator' | 'accuracy';
+  setActiveTab: (tab: 'overview' | 'transactions' | 'simulator' | 'accuracy') => void;
   openUploadModal: () => void;
   minSafeBalance: number;
   setMinSafeBalance: (val: number) => void;
@@ -46,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'transactions' as const, label: 'Transactions', icon: ReceiptText },
     { id: 'simulator' as const, label: 'What-If Simulator', icon: SlidersHorizontal },
+    { id: 'accuracy' as const, label: 'Accuracy & Backtest', icon: Target },
   ];
 
   return (

@@ -24,7 +24,9 @@ from backend.ml_engine import (
     RecurringPaymentDetector,
     CashFlowForecaster,
     AnomalyDetector,
-    FinancialExplainer
+    FinancialExplainer,
+    SpendingLimitOptimizer,
+    BacktestEngine
 )
 
 app = FastAPI(
@@ -75,6 +77,17 @@ class SimulateRequest(BaseModel):
     income_boost_pct: float = 0.0
     one_time_expenses: Optional[List[OneTimeExpense]] = None
     new_recurring_emis: Optional[List[RecurringEMI]] = None
+
+class LimitsRequest(BaseModel):
+    transactions: Optional[List[Dict[str, Any]]] = None
+    current_balance: Optional[float] = None
+    minimum_safe_balance: Optional[float] = 5000.0
+    target_max_breach_prob: Optional[float] = 10.0
+
+class BacktestRequest(BaseModel):
+    transactions: Optional[List[Dict[str, Any]]] = None
+    starting_balance: Optional[float] = 75000.0
+    test_window_days: Optional[int] = 30
 
 
 # ==========================================
@@ -137,7 +150,15 @@ def run_pipeline_for_dataframe(
     else:
         cat_breakdown = {}
 
-    # 8. Clean Transaction Records (strict float type casting)
+    # 8. Personalized Spending Limits via Binary Search (<10% breach probability)
+    limits = SpendingLimitOptimizer.calculate_optimal_limits(
+        df=categorized_df,
+        current_balance=ending_balance,
+        minimum_safe_balance=min_safe,
+        target_max_breach_prob=10.0
+    )
+
+    # 9. Clean Transaction Records (strict float type casting)
     transaction_records = []
     for _, row in categorized_df.iterrows():
         amt_f = float(row["Amount"])
@@ -173,6 +194,8 @@ def run_pipeline_for_dataframe(
         "current_balance": round(ending_balance, 2),
         "starting_balance": round(start_bal, 2),
         "minimum_safe_balance": float(min_safe),
+        "data_sufficiency": forecast_res.get("data_sufficiency", {}),
+        "limits": limits,
         "metrics_30d": {
             "inflows": round(inflows_30d, 2),
             "outflows": round(outflows_30d, 2),
@@ -183,10 +206,16 @@ def run_pipeline_for_dataframe(
             "prob_below_safe_balance": float(forecast_res["prob_below_safe_balance"]),
             "risk_level": forecast_res["risk_level"],
             "first_breach_date": forecast_res["first_breach_date"],
+            "breach_date_range": forecast_res.get("breach_date_range"),
             "lowest_median_balance": float(forecast_res["lowest_median_balance"]),
             "headline": explanation["headline"],
             "root_cause": explanation["root_cause"],
-            "recommendations": explanation["actionable_recommendations"]
+            "recommendations": explanation["actionable_recommendations"],
+            "top_drivers": forecast_res.get("top_drivers", []),
+            "bills_before_inflow": forecast_res.get("bills_before_inflow", []),
+            "total_fixed_before_inflow": forecast_res.get("total_fixed_before_inflow", 0.0),
+            "expected_inflow_gap_days": forecast_res.get("expected_inflow_gap_days", 28),
+            "expected_inflow_date": forecast_res.get("expected_inflow_date")
         },
         "forecast": {
             "forecast_meta": {
@@ -197,8 +226,10 @@ def run_pipeline_for_dataframe(
                 "prob_below_safe_balance": float(forecast_res["prob_below_safe_balance"]),
                 "risk_level": forecast_res["risk_level"],
                 "first_breach_date": forecast_res["first_breach_date"],
+                "breach_date_range": forecast_res.get("breach_date_range"),
                 "lowest_median_balance": float(forecast_res["lowest_median_balance"]),
                 "lowest_p10_balance": float(forecast_res["lowest_p10_balance"]),
+                "data_sufficiency": forecast_res.get("data_sufficiency", {})
             },
             "burn_metrics": {
                 "mean_income_interval_days": float(forecast_res["mean_income_interval_days"]),
@@ -406,6 +437,90 @@ def categorize_endpoint(payload: CategorizeRequest):
             "method": pred["method"]
         })
     return {"categories": results}
+
+@app.get("/limits")
+def get_limits(current_balance: Optional[float] = None, minimum_safe_balance: Optional[float] = 5000.0):
+    """Computes personalized daily spending limit keeping buffer breach risk < 10% via binary search."""
+    if not os.path.exists(DATA_PATH):
+        from backend.generate_data import generate_synthetic_transactions
+        generate_synthetic_transactions(DATA_PATH)
+    try:
+        with open(DATA_PATH, "rb") as f:
+            df, _ = StatementParser.parse_csv(f.read())
+        df = categorizer.categorize_dataframe(df)
+        bal = current_balance if current_balance is not None else float(df["Balance"].iloc[-1])
+        return SpendingLimitOptimizer.calculate_optimal_limits(
+            df=df,
+            current_balance=bal,
+            minimum_safe_balance=float(minimum_safe_balance or 5000.0)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Limits calculation error: {str(e)}")
+
+@app.post("/limits")
+def post_limits(payload: LimitsRequest):
+    """Computes personalized daily spending limit on uploaded/custom transactions."""
+    try:
+        if payload.transactions and len(payload.transactions) > 0:
+            df = pd.DataFrame(payload.transactions)
+            for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
+                if col not in df.columns and alt in df.columns:
+                    df[col] = df[alt]
+            bal = payload.current_balance if payload.current_balance is not None else float(df["Balance"].iloc[-1])
+        else:
+            with open(DATA_PATH, "rb") as f:
+                df, _ = StatementParser.parse_csv(f.read())
+            df = categorizer.categorize_dataframe(df)
+            bal = payload.current_balance if payload.current_balance is not None else float(df["Balance"].iloc[-1])
+
+        return SpendingLimitOptimizer.calculate_optimal_limits(
+            df=df,
+            current_balance=bal,
+            minimum_safe_balance=float(payload.minimum_safe_balance or 5000.0),
+            target_max_breach_prob=float(payload.target_max_breach_prob or 10.0)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Limits calculation error: {str(e)}")
+
+@app.get("/backtest")
+def get_backtest(starting_balance: Optional[float] = 75000.0, test_window_days: int = 30):
+    """Executes rolling-origin backtest on the reference dataset."""
+    if not os.path.exists(DATA_PATH):
+        from backend.generate_data import generate_synthetic_transactions
+        generate_synthetic_transactions(DATA_PATH)
+    try:
+        with open(DATA_PATH, "rb") as f:
+            df, _ = StatementParser.parse_csv(f.read(), starting_balance=float(starting_balance or 75000.0))
+        return BacktestEngine.run_rolling_backtest(
+            df=df,
+            initial_balance=float(starting_balance or 75000.0),
+            test_window_days=test_window_days
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backtest error: {str(e)}")
+
+@app.post("/backtest")
+def post_backtest(payload: BacktestRequest):
+    """Executes rolling-origin backtest on custom/uploaded transactions."""
+    try:
+        if payload.transactions and len(payload.transactions) > 0:
+            df = pd.DataFrame(payload.transactions)
+            for col, alt in [("Amount", "amount"), ("Date", "date"), ("Category", "category"), ("Balance", "balance")]:
+                if col not in df.columns and alt in df.columns:
+                    df[col] = df[alt]
+            bal = payload.starting_balance if payload.starting_balance is not None else 75000.0
+        else:
+            with open(DATA_PATH, "rb") as f:
+                df, _ = StatementParser.parse_csv(f.read(), starting_balance=75000.0)
+            bal = 75000.0
+
+        return BacktestEngine.run_rolling_backtest(
+            df=df,
+            initial_balance=float(bal),
+            test_window_days=payload.test_window_days or 30
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backtest error: {str(e)}")
 
 @app.post("/privacy/delete")
 def delete_all_data():

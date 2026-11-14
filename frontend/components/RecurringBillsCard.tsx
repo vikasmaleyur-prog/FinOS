@@ -12,6 +12,8 @@ interface RecurringBill {
   next_due_date: string;
   category: string;
   day_of_month: number;
+  confidence?: number;
+  confidence_pct?: number;
 }
 
 interface RecurringBillsCardProps {
@@ -62,6 +64,14 @@ export const RecurringBillsCard: React.FC<RecurringBillsCardProps> = ({ bills, t
                     <span>{bill?.cadence || 'Monthly'}</span>
                     <span>•</span>
                     <span className="text-white/60">Due {bill?.next_due_date || 'Upcoming'}</span>
+                    {bill?.confidence_pct && (
+                      <>
+                        <span>•</span>
+                        <span className="text-[#d9f154]/90 bg-[#d9f154]/10 px-1 rounded">
+                          {bill.confidence_pct}% conf
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
