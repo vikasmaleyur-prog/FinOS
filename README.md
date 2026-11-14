@@ -9,7 +9,7 @@ FinOS is an enterprise-grade, privacy-first FinTech platform built specifically 
 ### 1. Robust Real-World Bank Data Ingestion (`backend/ingestion.py`)
 - **PhonePe & Bank Statement Preambles**: Automatically skips preambles (such as PhonePe's 3-line metadata preamble) by locating header lines containing `Transaction Details` and `Amount`.
 - **Chronological Sorting & Balance Rebuilding**: Indian UPI statements order transactions newest-first. The engine sorts chronologically (`ascending=True`) before executing `df['Running Balance'] = starting_balance + df['Amount'].cumsum()`.
-- **100% Stateless Architecture**: Eliminates server-side state leakage. `/upload` processes the file in memory and immediately returns the full payload to the React client.
+- **100% Stateless Architecture**: Eliminates server-side session state leakage. The `/upload` endpoint processes files in memory and immediately returns the full payload to the React client. Zero persistent session or database storage is retained on the backend.
 - **DPDP Act 2023 Compliance**: Built-in regex sanitization strips phone numbers (`XXXXXX1234`), UPI IDs (`u***@bank`), and UTRs before client delivery.
 
 ### 2. Hybrid Indian-Context Auto-Categorizer (`backend/ml_engine.py`)
@@ -21,10 +21,11 @@ FinOS is an enterprise-grade, privacy-first FinTech platform built specifically 
 - **Instant State Invalidation**: Uploading a new statement immediately resets previous state (`setTransactions(null)`, `setForecast(null)`) to prevent stale data display.
 - **HTTP Error Toasts**: Network failures or invalid statements catch 400/500 backend responses, stop loaders, and render dismissible alerts without breaking the UI.
 
-### 3. Premium Ramp.com Design System Clone
+### 4. Premium Ramp.com Design System Clone
 - **Color Tokens**: Deep charcoal backgrounds (`#0a0a0a`), stark elevated cards (`#121418`, `#1b1d23`), hairline borders (`border-white/10`), and Ramp's signature neon lime accent (`#d9f154`).
-- **New Split-Screen Auth Page (`/login`)**:
-  - Left: Minimalist login with glassmorphism inputs, Google/Apple SSO buttons, and DPDP compliance indicators.
+- **Split-Screen Auth Showcase (`/login`)**:
+  - **Demo Notice**: Authentication page and SSO buttons (Google/Apple) are designed as a front-end interactive demo showcase; no external OAuth server is required. Clicking sign-in instantly navigates to the dashboard.
+  - Left: Minimalist login with glassmorphism inputs, demo credentials, and DPDP compliance indicators.
   - Right: Deep ambient gradient backdrop with a live 60-day runway radar card and value-prop customer quote.
 - **Dashboard (`/dashboard`)**:
   - **View 1 (Overview)**: Dynamic headline risk radar, key metrics row, 60-day Recharts forecast chart with shaded 80% CI bands, recurring obligations card, and category breakdown.
@@ -42,7 +43,7 @@ finos/
 │   ├── ingestion.py          # Robust CSV parsing for real messy Indian bank data
 │   ├── generate_data.py      # Synthetic 2-year Indian bank transaction generator
 │   ├── ml_engine.py          # DPDP Masking, NLP Categorizer, Monte Carlo, Isolation Forest
-│   ├── main.py               # FastAPI server (all REST endpoints & session manager)
+│   ├── main.py               # FastAPI server (Stateless REST endpoints & analytics pipeline)
 │   └── requirements.txt      # Python dependencies
 ├── data/
 │   └── synthetic_transactions.csv  # 24-month reference dataset (1,082 txns)
@@ -52,7 +53,7 @@ finos/
 │   │   ├── layout.tsx        # Inter & JetBrains Mono typography injection
 │   │   ├── page.tsx          # Root redirect to /login
 │   │   ├── login/
-│   │   │   └── page.tsx      # Premium split-screen login page
+│   │   │   └── page.tsx      # Interactive demo login page
 │   │   └── dashboard/
 │   │       └── page.tsx      # Main dashboard (Overview, Ledger, Simulator, Empty States)
 │   ├── components/
@@ -79,23 +80,24 @@ finos/
 ### 1. Backend Setup
 
 ```bash
-cd /Users/vikasn/.gemini/antigravity/scratch/finos
+# From repository root
+pip install -r backend/requirements.txt
 
 # Generate or verify synthetic dataset
-python3 backend/generate_data.py
+python backend/generate_data.py
 
 # Launch FastAPI Backend
-PYTHONPATH=. python3 backend/main.py
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 *API runs on `http://127.0.0.1:8000` (Interactive docs: `http://127.0.0.1:8000/docs`).*
 
 ### 2. Frontend Setup
 
 ```bash
-cd /Users/vikasn/.gemini/antigravity/scratch/finos/frontend
-
-# Launch Next.js
-npm run dev # or npm run start
+# In frontend directory
+cd frontend
+npm install
+npm run dev
 ```
 *Frontend runs on `http://localhost:3000` (Redirects to `/login`).*
 

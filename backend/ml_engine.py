@@ -66,7 +66,13 @@ class PrivacyMasker:
             return "u***@upi"
         masked = cls.UPI_REGEX.sub(upi_repl, masked)
 
-        # 3. Mask Bank Account / Card numbers
+        # 3. Mask UTR numbers (before generic account regex)
+        def utr_repl(m):
+            stats["utr_masked"] += 1
+            return "UTR-XXXXXX"
+        masked = cls.UTR_REGEX.sub(utr_repl, masked)
+
+        # 4. Mask Bank Account / Card numbers
         def acc_repl(m):
             stats["accounts_masked"] += 1
             digits = re.sub(r'\D', '', m.group(0))
@@ -74,12 +80,6 @@ class PrivacyMasker:
                 return f"A/C XXXXXX{digits[-4:]}"
             return m.group(0)
         masked = cls.ACCOUNT_REGEX.sub(acc_repl, masked)
-
-        # 4. Mask UTR numbers
-        def utr_repl(m):
-            stats["utr_masked"] += 1
-            return "UTR-XXXXXX"
-        masked = cls.UTR_REGEX.sub(utr_repl, masked)
 
         # 5. Mask PAN
         def pan_repl(m):

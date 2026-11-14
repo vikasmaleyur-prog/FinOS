@@ -221,4 +221,5 @@ def generate_synthetic_transactions(output_path="data/synthetic_transactions.csv
     return df
 
 if __name__ == "__main__":
-    generate_synthetic_transactions("/Users/vikasn/.gemini/antigravity/scratch/finos/data/synthetic_transactions.csv")
+    default_output = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "synthetic_transactions.csv")
+    generate_synthetic_transactions(default_output)

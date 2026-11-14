@@ -67,6 +67,10 @@ export default function LoginPage() {
             <p className="text-xs sm:text-sm text-white/50 leading-relaxed">
               Predictive liquidity modeling and stochastic cash flow manager for irregular earners.
             </p>
+            <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-[#d9f154]/10 border border-[#d9f154]/20 text-[#d9f154] text-[11px] font-mono mt-2">
+              <Sparkles size={12} />
+              <span>Interactive Demo — Click any sign-in option to launch dashboard</span>
+            </div>
           </div>
 
           {/* SSO Buttons */}
