@@ -990,6 +990,15 @@ def delete_all_data():
         "message": "Server is 100% stateless. Zero personal transaction data is stored on server."
     }
 
+# ==========================================
+# ROUTE MIRRORING FOR SERVERLESS / VERCEL (/api/...)
+# ==========================================
+# Ensures all endpoints are reachable both at root (/upload) and with /api prefix (/api/upload)
+for _route in list(app.routes):
+    if hasattr(_route, 'endpoint') and hasattr(_route, 'methods'):
+        if not _route.path.startswith('/api'):
+            app.add_api_route(f'/api{_route.path}', _route.endpoint, methods=_route.methods)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

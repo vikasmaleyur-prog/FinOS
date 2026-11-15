@@ -44,6 +44,30 @@ export default function DashboardPage() {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setIsSidebarCollapsed(true);
     }
+    // Hydrate persistent user session from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('finos_session_data');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.transactions && parsed.transactions.length > 0) {
+            setTransactions(parsed.transactions);
+            setForecast(parsed.forecast || null);
+            setOverview(parsed);
+            setRecurringBills(parsed.recurring_bills || []);
+            setAnomalies(parsed.anomalies || []);
+            if (parsed.minimum_safe_balance) {
+              setMinSafeBalance(Number(parsed.minimum_safe_balance));
+            }
+            if (parsed.account_type) {
+              setAccountType(parsed.account_type);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to hydrate session from localStorage', e);
+      }
+    }
   }, []);
   
   // Stateless Client-Side Data States
@@ -87,6 +111,13 @@ export default function DashboardPage() {
     }
     if (data.account_type) {
       setAccountType(data.account_type);
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('finos_session_data', JSON.stringify(data));
+      } catch (e) {
+        console.warn('Could not persist session to localStorage', e);
+      }
     }
   };
 
@@ -173,6 +204,13 @@ export default function DashboardPage() {
     setRecurringBills([]);
     setAnomalies([]);
     setUploadError(null);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('finos_session_data');
+      } catch (e) {
+        console.warn('Failed to clear localStorage', e);
+      }
+    }
   };
 
   const hasData = Boolean(transactions && Array.isArray(transactions) && transactions.length > 0);
@@ -450,6 +488,7 @@ export default function DashboardPage() {
                 transactions={transactions || []}
                 anomalies={anomalies || []}
                 piiStats={overview?.pii_stats || null}
+                apiBase={API_BASE}
               />
             )}
 

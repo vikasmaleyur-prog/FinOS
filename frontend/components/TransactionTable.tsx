@@ -39,13 +39,15 @@ interface TransactionTableProps {
   transactions?: Transaction[] | null;
   anomalies?: Anomaly[] | null;
   piiStats?: Record<string, number> | null;
+  apiBase?: string;
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
   apiBase,
   transactions,
   anomalies,
-  piiStats
+  piiStats,
+  apiBase = '/api'
 }) => {
   const [page, setPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState('All');
