@@ -1,4 +1,12 @@
-# FinOS: Predictive Cash Flow Operating System
+## 🚀 How to try FinOS (read this first)
+
+**FinOS needs a bank statement to work.** On first launch the dashboard is empty. Nothing is forecast until you upload a statement.
+
+### Step 1: Upload a statement
+1. Open the app and click **Import Statement** (top right, or in the left sidebar).
+2. Drop a **CSV** bank statement into the upload box.
+3. Enter your **Balance on statement start date** and your **Minimum Buffer** (the lowest balance you are comfortable with, e.g. ₹2,000).
+4. Click **Sanitize & Load Dataset**.# FinOS: Predictive Cash Flow Operating System
 
 FinOS is an enterprise-grade, privacy-first FinTech platform built for **freelancers, irregular earners, and small business (SMB) owners** in India. It models cash timing asymmetry, detects recurring commitments, runs **1,000 Monte Carlo stochastic forecast simulations**, flags spending anomalies via 4-feature Isolation Forests, evaluates prediction accuracy via rolling-origin backtesting, and enables interactive "What-If" decision stress testing—all packaged inside a pixel-perfect dark UI inspired by **Ramp.com**.
 
