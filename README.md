@@ -4,7 +4,7 @@
 
 ### Step 1: Upload a statement
 1. Open the app and click **Import Statement** (top right, or in the left sidebar).
-2. Drop a **CSV** bank statement into the upload box.
+2. Drop a **CSV** bank statement into the upload box (Drop only **CSV** file not pdf as currently it is in working stage for pdf upload)
 3. Enter your **Balance on statement start date** and your **Minimum Buffer** (the lowest balance you are comfortable with, e.g. ₹2,000).
 4. Click **Sanitize & Load Dataset**.# FinOS: Predictive Cash Flow Operating System
 
