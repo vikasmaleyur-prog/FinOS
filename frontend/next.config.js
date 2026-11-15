@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    // In local development, proxy /api requests to local FastAPI uvicorn server
-    if (process.env.NODE_ENV === 'development') {
+    // In local development or local production test, proxy /api requests to local FastAPI server
+    if (!process.env.VERCEL) {
       return [
         {
           source: '/api/:path*',

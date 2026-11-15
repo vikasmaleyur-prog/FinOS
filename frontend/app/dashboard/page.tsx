@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { Sidebar } from '@/components/Sidebar';
 import { RiskBanner } from '@/components/RiskBanner';
 import { MetricsRow } from '@/components/MetricsRow';
+import { YourCardsWidget } from '@/components/YourCardsWidget';
 import { ForecastChart } from '@/components/ForecastChart';
-import { RecurringBillsCard } from '@/components/RecurringBillsCard';
 import { CategoryDonutCard } from '@/components/CategoryDonutCard';
+import { RecentTransactionsCard } from '@/components/RecentTransactionsCard';
+import { AIAssistantCard } from '@/components/AIAssistantCard';
+import { RecurringBillsCard } from '@/components/RecurringBillsCard';
 import { TransactionTable } from '@/components/TransactionTable';
 import { SimulatorView } from '@/components/SimulatorView';
 import { AccuracyView } from '@/components/AccuracyView';
@@ -19,15 +22,17 @@ import { MultiAccountView } from '@/components/MultiAccountView';
 import { 
   UploadCloud, 
   LogOut, 
-  X,
-  AlertCircle,
-  Sparkles,
-  ShieldCheck,
-  SlidersHorizontal,
-  ArrowRightLeft,
-  FileSpreadsheet,
-  CheckCircle2,
-  TrendingUp
+  X, 
+  AlertCircle, 
+  Sparkles, 
+  ShieldCheck, 
+  SlidersHorizontal, 
+  ArrowRightLeft, 
+  FileSpreadsheet, 
+  Bookmark, 
+  Search, 
+  Sliders,
+  ChevronDown
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -37,8 +42,10 @@ export default function DashboardPage() {
   const [accountType, setAccountType] = useState<'savings' | 'current'>('savings');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInitialPrompt, setChatInitialPrompt] = useState<string | undefined>(undefined);
   const [minSafeBalance, setMinSafeBalance] = useState<number>(5000);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   React.useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -196,7 +203,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Purge data under DPDP Act 2023
   const handleDeleteData = () => {
     setTransactions(null);
     setForecast(null);
@@ -215,9 +221,18 @@ export default function DashboardPage() {
 
   const hasData = Boolean(transactions && Array.isArray(transactions) && transactions.length > 0);
 
+  // Runway calculation for payment card
+  const discretionaryBurn = Number(forecast?.burn_metrics?.mean_daily_burn ?? 850);
+  const fixedMonthly = Number(overview?.metrics_30d?.fixed_commitments ?? 0);
+  const currentBal = Number(overview?.current_balance ?? 0);
+  const daysOfRunway = Math.max(
+    0,
+    Math.round((currentBal - minSafeBalance) / (discretionaryBurn + (fixedMonthly / 30)))
+  );
+
   return (
-    <div className="min-h-screen bg-[#F7F5FA] text-[#3B3552] flex font-sans">
-      {/* Sidebar Navigation */}
+    <div className="min-h-screen text-[#3B3552] flex font-sans selection:bg-[#F3EDFA] selection:text-[#7650A8]">
+      {/* Floating Dock Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -241,50 +256,47 @@ export default function DashboardPage() {
       />
 
       {/* Main Content Area */}
-      <main className={`flex-1 min-w-0 w-full ${isSidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[260px]'} pb-24 md:pb-8 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto transition-all`}>
-        {/* Sticky Light Top Bar */}
-        <header className="sticky top-0 z-30 bg-[#F7F5FA]/90 backdrop-blur-md border-b border-[#EAE6F0] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-6 transition-all">
-          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-            {/* Left: Branding & Status */}
+      <main className={`flex-1 min-w-0 w-full ${isSidebarCollapsed ? 'md:ml-[98px]' : 'md:ml-[280px]'} pb-24 md:pb-8 p-4 sm:p-6 lg:p-8 pr-4 sm:pr-6 lg:pr-10 max-w-[1600px] transition-all duration-300`}>
+        {/* Top Header (Paynix Style) */}
+        <header className="mb-7">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Left: Greeting & User Name */}
             <div className="min-w-0">
-              <div className="flex items-center flex-wrap gap-2 text-xs text-[#77758A] mb-1">
-                <span className="font-bold uppercase tracking-wider text-[11px] text-[#77758A]">
-                  {activeTab === 'multi-account' ? 'FINOS WORKSPACE / MULTI-ACCOUNT' : `YOUR WORKSPACE / ${activeTab.toUpperCase()}`}
-                </span>
-                
-                {/* Privacy Chip */}
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#E8F8F2] text-[#0E684C] border border-[#B4E8D6]">
-                  <ShieldCheck size={12} className="text-[#159B72]" />
-                  Privacy: data stays local
-                </span>
-
-                {overview?.dataset_loaded && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FEF7EC] text-[#8F5805] border border-[#FBD9A3]">
-                    Demo: {overview.dataset_loaded}
-                  </span>
-                )}
+              <div className="flex items-center space-x-1.5 text-xs text-[#77758A] font-semibold">
+                <span>Hey, Welcome</span>
+                <span className="text-sm">👋</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#17152D]">
-                {activeTab === 'overview' && 'Cash flow overview'}
-                {activeTab === 'transactions' && 'Ledger & Categorized Transactions'}
-                {activeTab === 'simulator' && 'What-If Cash Flow Stress Testing'}
-                {activeTab === 'accuracy' && 'Predictive Accuracy & Backtesting'}
-                {activeTab === 'multi-account' && 'Multi-Account Consolidation & Balancing'}
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#17152D] mt-0.5">
+                {overview?.account_holder || (activeTab === 'overview' ? 'Jhon Lelly' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
               </h1>
             </div>
 
-            {/* Right: Controls */}
+            {/* Center: Rounded Pill Search Bar */}
+            <div className="flex-1 max-w-md hidden lg:block mx-4">
+              <div className="relative flex items-center">
+                <Search size={16} className="absolute left-4 text-[#77758A] pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search transaction, card, category..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-11 pl-11 pr-4 rounded-full bg-white border border-[#ECE7F2] text-xs sm:text-sm text-[#17152D] placeholder-[#77758A] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#7650A8] focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Right: Controls & Profile */}
             <div className="flex items-center flex-wrap gap-2.5">
-              {/* Account Type Toggle */}
-              <div className="inline-flex items-center bg-white border border-[#EAE6F0] p-1 rounded-full shadow-sm">
+              {/* Account Type Toggle Switch */}
+              <div className="inline-flex items-center bg-white border border-[#ECE7F2] p-1 rounded-full shadow-xs">
                 <button
                   onClick={() => handleSwitchAccountType('savings')}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
                     accountType === 'savings'
-                      ? 'bg-[#7650A8] text-white shadow-sm'
+                      ? 'bg-[#181326] text-white shadow-xs'
                       : 'text-[#77758A] hover:text-[#17152D]'
                   }`}
-                  title="Switch to Personal/Freelance Savings Account"
+                  title="Switch to Personal Savings"
                 >
                   Savings
                 </button>
@@ -292,23 +304,26 @@ export default function DashboardPage() {
                   onClick={() => handleSwitchAccountType('current')}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
                     accountType === 'current'
-                      ? 'bg-[#7650A8] text-white shadow-sm'
+                      ? 'bg-[#181326] text-white shadow-xs'
                       : 'text-[#77758A] hover:text-[#17152D]'
                   }`}
-                  title="Switch to Small Business Current Account"
+                  title="Switch to SMB Current Account"
                 >
-                  Current (SMB)
+                  Current
                 </button>
               </div>
 
-              {/* Ask FinOS Chat Button */}
+              {/* Ask FinOS Chat Trigger */}
               <button
-                onClick={() => setIsChatOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full bg-[#F3EDFA] hover:bg-[#EBE2F7] active:bg-[#DBC3F0] text-[#7650A8] border border-[#EAE6F0] text-xs font-semibold tracking-tight transition-all shadow-sm cursor-pointer"
-                title="Open Ask FinOS AI Chat Copilot"
+                onClick={() => {
+                  setChatInitialPrompt(undefined);
+                  setIsChatOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#F3EDFA] hover:bg-[#EBE2F7] active:bg-[#DBC3F0] text-[#7650A8] border border-[#ECE7F2] text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                title="Open Ask FinOS Copilot"
               >
-                <Sparkles size={15} className="text-[#7650A8]" />
-                <span>Ask FinOS</span>
+                <Sparkles size={14} className="text-[#7650A8]" />
+                <span className="hidden sm:inline">Ask FinOS</span>
               </button>
 
               {/* Quick Upload Button */}
@@ -317,19 +332,31 @@ export default function DashboardPage() {
                   setUploadError(null);
                   setIsUploadModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full bg-[#7650A8] hover:bg-[#643F96] active:bg-[#523082] text-white text-xs font-semibold tracking-tight transition-all shadow-[0_2px_8px_rgba(118,80,168,0.25)] cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#7650A8] hover:bg-[#643F96] active:bg-[#523082] text-white text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(118,80,168,0.25)] cursor-pointer"
               >
-                <UploadCloud size={15} />
+                <UploadCloud size={14} />
                 <span>Import Statement</span>
               </button>
 
-              {/* User Sign Out Link */}
+              {/* Bookmark / Quick Action Button */}
+              <button
+                type="button"
+                className="p-2.5 rounded-full bg-white hover:bg-[#F3EDFA] text-[#77758A] hover:text-[#7650A8] border border-[#ECE7F2] shadow-xs transition-colors hidden sm:inline-flex"
+                title="Saved Insights"
+              >
+                <Bookmark size={16} />
+              </button>
+
+              {/* User Profile Avatar with Active Indicator */}
               <Link
                 href="/login"
-                className="p-2.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-full bg-white hover:bg-[#F3EDFA] text-[#77758A] hover:text-[#7650A8] transition-colors border border-[#EAE6F0] shadow-sm"
-                title="Sign Out to Login Page"
+                className="relative group p-0.5 rounded-full bg-white border border-[#ECE7F2] shadow-xs hover:border-[#7650A8] transition-all"
+                title="User Profile / Sign Out"
               >
-                <LogOut size={16} />
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#6838AC] to-[#9965E8] flex items-center justify-center text-white text-xs font-bold uppercase shadow-2xs">
+                  {overview?.account_holder ? overview.account_holder.charAt(0) : 'JL'}
+                </div>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#159B72] border-2 border-white" />
               </Link>
             </div>
           </div>
@@ -337,7 +364,7 @@ export default function DashboardPage() {
 
         {/* Upload Error Alert / Toast Notification */}
         {uploadError && (
-          <div className="mb-6 p-4 rounded-[16px] bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] text-xs flex items-start justify-between shadow-sm">
+          <div className="mb-6 p-4 rounded-[20px] bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] text-xs flex items-start justify-between shadow-xs">
             <div className="flex items-start space-x-3">
               <AlertCircle size={18} className="shrink-0 mt-0.5 text-[#E5484D]" />
               <div>
@@ -367,27 +394,11 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* ======================================================== */}
-            {/* VIEW 1: OVERVIEW */}
+            {/* VIEW 1: OVERVIEW (Paynix Exact Layout) */}
             {/* ======================================================== */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                {/* Headline Risk Banner */}
-                <RiskBanner
-                  probBelowSafe={Number(forecast?.forecast_meta?.prob_below_safe_balance ?? overview?.risk_summary?.prob_below_safe_balance ?? 0)}
-                  riskLevel={forecast?.forecast_meta?.risk_level ?? overview?.risk_summary?.risk_level ?? 'HEALTHY'}
-                  firstBreachDate={forecast?.forecast_meta?.first_breach_date ?? overview?.risk_summary?.first_breach_date}
-                  breachDateRange={overview?.risk_summary?.breach_date_range ?? forecast?.forecast_meta?.breach_date_range}
-                  minSafeBalance={minSafeBalance}
-                  headline={forecast?.explanation?.headline ?? overview?.risk_summary?.headline}
-                  rootCause={forecast?.explanation?.root_cause ?? overview?.risk_summary?.root_cause}
-                  recommendations={forecast?.explanation?.actionable_recommendations ?? overview?.risk_summary?.recommendations}
-                  lowestExpectedBalance={Number(forecast?.forecast_meta?.lowest_median_balance ?? overview?.risk_summary?.lowest_median_balance ?? 0)}
-                  topDrivers={overview?.risk_summary?.top_drivers ?? forecast?.explanation?.top_drivers}
-                  billsBeforeInflow={overview?.risk_summary?.bills_before_inflow ?? forecast?.explanation?.bills_before_inflow}
-                  expectedInflowGapDays={overview?.risk_summary?.expected_inflow_gap_days ?? forecast?.explanation?.expected_inflow_gap_days}
-                />
-
-                {/* Metrics Row */}
+                {/* Row 1: 4 Top KPI Metric Cards (Total Balance, Net Profit, Monthly Income, Monthly Expenses) */}
                 <MetricsRow
                   currentBalance={Number(overview?.current_balance ?? 0)}
                   inflows30d={Number(overview?.metrics_30d?.inflows ?? 0)}
@@ -398,25 +409,95 @@ export default function DashboardPage() {
                   minimumSafeBalance={minSafeBalance}
                 />
 
-                {/* Quick-Action Tiles */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Risk Banner (Sleek Redesigned Card) */}
+                {(forecast?.forecast_meta?.prob_below_safe_balance !== undefined || overview?.risk_summary) && (
+                  <RiskBanner
+                    probBelowSafe={Number(forecast?.forecast_meta?.prob_below_safe_balance ?? overview?.risk_summary?.prob_below_safe_balance ?? 0)}
+                    riskLevel={forecast?.forecast_meta?.risk_level ?? overview?.risk_summary?.risk_level ?? 'HEALTHY'}
+                    firstBreachDate={forecast?.forecast_meta?.first_breach_date ?? overview?.risk_summary?.first_breach_date}
+                    breachDateRange={overview?.risk_summary?.breach_date_range ?? forecast?.forecast_meta?.breach_date_range}
+                    minSafeBalance={minSafeBalance}
+                    headline={forecast?.explanation?.headline ?? overview?.risk_summary?.headline}
+                    rootCause={forecast?.explanation?.root_cause ?? overview?.risk_summary?.root_cause}
+                    recommendations={forecast?.explanation?.actionable_recommendations ?? overview?.risk_summary?.recommendations}
+                    lowestExpectedBalance={Number(forecast?.forecast_meta?.lowest_median_balance ?? overview?.risk_summary?.lowest_median_balance ?? 0)}
+                    topDrivers={overview?.risk_summary?.top_drivers ?? forecast?.explanation?.top_drivers}
+                    billsBeforeInflow={overview?.risk_summary?.bills_before_inflow ?? forecast?.explanation?.bills_before_inflow}
+                    expectedInflowGapDays={overview?.risk_summary?.expected_inflow_gap_days ?? forecast?.explanation?.expected_inflow_gap_days}
+                  />
+                )}
+
+                {/* Row 2: "Your Cards" (Left) + "Transaction Overview" Area Chart (Right) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                  <div className="lg:col-span-5 flex">
+                    <YourCardsWidget
+                      currentBalance={Number(overview?.current_balance ?? 0)}
+                      minSafeBalance={minSafeBalance}
+                      daysOfRunway={daysOfRunway}
+                      accountType={accountType}
+                      accountHolder={overview?.account_holder || 'JHON LELLY'}
+                      accountNumber={overview?.account_number || '•••• 8589'}
+                    />
+                  </div>
+                  <div className="lg:col-span-7 flex">
+                    <ForecastChart
+                      data={forecast?.timeline}
+                      currentBalance={Number(overview?.current_balance ?? 0)}
+                      minimumSafeBalance={minSafeBalance}
+                      probBelowSafe={Number(forecast?.forecast_meta?.prob_below_safe_balance ?? 0)}
+                      breachDate={forecast?.forecast_meta?.first_breach_date}
+                      dataSufficiency={overview?.data_sufficiency ?? forecast?.forecast_meta?.data_sufficiency}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: Expense Breakdown (Donut) + Recent Transactions + AI Assistant */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+                  <div className="flex">
+                    <CategoryDonutCard
+                      categories={overview?.category_spending || []}
+                    />
+                  </div>
+
+                  <div className="flex">
+                    <RecentTransactionsCard
+                      transactions={transactions || []}
+                      onViewAll={() => setActiveTab('transactions')}
+                    />
+                  </div>
+
+                  <div className="flex">
+                    <AIAssistantCard
+                      onOpenChat={(prompt) => {
+                        setChatInitialPrompt(prompt);
+                        setIsChatOpen(true);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Action Navigation Tiles */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                   <button
                     onClick={() => setActiveTab('simulator')}
-                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                    className="p-4 rounded-[22px] bg-white border border-[#ECE7F2] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/40 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.03)] group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl bg-[#F3EDFA] text-[#7650A8] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <SlidersHorizontal size={20} />
+                      <SlidersHorizontal size={18} />
                     </div>
                     <h3 className="font-bold text-sm text-[#17152D] mb-0.5">What-If Stress Test</h3>
                     <p className="text-xs text-[#77758A]">Simulate loans, delayed invoices, or major purchases</p>
                   </button>
 
                   <button
-                    onClick={() => setIsChatOpen(true)}
-                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                    onClick={() => {
+                      setChatInitialPrompt(undefined);
+                      setIsChatOpen(true);
+                    }}
+                    className="p-4 rounded-[22px] bg-white border border-[#ECE7F2] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/40 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.03)] group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl bg-[#F3EDFA] text-[#7650A8] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <Sparkles size={20} />
+                      <Sparkles size={18} />
                     </div>
                     <h3 className="font-bold text-sm text-[#17152D] mb-0.5">Ask FinOS Copilot</h3>
                     <p className="text-xs text-[#77758A]">Get instant AI explanations on cash flow risks and spending</p>
@@ -424,10 +505,10 @@ export default function DashboardPage() {
 
                   <button
                     onClick={() => setActiveTab('transactions')}
-                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                    className="p-4 rounded-[22px] bg-white border border-[#ECE7F2] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/40 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.03)] group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl bg-[#E8F8F2] text-[#159B72] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <FileSpreadsheet size={20} />
+                      <FileSpreadsheet size={18} />
                     </div>
                     <h3 className="font-bold text-sm text-[#17152D] mb-0.5">Ledger & Anomalies</h3>
                     <p className="text-xs text-[#77758A]">Audit UPI transactions, DPDP redactions, and unusual spikes</p>
@@ -435,47 +516,31 @@ export default function DashboardPage() {
 
                   <button
                     onClick={() => setActiveTab('multi-account')}
-                    className="p-4 rounded-[20px] bg-white border border-[#EAE6F0] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/50 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.04)] group cursor-pointer"
+                    className="p-4 rounded-[22px] bg-white border border-[#ECE7F2] hover:border-[#7650A8]/40 hover:bg-[#F3EDFA]/40 transition-all text-left shadow-[0_4px_20px_rgba(118,80,168,0.03)] group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl bg-[#FEF7EC] text-[#F5A623] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <ArrowRightLeft size={20} />
+                      <ArrowRightLeft size={18} />
                     </div>
                     <h3 className="font-bold text-sm text-[#17152D] mb-0.5">Multi-Account Balancing</h3>
                     <p className="text-xs text-[#77758A]">Consolidate savings and current accounts to eliminate deficits</p>
                   </button>
                 </div>
 
-                {/* Personalized Safe Spending Limits Card */}
+                {/* Personalized Limits & Recurring Bills */}
                 {overview?.limits && (
-                  <PersonalizedLimitsCard limits={overview.limits} />
-                )}
-
-                {/* Main Recharts 60-Day Forecast Chart */}
-                {forecast && forecast.timeline && forecast.timeline.length > 0 ? (
-                  <ForecastChart
-                    data={forecast.timeline}
-                    currentBalance={Number(overview?.current_balance ?? 0)}
-                    minimumSafeBalance={minSafeBalance}
-                    probBelowSafe={Number(forecast?.forecast_meta?.prob_below_safe_balance ?? 0)}
-                    breachDate={forecast?.forecast_meta?.first_breach_date}
-                    dataSufficiency={overview?.data_sufficiency ?? forecast?.forecast_meta?.data_sufficiency}
-                  />
-                ) : (
-                  <div className="p-12 text-center rounded-[20px] border border-[#ECE7F2] bg-white text-[#6B6584] text-xs shadow-sm">
-                    Computing 1,000 Monte Carlo paths...
+                  <div className="pt-2">
+                    <PersonalizedLimitsCard limits={overview.limits} />
                   </div>
                 )}
 
-                {/* Bottom Row: Recurring Obligations + Category Spending */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <RecurringBillsCard
-                    bills={recurringBills || []}
-                    totalMonthly={Number(overview?.metrics_30d?.fixed_commitments ?? 0)}
-                  />
-                  <CategoryDonutCard
-                    categories={overview?.category_spending || []}
-                  />
-                </div>
+                {recurringBills && recurringBills.length > 0 && (
+                  <div className="pt-2">
+                    <RecurringBillsCard
+                      bills={recurringBills || []}
+                      totalMonthly={Number(overview?.metrics_30d?.fixed_commitments ?? 0)}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
@@ -488,7 +553,6 @@ export default function DashboardPage() {
                 transactions={transactions || []}
                 anomalies={anomalies || []}
                 piiStats={overview?.pii_stats || null}
-                apiBase={API_BASE}
               />
             )}
 
@@ -528,7 +592,7 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* CSV Upload Modal */}
+      {/* CSV / PDF Upload Modal */}
       <UploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}

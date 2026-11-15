@@ -35,19 +35,17 @@ interface Anomaly {
 }
 
 interface TransactionTableProps {
-  apiBase: string;
+  apiBase?: string;
   transactions?: Transaction[] | null;
   anomalies?: Anomaly[] | null;
   piiStats?: Record<string, number> | null;
-  apiBase?: string;
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
-  apiBase,
+  apiBase = '/api',
   transactions,
   anomalies,
-  piiStats,
-  apiBase = '/api'
+  piiStats
 }) => {
   const [page, setPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState('All');
